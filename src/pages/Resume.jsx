@@ -82,6 +82,24 @@ const Resume = () => {
             Programming Languages & Technologies
           </Typography>
         </Box>
+        <Typography variant="h6" gutterBottom>
+          Core Technologies:
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+          - Programming Languages: R, Java, JavaScript / Node.js, jQuery, SQL
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+          - Databases & Data Engineering: Relational Data Modeling, ETL pipelines, POS Data Ingestion, Data Cleaning and Aggregaton
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+          - Data Analysis & Visualization: R, R Shiny, data transformation, summarization, reporting dashboards
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+          - Applications & Tools: Shiny apps, custom desktop and web applications, iPad-integrated data services
+        </Typography>
+        <Typography variant="body1" paragraph sx={{ mt: 2 }}>
+          - Business & Domain Expertise: Wine & Beverage Operations, Inventory Management, Sales Analytics, Forecasting
+        </Typography>
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {programmingLanguages.map((lang) => (
             <Chip
