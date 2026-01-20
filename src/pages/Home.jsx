@@ -91,7 +91,7 @@ const Home = () => {
         </Typography>
         <Typography variant="body1" paragraph>
           I am an experienced restaurant professsional with training aand experience in programming and data analysis.
-          I use my IT skills to transform data into actionable insights for my employer.
+          I use my IT skills to transform data into actionable insights for my current employer.
           With a background in computer science and experience in the hospitality industry, I bring
           a unique perspective to data analysis and business intelligence.
         </Typography>
