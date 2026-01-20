@@ -90,9 +90,9 @@ const Home = () => {
           About Me
         </Typography>
         <Typography variant="body1" paragraph>
-          Welcome to my portfolio! I'm a data analyst with a passion for
-          transforming data into actionable insights. With a background in
-          computer science and experience in the hospitality industry, I bring
+          I am an experienced restaurant professsional with training aand experience in programming and data analysis.
+          I use my IT skills to transform data into actionable insights for my employer.
+          With a background in computer science and experience in the hospitality industry, I bring
           a unique perspective to data analysis and business intelligence.
         </Typography>
         <Typography variant="body1" paragraph>
