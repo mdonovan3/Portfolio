@@ -9,7 +9,7 @@ import ShinyApps from "./pages/ShinyApps";
 import GistsSql from "./pages/GistsSql";
 import GistsR from "./pages/GistsR";
 import GistsNode from "./pages/GistsNode";
-import Repositories from "./pages/Repositories";
+import Repositories from "./pages/InventoryInfrastructure";
 
 function App() {
   return (
@@ -20,6 +20,7 @@ function App() {
           <Route path="/" element={<Layout />}>
             <Route index element={<Home />} />
             <Route path="resume" element={<Resume />} />
+            <Route path="projects/inventory-infrastructure" element={<InventoryInfrastructure />} />
             <Route path="projects/shiny-apps" element={<ShinyApps />} />
             <Route path="projects/gists/sql" element={<GistsSql />} />
             <Route path="projects/gists/r" element={<GistsR />} />

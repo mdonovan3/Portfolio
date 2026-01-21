@@ -97,7 +97,7 @@ const Home = () => {
         </Typography>
         <Typography variant="body1" paragraph>
           Currently serving as both a Data Analyst and Wine/Beverage Director,
-          I combine technical expertise with industry knowledge to drive
+          I combine technical expertise with domain knowledge to drive
           data-informed decision making.
         </Typography>
       </Paper>

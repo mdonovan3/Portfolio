@@ -24,6 +24,7 @@ import {
   ExpandMore,
   Apps,
   Code,
+  ImportantDevices,
   GitHub,
 } from '@mui/icons-material';
 
@@ -135,6 +136,16 @@ const Layout = () => {
             {open && (
               <Collapse in={projectsOpen} timeout="auto" unmountOnExit>
                 <List component="div" disablePadding>
+                      <ListItemButton
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/inventory-infrastructure')}
+                    selected={isActive('/projects/inventory-infrastructure')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <ImportantDevices />
+                    </ListItemIcon>
+                    <ListItemText primary="Inventory Mangement Infrastructure" />
+                  </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}
                     onClick={() => handleNavigation('/projects/shiny-apps')}
