@@ -15,13 +15,13 @@ const ShinyApps = () => {
   const shinyApps = [
     {
       title: 'Inventory Analysis',
-      description: 'Inventory Count Variance and Other Tools to Assist with Inventory Accurancy',
+      description: 'Inventory count variance and other tools to assist with inventory management',
       url: 'https://martindonovan.shinyapps.io/InventoryAnalysis/',
     },
     {
-      title: 'Sample Shiny App 2',
-      description: 'Description of your second R Shiny application',
-      url: '#',
+      title: 'Storage Pull Report',
+      description: 'To restock the in-restaurant wine room from the next door warehouse',
+      url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
     },
   ];
 
