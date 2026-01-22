@@ -14,9 +14,9 @@ import { Launch } from '@mui/icons-material';
 const ShinyApps = () => {
   const shinyApps = [
     {
-      title: 'Sample Shiny App 1',
-      description: 'Description of your first R Shiny application',
-      url: '#',
+      title: 'Inventory Analysis',
+      description: 'Inventory Count Variance and Other Tools to Assist with Inventory Accurancy',
+      url: 'https://martindonovan.shinyapps.io/InventoryAnalysis/',
     },
     {
       title: 'Sample Shiny App 2',
