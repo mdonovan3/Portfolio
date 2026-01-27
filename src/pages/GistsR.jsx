@@ -12,7 +12,7 @@ import { Code } from '@mui/icons-material';
 
 const GistsR = () => {
   const gists = [
-    { title: 'R Gist Example 1', url: '#', tags: ['Data Analysis', 'ggplot2'] },
+    { title: 'Script to plan holiday sales based current inventory and previous year sales', url: 'https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e', tags: ['Data Analysis'] },
     { title: 'R Gist Example 2', url: '#', tags: ['Statistics', 'Modeling'] },
   ];
 

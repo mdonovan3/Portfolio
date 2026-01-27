@@ -85,7 +85,7 @@ const Resume = () => {
         </Typography>
         <Typography variant="body1" paragraph sx={{ mt: 2 }}>
           - Databases & Data Engineering: Relational Data Modeling, ETL
-          pipelines, POS Data Ingestion, Data Cleaning and Aggregaton
+          pipelines, POS Data Ingestion, Data Cleaning and Aggregation
         </Typography>
         <Typography variant="body1" paragraph sx={{ mt: 2 }}>
           - Data Analysis & Visualization: R, R Shiny, data transformation,
