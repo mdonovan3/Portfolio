@@ -12,7 +12,7 @@ import { Code } from '@mui/icons-material';
 
 const GistsSql = () => {
   const gists = [
-    { title: 'SQL f unction with CTE to compute on hand inventory', url: 'https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79', tags: ['Function', 'CTE'] },
+    { title: 'SQL function with CTE to compute on hand inventory', url: 'https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79', tags: ['Function', 'CTE'] },
     { title: 'SQL Gist Example 2', url: '#', tags: ['Joins', 'Analytics'] },
   ];
 
