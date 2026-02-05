@@ -12,7 +12,7 @@ import { Code } from '@mui/icons-material';
 
 const GistsNode = () => {
   const gists = [
-    { title: 'Node.js Gist Example 1', url: '#', tags: ['Express', 'API'] },
+    { title: 'Product API endpoint', url: 'https://gist.github.com/mdonovan3/132dbd29f68042ba9832476e8711fd90', tags: ['Express', 'API'] },
     { title: 'Node.js Gist Example 2', url: '#', tags: ['Async', 'Utilities'] },
   ];
 
