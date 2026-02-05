@@ -6,7 +6,7 @@ import {
   Grid,
   IconButton,
   Chip,
-} from '@mui/material';
+} from "@mui/material";
 import {
   GitHub,
   LinkedIn,
@@ -14,13 +14,14 @@ import {
   School,
   Work,
   LocationOn,
-} from '@mui/icons-material';
+  Dashboard,
+} from "@mui/icons-material";
 
 const Home = () => {
   return (
     <Container maxWidth="lg">
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
-        <Typography variant="h2" gutterBottom sx={{ color: '#2c3e50' }}>
+        <Typography variant="h2" gutterBottom sx={{ color: "#2c3e50" }}>
           Martin Donovan
         </Typography>
         <Typography variant="h5" color="text.secondary" gutterBottom>
@@ -29,22 +30,22 @@ const Home = () => {
 
         <Box sx={{ mt: 3, mb: 3 }}>
           <IconButton
-            href="https://github.com"
+            href="https://github.com/mdonovan3"
             target="_blank"
-            sx={{ color: '#2c3e50' }}
+            sx={{ color: "#2c3e50" }}
           >
             <GitHub fontSize="large" />
           </IconButton>
           <IconButton
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/in/martin-donovan-9698735/"
             target="_blank"
-            sx={{ color: '#2c3e50' }}
+            sx={{ color: "#2c3e50" }}
           >
             <LinkedIn fontSize="large" />
           </IconButton>
           <IconButton
-            href="mailto:your.email@gmail.com"
-            sx={{ color: '#2c3e50' }}
+            href="mailto:martindonovan@gmail.com"
+            sx={{ color: "#2c3e50" }}
           >
             <Email fontSize="large" />
           </IconButton>
@@ -52,14 +53,14 @@ const Home = () => {
 
         <Grid container spacing={3} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <LocationOn sx={{ mr: 1, color: '#7f8c8d' }} />
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <LocationOn sx={{ mr: 1, color: "#7f8c8d" }} />
               <Typography variant="body1">
                 <strong>Residence:</strong> Atlanta, GA
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <School sx={{ mr: 1, color: '#7f8c8d' }} />
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <School sx={{ mr: 1, color: "#7f8c8d" }} />
               <Typography variant="body1">
                 <strong>Education:</strong> BS in Computer Science
               </Typography>
@@ -69,8 +70,8 @@ const Home = () => {
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Work sx={{ mr: 1, color: '#7f8c8d' }} />
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+              <Work sx={{ mr: 1, color: "#7f8c8d" }} />
               <Typography variant="body1">
                 <strong>Position:</strong>
               </Typography>
@@ -86,24 +87,26 @@ const Home = () => {
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#2c3e50' }}>
+        <Typography variant="h4" gutterBottom sx={{ color: "#2c3e50" }}>
           About Me
         </Typography>
         <Typography variant="body1" paragraph>
-          I am an experienced restaurant professsional with training and experience in programming and data analysis.
-          I use my IT skills to transform data into actionable insights for my current employer.
-          With a background in computer science and experience in the hospitality industry, I bring
-          a unique perspective to data analysis and business intelligence.
+          I am an experienced restaurant professsional with training and
+          experience in programming and data analysis. I use my IT skills to
+          transform data into actionable insights for my current employer. With
+          a background in computer science and experience in the hospitality
+          industry, I bring a unique perspective to data analysis and business
+          intelligence.
         </Typography>
         <Typography variant="body1" paragraph>
-          Currently serving as both a Data Analyst and Wine/Beverage Director,
-          I combine technical expertise with domain knowledge to drive
+          Currently serving as both a Data Analyst and Wine/Beverage Director, I
+          combine technical expertise with domain knowledge to drive
           data-informed decision making.
         </Typography>
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ color: '#2c3e50' }}>
+        <Typography variant="h4" gutterBottom sx={{ color: "#2c3e50" }}>
           Interests
         </Typography>
         <Typography variant="body1" color="text.secondary">

@@ -7,19 +7,24 @@ import {
   ListItemText,
   ListItemButton,
   Chip,
-} from '@mui/material';
-import { Code } from '@mui/icons-material';
+} from "@mui/material";
+import { Code } from "@mui/icons-material";
 
 const GistsR = () => {
   const gists = [
-    { title: 'Script to plan holiday sales based current inventory and previous year sales', url: 'https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e', tags: ['Data Analysis'] },
-    { title: 'R Gist Example 2', url: '#', tags: ['Statistics', 'Modeling'] },
+    {
+      title:
+        "Script to plan holiday sales based current inventory and previous year sales from Bevspot data",
+      url: "https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e",
+      tags: ["Data Analysis"],
+    },
+    { title: "R Gist Example 2", url: "#", tags: ["Statistics", "Modeling"] },
   ];
 
   return (
     <Container maxWidth="lg">
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
-        <Typography variant="h3" gutterBottom sx={{ color: '#2c3e50' }}>
+        <Typography variant="h3" gutterBottom sx={{ color: "#2c3e50" }}>
           R Code Snippets
         </Typography>
         <Typography variant="body1" color="text.secondary">
@@ -36,14 +41,14 @@ const GistsR = () => {
                 href={gist.url}
                 target="_blank"
                 sx={{
-                  '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                  "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" },
                 }}
               >
-                <Code sx={{ mr: 2, color: '#7f8c8d' }} />
+                <Code sx={{ mr: 2, color: "#7f8c8d" }} />
                 <ListItemText
                   primary={gist.title}
                   secondary={
-                    <div style={{ marginTop: '8px' }}>
+                    <div style={{ marginTop: "8px" }}>
                       {gist.tags.map((tag) => (
                         <Chip
                           key={tag}
