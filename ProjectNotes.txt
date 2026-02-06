@@ -1,0 +1,9 @@
+Server performance dashboard:
+    Hours / week
+    Sales
+        by category
+        per cover
+    Tip percentage
+    Percentage of repeat guest
+        take time emplyed into account
+        check average of repeat guests
