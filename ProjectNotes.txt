@@ -8,3 +8,8 @@ Server performance dashboard:
         take time emplyed into account
         check average of repeat guests
     number of voids / comps / promos
+
+    Guest stats in separate table
+    first visit
+    avg check
+    lifetime spend
