@@ -7,3 +7,4 @@ Server performance dashboard:
     Percentage of repeat guest
         take time emplyed into account
         check average of repeat guests
+    number of voids / comps / promos
