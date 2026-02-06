@@ -23,6 +23,16 @@ const ShinyApps = () => {
       description: 'To restock the in-restaurant wine room from the next door warehouse',
       url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
     },
+    {
+      title: 'Server Performance Dashboard',
+      description: 'Performance metrics for restaurant servers including sales and repeat guests',
+      url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
+    },
+    {
+      title: 'Wine Purchase Report',
+      description: 'Wine purchase innvoices with expandable detail line items',
+      url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
+    }
   ];
 
   return (
