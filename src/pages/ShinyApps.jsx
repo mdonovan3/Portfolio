@@ -24,9 +24,9 @@ const ShinyApps = () => {
       url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
     },
     {
-      title: 'Server Performance Dashboard',
-      description: 'Performance metrics for restaurant servers including sales and repeat guests',
-      url: 'https://martindonovan.shinyapps.io/StoragePullReport/',
+      title: 'Front of House Metrics Dashboard',
+      description: 'Metrics related to servers and guests',
+      url: 'https://martindonovan.shinyapps.io/FOHDashboard/',
     },
     {
       title: 'Wine Purchase Report',
