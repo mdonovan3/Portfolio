@@ -47,7 +47,7 @@ const GistsSql = () => {
                       {gist.tags.map((tag) => (
                         <Chip
                           key={tag}
-                          label={tag}
+                          label={<em>{tag}</em>}
                           size="small"
                           sx={{ mr: 0.5 }}
                         />
