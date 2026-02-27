@@ -32,9 +32,9 @@ const ShinyApps = () => {
       tags: ["React", "front end"],
     },
     {
-      title: "Front of House Metrics Dashboard",
+      title: "Restaurant Analytics Dashboard",
       description: "Metrics related to servers and guests",
-      url: "https://martindonovan.shinyapps.io/FOHDashboard/",
+      url: "https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/",
       tags: ["React", "front end"],
     },
     {
