@@ -10,7 +10,7 @@ import ShinyApps from "./pages/ShinyApps";
 import GistsSql from "./pages/GistsSql";
 import GistsR from "./pages/GistsR";
 import GistsNode from "./pages/GistsNode";
-import Repositories from "./pages/InventoryInfrastructure";
+import Repositories from "./pages/Repositories";
 
 function App() {
   return (

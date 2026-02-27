@@ -14,16 +14,18 @@ import { GitHub, Star } from '@mui/icons-material';
 const Repositories = () => {
   const repos = [
     {
-      title: 'Prtfolio Site',
+      title: 'Portfolio Site',
       description: 'repository for this portfolio site',
       url: 'https://github.com/mdonovan3/Portfolio.git',
       language: 'React',
+      stars: 4,
     },
     {
       title: 'Sample Repository 2',
       description: 'Description of your second GitHub repository',
       url: '#',
       language: 'R',
+      stars: 8,
     },
   ];
 
@@ -55,12 +57,12 @@ const Repositories = () => {
                     size="small"
                     sx={{ mr: 1, backgroundColor: '#2c3e50', color: 'white' }}
                   />
-                  {/* <Chip
+                  <Chip
                     icon={<Star />}
                     label={repo.stars}
                     size="small"
                     variant="outlined"
-                  /> */}
+                  />
                 </div>
               </CardContent>
               <CardActions>
