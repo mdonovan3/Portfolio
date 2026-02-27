@@ -18,13 +18,16 @@ const GistsR = () => {
       url: "https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e",
       tags: ["data analysis"],
     },
-    { 
-      title: "R code to pull and transform API data from Restaurant365 OData connector", 
-      url: "https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7", 
-      tags: ["API", "data transformation"] },
-      {title: "R to aggregate POS dataset from raw data stored in RDBMS", 
-      url: "https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059", 
-      tags: ["dplyr", "data transformation"]}
+    {
+      title: "R code to pull and transform API data from Restaurant365 OData connector",
+      url: "https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7",
+      tags: ["API", "data transformation"]
+    },
+    {
+      title: "R to aggregate POS dataset from raw data stored in RDBMS",
+      url: "https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059",
+      tags: ["dplyr", "data transformation"]
+    }
   ];
 
   return (
