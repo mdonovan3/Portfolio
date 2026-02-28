@@ -38,7 +38,7 @@ const ShinyApps = () => {
       tags: ["React", "front end"],
     },
     {
-      title: "Wine Purchase Report",
+      title: "Wine Purchase Report - Fix",
       description: "Wine purchase innvoices with expandable detail line items",
       url: "https://martindonovan.shinyapps.io/StoragePullReport/",
       tags: ["React", "front end"],

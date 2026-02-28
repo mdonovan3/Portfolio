@@ -14,7 +14,7 @@ const GistsR = () => {
   const gists = [
     {
       title:
-        "Script to plan holiday sales based current inventory and previous year sales from Bevspot data",
+        "Script to plan holiday sales based on current inventory and previous year sales from Bevspot data",
       url: "https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e",
       tags: ["data analysis"],
     },
