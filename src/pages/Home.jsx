@@ -14,7 +14,6 @@ import {
   School,
   Work,
   LocationOn,
-  Dashboard,
 } from "@mui/icons-material";
 
 const Home = () => {
@@ -66,7 +65,7 @@ const Home = () => {
               </Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-              Southern Polytechnic State University (now Kennesaw University)
+              Southern Polytechnic State University (now Kennesaw State University)
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
@@ -91,17 +90,26 @@ const Home = () => {
           About Me
         </Typography>
         <Typography variant="body1" paragraph>
-          I am an experienced restaurant professsional with training and
-          experience in programming and data analysis. I use my IT skills to
-          transform data into actionable insights for my current employer. With
-          a background in computer science and experience in the hospitality
-          industry, I bring a unique perspective to data analysis and business
-          intelligence.
+          I hold a BS in Computer Science and have spent my career at the intersection
+          of the restaurant industry and software development. Over twenty years at
+          Liberty House Restaurant Corporation, I built and maintain a complete data
+          platform for the company's wine program — starting with Excel spreadsheets
+          and evolving through Microsoft Access, on-premise PostgreSQL, cloud migration
+          to AWS RDS, a Node.js web application, an iOS guest-facing wine list app,
+          and a multi-location automated analytics pipeline in R.
         </Typography>
         <Typography variant="body1" paragraph>
-          Currently serving as both a Data Analyst and Wine/Beverage Director, I
-          combine technical expertise with domain knowledge to drive
-          data-informed decision making.
+          Every component of that system was designed, built, or directly overseen by
+          myself — spanning relational database design, ETL development, REST API
+          construction, desktop and web application development, and operational
+          reporting dashboards. My technical work has had direct business impact:
+          reduced inventory variance, broader wine sales across categories, and
+          data-informed purchasing decisions across multiple locations.
+        </Typography>
+        <Typography variant="body1">
+          I'm currently looking to bring this combination of computer science training,
+          deep domain expertise in hospitality data, and self-directed full-stack
+          development into a data engineering or analytics role.
         </Typography>
       </Paper>
 
@@ -109,8 +117,16 @@ const Home = () => {
         <Typography variant="h4" gutterBottom sx={{ color: "#2c3e50" }}>
           Interests
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          <em>Section to be filled with personal interests and hobbies...</em>
+        <Typography variant="body1" paragraph>
+          Wine has been a professional passion and a personal one — I hold advanced
+          certifications and spend time studying regions, vintages, and producers beyond
+          what the job requires. The wine list app and inventory system grew partly out
+          of genuine curiosity about the data behind what ends up in a glass.
+        </Typography>
+        <Typography variant="body1">
+          Outside of work I'm interested in the broader application of data engineering
+          to hospitality — an industry that generates enormous operational data but
+          historically underinvests in the tooling to use it.
         </Typography>
       </Paper>
     </Container>
