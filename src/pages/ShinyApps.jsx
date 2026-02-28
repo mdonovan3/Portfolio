@@ -38,9 +38,9 @@ const ShinyApps = () => {
       tags: ["React", "front end"],
     },
     {
-      title: "Wine Purchase Report - Fix",
+      title: "Wine Purchase Report",
       description: "Wine purchase innvoices with expandable detail line items",
-      url: "https://martindonovan.shinyapps.io/StoragePullReport/",
+      url: "https://martindonovan.shinyapps.io/PurchaseDetailsReport/",
       tags: ["React", "front end"],
     },
   ];
@@ -74,12 +74,12 @@ const ShinyApps = () => {
                   secondary={
                     <div style={{ marginTop: "8px" }}>
                       {app.tags.map((tag) => (
-                        <Chip
-                          key={tag}
-                          label={<em>{tag}</em>}
-                          size="small"
-                          sx={{ mr: 0.5 }}
-                        />
+                        // <Chip
+                        //   key={tag}
+                        //   label={<em>{tag}</em>}
+                        //   size="small"
+                        //   sx={{ mr: 0.5 }}
+                        // />
                       ))}
                     </div>
                   }
