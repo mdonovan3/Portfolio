@@ -49,10 +49,10 @@ const ShinyApps = () => {
     <Container maxWidth="lg">
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
         <Typography variant="h3" gutterBottom sx={{ color: "#2c3e50" }}>
-          Code Repositories
+          Deployed Shiny Applications
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          placeholder
+          Shinyapps.io
         </Typography>
       </Paper>
 
@@ -73,14 +73,14 @@ const ShinyApps = () => {
                   primary={app.title}
                   secondary={
                     <div style={{ marginTop: "8px" }}>
-                      {app.tags.map((tag) => (
-                        // <Chip
-                        //   key={tag}
-                        //   label={<em>{tag}</em>}
-                        //   size="small"
-                        //   sx={{ mr: 0.5 }}
-                        // />
-                      ))}
+                      {/* {app.tags.map((tag) => (
+                        <Chip
+                          key={tag}
+                          label={<em>{tag}</em>}
+                          size="small"
+                          sx={{ mr: 0.5 }}
+                        />
+                      ))} */}
                     </div>
                   }
                 />
