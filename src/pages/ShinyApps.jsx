@@ -20,7 +20,7 @@ const ShinyApps = () => {
     {
       title: "Inventory Analysis",
       description:
-        "Inventory count variance and other tools to assist with inventory management",
+        "R Shiny dashboard for wine inventory management at a multi-location restaurant group. Tracks beginning/ending inventory, count variances, purchases, and glass/bottle sales across periods — with cost of sales and cost percentage calculated automatically. Backed by a PostgreSQL database with a normalized schema for products, locations, and invoices.",
       url: "https://martindonovan.shinyapps.io/InventoryAnalysis/",
       tags: ["React", "front end"],
     },
@@ -73,6 +73,7 @@ const ShinyApps = () => {
                   primary={app.title}
                   secondary={
                     <div style={{ marginTop: "8px" }}>
+                      {<em>{app.description}</em>}
                       {/* {app.tags.map((tag) => (
                         <Chip
                           key={tag}
