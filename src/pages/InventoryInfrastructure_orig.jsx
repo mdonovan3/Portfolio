@@ -22,7 +22,7 @@ const timeline = [
   {
     era: "–2005",
     label: "Excel Spreadsheets",
-    accentColor: "#6a8f72",
+    accentColor: "#27ae60",
     tech: ["Microsoft Excel"],
     description:
       "Wine inventory tracked manually in Excel workbooks. Each count period meant hours of data entry and formula maintenance. Cost percentages were calculated by hand with no historical record, no variance detection, and no connection to the POS system.",
@@ -42,7 +42,7 @@ const timeline = [
   {
     era: "2005 – 2008",
     label: "Access DB + PosiTouch POS Integration",
-    accentColor: "#7a6e8a",
+    accentColor: "#8e44ad",
     tech: ["Microsoft Access", "PosiTouch POS", "Perl"],
     description:
       "The first real system: a Microsoft Access database with an embedded Perl script that polled the PosiTouch POS system to import daily sales automatically. This introduced perpetual inventory — tracking theoretical on-hand quantity based on sales versus what was physically counted. Variance detection was born here.",
@@ -63,7 +63,7 @@ const timeline = [
   {
     era: "2008 – 2019",
     label: "On-Premise PostgreSQL + Java Desktop App",
-    accentColor: "#5a7fa0",
+    accentColor: "#2980b9",
     tech: ["PostgreSQL", "Java", "JavaFX", "JDBC", "Aloha POS", "DBF"],
     description:
       "Access hit its limits. A fully normalized PostgreSQL schema replaced it — designed from scratch with 30+ tables. A JavaFX desktop application provided the management interface: adding wines, uploading label images, managing the wine list, and setting tiered formula pricing. A Java ETL client read Aloha POS DBF binary files directly from disk, resolved PLU-to-product mappings, and loaded sales data into PostgreSQL.",
@@ -86,7 +86,7 @@ const timeline = [
   {
     era: "2011 – Present",
     label: "iOS Wine List App",
-    accentColor: "#4e8c80",
+    accentColor: "#16a085",
     tech: ["iOS", "iPad", "REST API", "PostgreSQL", "AWS RDS"],
     description:
       "Oversaw the specification and rollout of a custom iOS application to replace paper wine lists across the restaurant. Working with an outside development firm, the project was managed from requirements through deployment — defining the data model integration, specifying feature requirements, and coordinating the technical connection to the existing PostgreSQL database on AWS RDS. The app has been in active daily use since launch.",
@@ -110,7 +110,7 @@ const timeline = [
   {
     era: "2019 – Present",
     label: "Cloud Migration + Node.js Web Application",
-    accentColor: "#a07848",
+    accentColor: "#e67e22",
     tech: ["AWS RDS", "Node.js", "Express", "EJS", "Passport.js", "MongoDB", "Bootstrap"],
     description:
       "The on-premise PostgreSQL database migrated to AWS RDS, enabling remote access and multi-location support. A Node.js/Express web application replaced the need to be on-site to manage the wine program. User authentication via Passport.js with bcrypt; session data in MongoDB; wine program data in PostgreSQL.",
@@ -133,10 +133,10 @@ const timeline = [
   {
     era: "2020 – Present",
     label: "Multi-Location R Pipeline + Shiny Analytics",
-    accentColor: "#9e6060",
+    accentColor: "#c0392b",
     tech: ["R", "Shiny", "tidyverse", "RPostgreSQL", "Task Scheduler", "R365 OData", "BevSpot"],
     description:
-      "A new automated ETL layer was built in R. A Windows Task Scheduler job runs nightly, reading each location's Aloha.ini to identify the restaurant, checking for existing data, and loading only new records to per-location PostgreSQL databases on AWS RDS. A separate R client connects to Restaurant365 via OData API for financial data. Multiple R Shiny dashboards deliver operational reporting.",
+      "As operations expanded to multiple locations, a new automated ETL layer was built in R. A Windows Task Scheduler job runs nightly, reading each location's Aloha.ini to identify the restaurant, checking for existing data, and loading only new records to per-location PostgreSQL databases on AWS RDS. A separate R client connects to Restaurant365 via OData API for financial data. Multiple R Shiny dashboards deliver operational reporting.",
     highlights: [
       "Nightly automated polling across all locations via Windows Task Scheduler + Rscript.exe",
       "Location identity resolved: Aloha.ini UNITNUMBER → entities table → per-location database",
@@ -163,9 +163,9 @@ const timeline = [
 const currentArch = [
   {
     layer: "Data Sources",
-    color: "#6a8f72",
-    bg: "#f5f9f6",
-    border: "#c8dccb",
+    color: "#27ae60",
+    bg: "#f0faf3",
+    border: "#a9dfbf",
     items: [
       "Aloha POS (nightly DBF files)",
       "Restaurant365 OData API",
@@ -175,9 +175,9 @@ const currentArch = [
   },
   {
     layer: "Processing & Storage",
-    color: "#5a7fa0",
-    bg: "#f4f7fb",
-    border: "#c0cfe0",
+    color: "#2980b9",
+    bg: "#eaf4fb",
+    border: "#aed6f1",
     items: [
       "R nightly ETL (Windows Task Scheduler)",
       "Node.js REST API (14 endpoints)",
@@ -188,9 +188,9 @@ const currentArch = [
   },
   {
     layer: "Interfaces & Outputs",
-    color: "#9e6060",
-    bg: "#faf6f6",
-    border: "#ddc8c8",
+    color: "#c0392b",
+    bg: "#fdf2f2",
+    border: "#f5b7b1",
     items: [
       "iOS iPad wine list app (guest-facing)",
       "JavaFX desktop app (catalog management)",
@@ -283,21 +283,22 @@ const StackDiagram = ({ stack, accentColor }) => (
 
 // ── TIMELINE CARD ─────────────────────────────────────────────────────────────
 
-const TimelineCard = ({ era }) => {
+const TimelineCard = ({ era, index }) => {
   const [open, setOpen] = useState(false);
 
   return (
     <Paper
-      elevation={0}
+      elevation={open ? 2 : 1}
       sx={{
-        mb: 1.5,
-        border: "1px solid #e0e0e0",
-        borderLeft: `3px solid ${open ? era.accentColor : "#bdc3c7"}`,
-        transition: "border-color 0.2s, border-left-color 0.2s",
+        mb: 2,
+        border: `1px solid ${open ? era.accentColor + "55" : "#e0e0e0"}`,
+        transition: "border-color 0.2s, box-shadow 0.2s",
         overflow: "hidden",
-        borderRadius: 1,
       }}
     >
+      {/* Accent bar */}
+      <Box sx={{ height: 3, backgroundColor: era.accentColor }} />
+
       {/* Clickable header */}
       <Box
         onClick={() => setOpen(!open)}
@@ -310,25 +311,33 @@ const TimelineCard = ({ era }) => {
           "&:hover": { backgroundColor: "rgba(0,0,0,0.015)" },
         }}
       >
+        {/* Step number */}
+        <Box
+          sx={{
+            width: 34,
+            height: 34,
+            borderRadius: "50%",
+            backgroundColor: era.accentColor,
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            fontSize: "0.82rem",
+            flexShrink: 0,
+            mt: 0.25,
+          }}
+        >
+          {index + 1}
+        </Box>
+
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5, flexWrap: "wrap" }}>
-            <Typography
-              variant="caption"
-              sx={{
-                color: "#7f8c8d",
-                fontWeight: 600,
-                letterSpacing: "0.05em",
-                backgroundColor: "#f0f0f0",
-                px: 1,
-                py: 0.25,
-                borderRadius: 0.5,
-                fontFamily: "monospace",
-                fontSize: "0.72rem",
-              }}
-            >
-              {era.era}
-            </Typography>
-          </Box>
+          <Typography
+            variant="caption"
+            sx={{ color: era.accentColor, fontWeight: 600, letterSpacing: "0.05em", display: "block", mb: 0.25 }}
+          >
+            {era.era}
+          </Typography>
           <Typography variant="h6" sx={{ color: "#2c3e50", fontWeight: 500, mb: 0.75, fontSize: "1.05rem" }}>
             {era.label}
           </Typography>
@@ -357,14 +366,14 @@ const TimelineCard = ({ era }) => {
 
               <Typography
                 variant="caption"
-                sx={{ color: "#7f8c8d", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", mb: 1 }}
+                sx={{ color: era.accentColor, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", mb: 1 }}
               >
                 Technical Highlights
               </Typography>
 
               {era.highlights.map((h, i) => (
                 <Box key={i} sx={{ display: "flex", gap: 1, mb: 0.75, alignItems: "flex-start" }}>
-                  <Circle sx={{ fontSize: 6, color: era.accentColor, mt: "7px", flexShrink: 0, opacity: 0.7 }} />
+                  <Circle sx={{ fontSize: 6, color: era.accentColor, mt: "7px", flexShrink: 0 }} />
                   <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
                     {h}
                   </Typography>
@@ -375,7 +384,7 @@ const TimelineCard = ({ era }) => {
                 sx={{
                   mt: 2,
                   p: 1.5,
-                  backgroundColor: "#f5f5f5",
+                  backgroundColor: `${era.accentColor}0f`,
                   borderLeft: `3px solid ${era.accentColor}`,
                   borderRadius: "0 4px 4px 0",
                 }}
@@ -389,7 +398,7 @@ const TimelineCard = ({ era }) => {
             <Grid item xs={12} md={5}>
               <Typography
                 variant="caption"
-                sx={{ color: "#7f8c8d", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", mb: 1.5 }}
+                sx={{ color: era.accentColor, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", display: "block", mb: 1.5 }}
               >
                 Stack Diagram
               </Typography>
@@ -436,7 +445,7 @@ const InventoryInfrastructure = () => {
           Click any era to expand its technical details and stack diagram.
         </Typography>
         {timeline.map((era, index) => (
-          <TimelineCard key={index} era={era} />
+          <TimelineCard key={index} era={era} index={index} />
         ))}
       </Paper>
 

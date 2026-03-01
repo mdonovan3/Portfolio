@@ -13,6 +13,13 @@ import { GitHub } from "@mui/icons-material";
 
 const Repositories = () => {
   const repos = [
+        {
+      title: "Web Interface / API for Wine Data Entry",
+      description:
+        "A web front and back end for invoice entry and product setup",
+      url: "https://github.com/mdonovan3/wlm-web",
+      tags: ["JQuery", "Node"],
+    },
     {
       title: "Portfolio Site",
       description:
