@@ -14,11 +14,11 @@ import { GitHub } from "@mui/icons-material";
 const Repositories = () => {
   const repos = [
         {
-      title: "Web Interface / API for Wine Data Entry",
+      title: "Wine List Manager — Web Application",
       description:
-        "A web front and back end for invoice entry and product setup",
+        "Node.js/Express web application for managing a restaurant wine program across multiple locations. Server-rendered EJS views over a 14-endpoint REST API backed by PostgreSQL on AWS RDS. Covers product catalog management, cellar inventory, vendor invoice tracking, and wine list organization. User authentication via Passport.js with bcrypt; dual-database architecture separating session data (MongoDB) from domain data (PostgreSQL)",
       url: "https://github.com/mdonovan3/wlm-web",
-      tags: ["JQuery", "Node"],
+      tags: ["Node.js", "Express", "PostgreSQL", "EJS", "Passport.js", "REST API", "JQuery"],
     },
     {
       title: "Portfolio Site",
