@@ -1,0 +1,5 @@
+.Renviron
+*.Rhistory
+.Rdata
+*.html
+*.pdf

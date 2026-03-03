@@ -1,0 +1,5 @@
+# Copy to .Renviron and fill in password. Never commit .Renviron to git.
+db_host=blueridgegrill.cxond9zlkmhk.us-east-1.rds.amazonaws.com
+db_port=5432
+db_user=inventory
+db_pass=YOUR_PASSWORD_HERE
