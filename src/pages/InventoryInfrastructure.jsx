@@ -170,6 +170,7 @@ const currentArch = [
       "Aloha POS (nightly DBF files)",
       "Restaurant365 OData API",
       "BevSpot CSV exports",
+      "OpenTable exports",
       "Manual invoice entry (web UI)",
     ],
   },

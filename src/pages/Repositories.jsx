@@ -13,7 +13,22 @@ import { GitHub } from "@mui/icons-material";
 
 const Repositories = () => {
   const repos = [
-        {
+
+    {
+      title: "Inventory Spot Check",
+      description:
+        "Quarto-based inventory spot check report for a fine dining wine program. Pulls theoretical on-hand quantities from a PostgreSQL stored function, combines with post-count sales and purchase activity, and renders a paginated, room-by-room table formatted for physical spot checking against actual cellar counts for products that were purchased or sold since the last inventory count. Generated as a print-ready Word document.",
+      url: "#",
+      tags: ["R", "Quarto", "PostgreSQL", "gt", "inventory", "restaurant analytics", "RDS"],
+    },
+    {
+      title: "Wine Inventory Analysis",
+      description:
+        "R Shiny dashboard for period-over-period wine inventory analysis at a multi-location fine dining group. Tracks beginning and ending inventory values, count variances against theoretical on-hand, vendor purchases, and glass and bottle sales — with cost of sales and wine cost percentage calculated automatically. Supports URL parameter deep-linking for direct period access. Backed by PostgreSQL on AWS RDS.",
+      url: "#",
+      tags: ["R", "Shiny", "PostgreSQL", "shinydashboard", "DT", "restaurant analytics", "RDS"],
+    },
+    {
       title: "Wine List Manager — Web Application",
       description:
         "Node.js/Express web application for managing a restaurant wine program across multiple locations. Server-rendered EJS views over a 14-endpoint REST API backed by PostgreSQL on AWS RDS. Covers product catalog management, cellar inventory, vendor invoice tracking, and wine list organization. User authentication via Passport.js with bcrypt; dual-database architecture separating session data (MongoDB) from domain data (PostgreSQL)",
