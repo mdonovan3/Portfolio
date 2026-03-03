@@ -1,3 +1,0 @@
-.Renviron
-*.Rhistory
-.Rdata

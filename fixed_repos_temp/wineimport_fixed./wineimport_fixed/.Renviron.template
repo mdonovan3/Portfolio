@@ -1,7 +1,0 @@
-# .Renviron — place at c:\scripts\WineSalesImport\.Renviron
-# Never commit this file — add .Renviron to .gitignore
-
-db_host=blueridgegrill.cxond9zlkmhk.us-east-1.rds.amazonaws.com
-db_port=5432
-db_user=inventory
-db_pass=YOUR_PASSWORD_HERE
