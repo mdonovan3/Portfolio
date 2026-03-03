@@ -11,6 +11,9 @@ import GistsSql from "./pages/GistsSql";
 import GistsR from "./pages/GistsR";
 import GistsNode from "./pages/GistsNode";
 import Repositories from "./pages/Repositories";
+import InventoryAnalysis from "./pages/InventoryAnalysis";
+import R365Transactions from "./pages/R365Transactions";
+import WineSalesImport from "./pages/WineSalesImport";
 
 function App() {
   return (
@@ -30,6 +33,9 @@ function App() {
             <Route path="projects/gists/r" element={<GistsR />} />
             <Route path="projects/gists/node" element={<GistsNode />} />
             <Route path="projects/repositories" element={<Repositories />} />
+            <Route path="projects/inventory-analysis" element={<InventoryAnalysis />} />
+            <Route path="projects/r365-transactions" element={<R365Transactions />} />
+            <Route path="projects/wine-sales-import" element={<WineSalesImport />} />
           </Route>
         </Routes>
       </Router>
