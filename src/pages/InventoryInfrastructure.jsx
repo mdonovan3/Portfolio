@@ -137,7 +137,7 @@ const timeline = [
     accentColor: "#1976d2",
     tech: ["R", "Shiny", "tidyverse", "R365 OData", "Task Scheduler", "React", "MUI", "React Query", "Node.js", "Express", "JWT", "React Native", "Expo", "TypeScript"],
     description:
-      "The current system combines an automated R data pipeline, R Shiny analytics dashboards, and a React operational interface — all running on the same PostgreSQL schema on AWS RDS. The R layer handles ingestion and deep analytics; the React layer handles day-to-day operations. A React Native mobile app supports floor-level counting. These are complementary parts of one platform, not separate projects.",
+      "The current system combines an automated R data pipeline, R Shiny analytics dashboards, and a React operational interface — all running on the same PostgreSQL schema on AWS RDS. The R layer handles ingestion and deep analytics; the React layer handles day-to-day operations. A React Native mobile app supports floor-level counting. These are complementary parts of one platform, not separate projects. Throughout every generation I have served as the sole architect, developer, and de facto product owner — defining requirements, prioritizing features, and making architecture decisions independently.",
     highlights: [
       "R nightly ETL: Windows Task Scheduler polls all locations, resolves identity via Aloha.ini UNITNUMBER, idempotent writes to per-location AWS RDS databases",
       "R365 OData API connector: GL accounts, transaction details, multi-location financial data",
@@ -150,7 +150,7 @@ const timeline = [
       "React and React Native: entry–mid level (AI-assisted development); backend, schema, ETL, and all domain logic are my own work",
     ],
     outcome:
-      "One unified platform: R handles data ingestion and analytics, React handles operations, React Native handles mobile counting. Twenty years of the same core inventory math, now with a modern interface. Throughout every generation, I have been the sole architect, developer, and de facto product owner — setting direction, managing scope, and making technology decisions independently.",
+      "One unified platform: R handles data ingestion and analytics, React handles operations, React Native handles mobile counting. Twenty years of the same core inventory math, now with a modern interface.",
     stack: {
       sources: ["Aloha POS DBF (nightly)", "Restaurant365 OData API", "OpenTable", "Manual entry / fintech CSV"],
       processing: ["R ETL (Task Scheduler)", "Node.js/Express REST API", "PostgreSQL stored functions", "AWS RDS (per-location)"],
@@ -432,9 +432,10 @@ const InventoryInfrastructure = () => {
         <Typography variant="body1" color="text.secondary" paragraph>
           A twenty-year iterative project — from Excel spreadsheets to a cloud-hosted,
           multi-location data platform spanning five languages, three databases, a
-          guest-facing iOS wine list app, and a full analytics suite. Built entirely as
-          a side project while working in the restaurant industry. Each iteration replaced
-          its predecessor when the business outgrew it.
+          guest-facing iOS wine list app, and a full analytics suite. Designed, built,
+          and maintained solely by me, functioning as de facto product owner throughout:
+          defining requirements, managing scope, and driving each technology generation
+          based on business need.
         </Typography>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
           {["PostgreSQL", "R", "Java", "Node.js", "AWS RDS", "Shiny", "JavaFX", "iOS", "Perl"].map((t) => (
