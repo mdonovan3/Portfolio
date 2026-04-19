@@ -12,22 +12,25 @@ import { Code, School, Work, LocationOn } from "@mui/icons-material";
 const skillGroups = [
   {
     label: "Languages",
-    items: ["R", "SQL", "Java", "JavaScript / Node.js", "Perl", "Python"],
+    items: ["R", "SQL", "Python", "Java", "JavaScript / TypeScript / Node.js"],
   },
   {
     label: "Databases",
-    items: ["PostgreSQL", "MongoDB", "Microsoft Access"],
+    items: ["PostgreSQL", "DuckDB", "SQLite", "Microsoft Access"],
   },
   {
     label: "Frameworks & Tools",
-    items: ["R Shiny", "JavaFX", "Express.js", "tidyverse", "Passport.js", "dplyr"],
+    items: ["dbt", "R Shiny", "JavaFX", "Express.js", "tidyverse", "dplyr", "renv", "Quarto"],
   },
   {
     label: "Data & ETL",
     items: [
       "Relational data modeling",
+      "Multi-tenant architecture",
       "ETL pipeline development",
+      "Analytics engineering (dbt)",
       "POS data ingestion",
+      "Parquet / columnar storage",
       "Stored functions / procedures",
       "REST API design",
       "OData API integration",
@@ -35,7 +38,7 @@ const skillGroups = [
   },
   {
     label: "Infrastructure",
-    items: ["AWS RDS", "Windows Task Scheduler", "Git"],
+    items: ["AWS RDS", "AWS EC2", "AWS S3", "Terraform", "Git"],
   },
   {
     label: "Domain",
@@ -121,7 +124,7 @@ const Resume = () => {
         </Typography>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
-          {["PostgreSQL", "R", "Shiny", "Java", "Node.js", "AWS RDS", "Aloha POS", "R365 OData"].map((t) => (
+          {["PostgreSQL", "R", "Python", "dbt", "Shiny", "Java", "Node.js", "AWS RDS", "Aloha POS", "R365 OData"].map((t) => (
             <Chip
               key={t}
               label={t}

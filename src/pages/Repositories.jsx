@@ -39,7 +39,7 @@ const soloRepos = [
   {
     title: "Wine List Manager — Web Application (Express)",
     description:
-      "Node.js/Express web application for managing a restaurant wine program across multiple locations. Server-rendered EJS views over a 14-endpoint REST API backed by PostgreSQL on AWS RDS. Covers product catalog management, cellar inventory, vendor invoice tracking, and wine list organization. User authentication via Passport.js with bcrypt; dual-database architecture separating session data (MongoDB) from domain data (PostgreSQL).",
+      "Node.js/Express web application for managing a restaurant wine program across multiple locations. Server-rendered EJS views over a 14-endpoint REST API backed by PostgreSQL on AWS RDS. Covers product catalog management, cellar inventory, vendor invoice tracking, and wine list organization. User authentication via Passport.js with bcrypt; PostgreSQL on AWS RDS for all domain data; Passport.js with bcrypt for authentication.",
     url: "https://github.com/mdonovan3/wlm-web",
     tags: ["Node.js", "Express", "PostgreSQL", "EJS", "Passport.js", "REST API", "jQuery"],
   },

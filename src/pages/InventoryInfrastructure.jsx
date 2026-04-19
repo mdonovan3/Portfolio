@@ -112,14 +112,14 @@ const timeline = [
     era: "2021 – 2026",
     label: "Cloud Migration + Node.js Web Application",
     accentColor: "#a07848",
-    tech: ["AWS RDS", "Node.js", "Express", "EJS", "Passport.js", "MongoDB", "Bootstrap"],
+    tech: ["AWS RDS", "Node.js", "Express", "EJS", "Passport.js", "Bootstrap"],
     description:
-      "The on-premise PostgreSQL database migrated to AWS RDS, enabling remote access and multi-location support. A Node.js/Express web application replaced the need to be on-site to manage the wine program. User authentication via Passport.js with bcrypt; session data in MongoDB; wine program data in PostgreSQL.",
+      "The on-premise PostgreSQL database migrated to AWS RDS, enabling remote access and multi-location support. A Node.js/Express web application replaced the need to be on-site to manage the wine program. User authentication via Passport.js with bcrypt; all data in PostgreSQL on AWS RDS.",
     highlights: [
       "PostgreSQL migrated to AWS RDS — remote access, automated backups, multi-location ready",
       "14 REST API endpoints: products, instances, invoices, inventories, companies, categories, vintages, regions",
       "Passport.js local strategy with bcrypt password hashing and session management",
-      "Dual-database architecture: MongoDB for auth/sessions, PostgreSQL for domain data",
+      "Passport.js with bcrypt authentication; all data in PostgreSQL on AWS RDS",
       "Dynamic cascading selects: product → instance → pricing populated via API calls",
       "Formula price endpoint: unit cost in, calculated menu price out",
     ],
@@ -127,7 +127,7 @@ const timeline = [
       "System accessible from anywhere. Full REST API over the database. First version usable by non-technical staff.",
     stack: {
       sources: ["Manual entry via web UI", "Existing PostgreSQL data"],
-      processing: ["Node.js/Express REST API", "Passport.js + MongoDB auth", "AWS RDS PostgreSQL"],
+      processing: ["Node.js/Express REST API", "Passport.js + bcrypt auth", "AWS RDS PostgreSQL"],
       output: ["EJS web interface", "REST API (14 endpoints)"],
     },
   },
@@ -189,7 +189,7 @@ const currentArch = [
       "Node.js REST API (14 endpoints)",
       "PostgreSQL stored functions",
       "AWS RDS PostgreSQL (per-location)",
-      "MongoDB (auth / sessions)",
+      "Passport.js + bcrypt (auth, PostgreSQL)",
     ],
   },
   {
@@ -212,7 +212,7 @@ const currentArch = [
 
 const fullStack = [
   { label: "Languages", items: ["R", "Java", "JavaScript / TypeScript / Node.js", "SQL"] },
-  { label: "Databases", items: ["PostgreSQL (AWS RDS)", "DuckDB", "MongoDB", "SQLite (mobile)", "Microsoft Access"] },
+  { label: "Databases", items: ["PostgreSQL (AWS RDS)", "DuckDB", "SQLite (mobile)", "Microsoft Access"] },
   {
     label: "Frameworks",
     items: ["R Shiny", "JavaFX", "Express.js", "tidyverse"],
