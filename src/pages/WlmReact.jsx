@@ -273,7 +273,9 @@ const WlmReact = () => {
           The data model, PostgreSQL schema, backend API, SQL stored procedures, and business
           logic are my own work — developed over several years starting with Excel, then an
           R/Shiny analytics layer, then the Express/EJS web app, all backed by the same
-          PostgreSQL schema on AWS RDS. When I rebuilt the frontend in React, I used Claude (AI)
+          PostgreSQL schema on AWS RDS. I function as the de facto product owner of this
+          platform: I defined the requirements, prioritized the feature set, and made every
+          architecture decision. When I rebuilt the frontend in React, I used Claude (AI)
           as a primary tool throughout: the domain knowledge, architecture decisions, feature
           design, and all server-side code are mine, but the React UI was largely produced through
           AI-assisted development from my specifications. I treat it the same way I'd treat any

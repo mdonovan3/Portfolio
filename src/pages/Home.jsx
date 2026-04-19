@@ -6,6 +6,7 @@ import {
   Grid,
   IconButton,
   Chip,
+  Divider,
 } from "@mui/material";
 import {
   GitHub,
@@ -14,7 +15,16 @@ import {
   School,
   Work,
   LocationOn,
+  Storage,
+  BarChart,
+  AccountTree,
 } from "@mui/icons-material";
+
+const highlights = [
+  { icon: <Storage sx={{ color: "#2c3e50" }} />, label: "Database design & ETL", detail: "PostgreSQL schema, stored functions, multi-tenant AWS RDS, automated R pipelines" },
+  { icon: <BarChart sx={{ color: "#2c3e50" }} />, label: "Analytics & dashboards", detail: "R Shiny apps, DuckDB, multi-source joins (Aloha POS, OpenTable, R365)" },
+  { icon: <AccountTree sx={{ color: "#2c3e50" }} />, label: "API & backend", detail: "Node.js / Express REST APIs, OData integration, fintech CSV pipelines" },
+];
 
 const Home = () => {
   return (
@@ -85,6 +95,36 @@ const Home = () => {
         </Grid>
       </Paper>
 
+      {/* What I build — quick visual summary */}
+      <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
+        <Typography variant="h5" gutterBottom sx={{ color: "#2c3e50" }}>
+          What I Build
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          I build data systems for restaurants — schema design to pipelines to dashboards — as a solo developer across a live multi-unit operation. Twenty years of domain depth, CS training, and the whole stack.
+        </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {highlights.map((h) => (
+            <Box key={h.label} sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+              {h.icon}
+              <Box>
+                <Typography variant="body2" fontWeight={600} sx={{ color: "#2c3e50" }}>{h.label}</Typography>
+                <Typography variant="body2" color="text.secondary">{h.detail}</Typography>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+        <Divider sx={{ my: 3 }} />
+        <Typography variant="caption" sx={{ color: "#7f8c8d", display: "block", mb: 1, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          Domain expertise
+        </Typography>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
+          {["Aloha / NCR POS", "Restaurant365 OData", "OpenTable", "Wine & beverage operations", "Multi-location inventory", "Labor & tip reporting", "Cost of sales", "Perpetual inventory"].map((d) => (
+            <Chip key={d} label={d} size="small" variant="outlined" sx={{ fontSize: "0.7rem" }} />
+          ))}
+        </Box>
+      </Paper>
+
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
         <Typography variant="h4" gutterBottom sx={{ color: "#2c3e50" }}>
           About Me
@@ -102,7 +142,10 @@ const Home = () => {
           Every component of that system was designed, built, or directly overseen by
           myself — spanning relational database design, ETL development, REST API
           construction, desktop and web application development, and operational
-          reporting dashboards. My technical work has had direct business impact:
+          reporting dashboards. In practice I function as the de facto product owner
+          of this platform: defining requirements, prioritizing features, managing scope
+          across technology generations, and making architecture decisions with no
+          dedicated engineering team. My technical work has had direct business impact:
           reduced inventory variance, broader wine sales across categories, and
           data-informed purchasing decisions across multiple locations.
         </Typography>

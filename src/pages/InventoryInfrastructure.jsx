@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Paper,
@@ -43,7 +44,7 @@ const timeline = [
     era: "2005 – 2008",
     label: "Access DB + PosiTouch POS Integration",
     accentColor: "#7a6e8a",
-    tech: ["Microsoft Access", "PosiTouch POS", "Perl"],
+    tech: ["Microsoft Access", "PosiTouch POS"],
     description:
       "The first real system: a Microsoft Access database with an embedded Perl script that polled the PosiTouch POS system to import daily sales automatically. This introduced perpetual inventory — tracking theoretical on-hand quantity based on sales versus what was physically counted. Variance detection was born here.",
     highlights: [
@@ -108,7 +109,7 @@ const timeline = [
     },
   },
   {
-    era: "2019 – Present",
+    era: "2021 – 2026",
     label: "Cloud Migration + Node.js Web Application",
     accentColor: "#a07848",
     tech: ["AWS RDS", "Node.js", "Express", "EJS", "Passport.js", "MongoDB", "Bootstrap"],
@@ -132,29 +133,33 @@ const timeline = [
   },
   {
     era: "2020 – Present",
-    label: "Multi-Location R Pipeline + Shiny Analytics",
-    accentColor: "#9e6060",
-    tech: ["R", "Shiny", "tidyverse", "RPostgreSQL", "Task Scheduler", "R365 OData", "BevSpot"],
+    label: "Current System: Multi-Source Data Platform",
+    accentColor: "#1976d2",
+    tech: ["R", "Shiny", "tidyverse", "R365 OData", "Task Scheduler", "React", "MUI", "React Query", "Node.js", "Express", "JWT", "React Native", "Expo", "TypeScript"],
     description:
-      "A new automated ETL layer was built in R. A Windows Task Scheduler job runs nightly, reading each location's Aloha.ini to identify the restaurant, checking for existing data, and loading only new records to per-location PostgreSQL databases on AWS RDS. A separate R client connects to Restaurant365 via OData API for financial data. Multiple R Shiny dashboards deliver operational reporting.",
+      "The current system combines an automated R data pipeline, R Shiny analytics dashboards, and a React operational interface — all running on the same PostgreSQL schema on AWS RDS. The R layer handles ingestion and deep analytics; the React layer handles day-to-day operations. A React Native mobile app supports floor-level counting. These are complementary parts of one platform, not separate projects.",
     highlights: [
-      "Nightly automated polling across all locations via Windows Task Scheduler + Rscript.exe",
-      "Location identity resolved: Aloha.ini UNITNUMBER → entities table → per-location database",
-      "Idempotent import: checks existing records before writing, safe to re-run at any time",
+      "R nightly ETL: Windows Task Scheduler polls all locations, resolves identity via Aloha.ini UNITNUMBER, idempotent writes to per-location AWS RDS databases",
       "R365 OData API connector: GL accounts, transaction details, multi-location financial data",
-      "BevSpot holiday planner: projects bottle needs from prior-year sales using recipe pour math",
-      "Shiny dashboards: Inventory Analysis, Storage Pull Report, Restaurant Analytics, Purchase Report",
+      "Shiny dashboards: Inventory Analysis, Restaurant Analytics, Storage Pull Report, Wine Purchase Report",
+      "React SPA (2026) replaced the Express/EJS app — same backend, significantly better UI consolidating features from multiple prior tools",
+      "Inventory count system: multi-device room locking, offline staging, session audit trail with scope and method metadata",
+      "Three-level sales drill-down: product → checks → line items with void/overring detection",
+      "Fintech CSV import pipeline with product mapping and pending approval queue",
+      "React Native mobile app (Expo + TypeScript + Zustand + SQLite) for offline-first floor counting",
+      "React and React Native: entry–mid level (AI-assisted development); backend, schema, ETL, and all domain logic are my own work",
     ],
     outcome:
-      "Fully automated, multi-location data pipeline. Analytics accessible via browser without technical knowledge.",
+      "One unified platform: R handles data ingestion and analytics, React handles operations, React Native handles mobile counting. Twenty years of the same core inventory math, now with a modern interface. Throughout every generation, I have been the sole architect, developer, and de facto product owner — setting direction, managing scope, and making technology decisions independently.",
     stack: {
-      sources: ["Aloha POS DBF (nightly)", "Restaurant365 OData API", "BevSpot exports"],
-      processing: ["R ETL (Task Scheduler)", "tidyverse transforms", "AWS RDS PostgreSQL"],
+      sources: ["Aloha POS DBF (nightly)", "Restaurant365 OData API", "OpenTable", "Manual entry / fintech CSV"],
+      processing: ["R ETL (Task Scheduler)", "Node.js/Express REST API", "PostgreSQL stored functions", "AWS RDS (per-location)"],
       output: [
         "Shiny: Inventory Analysis",
         "Shiny: Restaurant Analytics",
-        "Shiny: Storage Pull",
-        "Shiny: Purchase Report",
+        "Shiny: Storage Pull & Purchase Reports",
+        "React SPA (operations)",
+        "React Native (mobile counting)",
       ],
     },
   },
@@ -193,9 +198,10 @@ const currentArch = [
     bg: "#faf6f6",
     border: "#ddc8c8",
     items: [
+      "React SPA — inventory, sales, purchasing, analysis (AI-assisted frontend)",
+      "React Native app — iOS/Android mobile counting (Expo + TypeScript)",
       "iOS iPad wine list app (guest-facing)",
       "JavaFX desktop app (catalog management)",
-      "Node/Express web app (browser UI)",
       "Shiny: Inventory Analysis dashboard",
       "Shiny: Restaurant Analytics",
       "Shiny: Storage Pull Report",
@@ -205,14 +211,22 @@ const currentArch = [
 ];
 
 const fullStack = [
-  { label: "Languages", items: ["R", "Java", "JavaScript / Node.js", "SQL", "Perl"] },
-  { label: "Databases", items: ["PostgreSQL (AWS RDS)", "MongoDB", "Microsoft Access"] },
-  { label: "Frameworks", items: ["R Shiny", "JavaFX", "Express.js", "tidyverse"] },
+  { label: "Languages", items: ["R", "Java", "JavaScript / TypeScript / Node.js", "SQL"] },
+  { label: "Databases", items: ["PostgreSQL (AWS RDS)", "DuckDB", "MongoDB", "SQLite (mobile)", "Microsoft Access"] },
+  {
+    label: "Frameworks",
+    items: ["R Shiny", "JavaFX", "Express.js", "tidyverse"],
+    secondary: {
+      label: "Entry–Mid (AI-assisted)",
+      items: ["React", "MUI", "React Query", "React Native (Expo)"],
+    },
+  },
   { label: "Integrations", items: ["Aloha (DBF)", "PosiTouch", "Restaurant365 OData", "BevSpot"] },
-  { label: "Infrastructure", items: ["AWS RDS", "Windows Task Scheduler", "Passport.js / bcrypt"] },
+  { label: "Infrastructure", items: ["AWS RDS"] },
 ];
 
 const relatedLinks = [
+  { label: "WLM React App — feature overview", url: "/projects/wlm-react", tag: "React", internal: true },
   { label: "PostgreSQL Schema (DDL)", url: "https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac", tag: "SQL" },
   { label: "Perpetual Inventory Stored Function", url: "https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79", tag: "SQL" },
   { label: "R365 OData API Connector", url: "https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7", tag: "R" },
@@ -406,6 +420,7 @@ const TimelineCard = ({ era }) => {
 // ── PAGE ──────────────────────────────────────────────────────────────────────
 
 const InventoryInfrastructure = () => {
+  const navigate = useNavigate();
   return (
     <Container maxWidth="lg">
 
@@ -532,6 +547,22 @@ const InventoryInfrastructure = () => {
                   {item}
                 </Typography>
               ))}
+              {group.secondary && (
+                <>
+                  <Divider sx={{ my: 1, borderColor: "#e0e0e0" }} />
+                  <Typography
+                    variant="caption"
+                    sx={{ color: "#aaa", fontStyle: "italic", display: "block", mb: 0.75, fontSize: "0.68rem" }}
+                  >
+                    {group.secondary.label}
+                  </Typography>
+                  {group.secondary.items.map((item) => (
+                    <Typography key={item} variant="body2" sx={{ mb: 0.5, lineHeight: 1.6, color: "#aaa" }}>
+                      {item}
+                    </Typography>
+                  ))}
+                </>
+              )}
             </Grid>
           ))}
         </Grid>
@@ -550,10 +581,11 @@ const InventoryInfrastructure = () => {
             <Grid item xs={12} sm={6} md={4} key={link.label}>
               <Box
                 component="a"
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{
+                href={link.internal ? undefined : link.url}
+                target={link.internal ? undefined : "_blank"}
+                rel={link.internal ? undefined : "noopener noreferrer"}
+                onClick={link.internal ? () => navigate(link.url) : undefined}
+                sx={{ cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,
