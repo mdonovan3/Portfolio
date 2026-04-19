@@ -32,11 +32,11 @@ const periods = [
 ];
 
 const variance = [
-  { name:"Bones Cab 2020",        var:-2.5, ext:-148.75 },
+  { name:"Harborview Cab 2020",    var:-2.5, ext:-148.75 },
   { name:"Veuve Clicquot MV",     var:-1.0, ext:-53.47  },
   { name:"Stags Leap Artemis CV", var:-1.5, ext:-94.50  },
   { name:"Duckhorn Napa Cab CV",  var:-1.0, ext:-68.00  },
-  { name:"Bones Chardonnay",      var: 2.0, ext: 54.20  },
+  { name:"Harborview Chardonnay", var: 2.0, ext: 54.20  },
   { name:"Sancerre Thomas BTG",   var: 1.0, ext: 18.20  },
   { name:"Caymus Cab 2020",       var: 0.5, ext: 42.50  },
   { name:"Frank Family Napa Cab", var:-1.0, ext:-89.00  },
@@ -101,6 +101,7 @@ const InventoryAnalysis = () => {
             {["R","Shiny","PostgreSQL","shinydashboard","DT","RDS"].map((t) => (
               <Chip key={t} label={t} size="small" sx={{ bgcolor: NAVY, color:"#fff" }} />
             ))}
+            <Chip label="Sample data — anonymized &amp; randomized" size="small" variant="outlined" sx={{ borderColor:"#95a5a6", color:"#7f8c8d", fontStyle:"italic" }} />
           </Box>
         </Box>
       </Paper>

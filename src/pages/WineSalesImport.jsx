@@ -16,15 +16,15 @@ import SkipNextIcon     from "@mui/icons-material/SkipNext";
 const NAVY = "#2c3e50", SILVER = "#95a5a6", GREEN = "#27ae60", RED = "#e74c3c", BLUE = "#2980b9";
 
 const importLog = [
-  { date:"2024-12-16", location:"Blue Ridge Grill", records:148, status:"imported",  db:"brg_wine"   },
-  { date:"2024-12-16", location:"Bones",            records:203, status:"imported",  db:"bones_wine" },
-  { date:"2024-12-16", location:"OK Cafe",          records:94,  status:"imported",  db:"okc_wine"   },
-  { date:"2024-12-15", location:"Blue Ridge Grill", records:161, status:"imported",  db:"brg_wine"   },
-  { date:"2024-12-15", location:"Bones",            records:188, status:"imported",  db:"bones_wine" },
-  { date:"2024-12-15", location:"OK Cafe",          records:77,  status:"skipped",   db:"okc_wine"   },
-  { date:"2024-12-14", location:"Blue Ridge Grill", records:0,   status:"error",     db:"brg_wine"   },
-  { date:"2024-12-14", location:"Bones",            records:214, status:"imported",  db:"bones_wine" },
-  { date:"2024-12-14", location:"OK Cafe",          records:88,  status:"imported",  db:"okc_wine"   },
+  { date:"2024-12-16", location:"Harborview Grille", records:148, status:"imported",  db:"hvg_wine"   },
+  { date:"2024-12-16", location:"Ironstone",         records:203, status:"imported",  db:"irs_wine"   },
+  { date:"2024-12-16", location:"Parkside Café",     records:94,  status:"imported",  db:"pkc_wine"   },
+  { date:"2024-12-15", location:"Harborview Grille", records:161, status:"imported",  db:"hvg_wine"   },
+  { date:"2024-12-15", location:"Ironstone",         records:188, status:"imported",  db:"irs_wine"   },
+  { date:"2024-12-15", location:"Parkside Café",     records:77,  status:"skipped",   db:"pkc_wine"   },
+  { date:"2024-12-14", location:"Harborview Grille", records:0,   status:"error",     db:"hvg_wine"   },
+  { date:"2024-12-14", location:"Ironstone",         records:214, status:"imported",  db:"irs_wine"   },
+  { date:"2024-12-14", location:"Parkside Café",     records:88,  status:"imported",  db:"pkc_wine"   },
 ];
 
 const salesByLocation = [
@@ -83,6 +83,7 @@ const WineSalesImport = () => (
           {["R","PostgreSQL","Aloha POS","ETL","foreign","AWS RDS"].map((t) => (
             <Chip key={t} label={t} size="small" sx={{ bgcolor:NAVY, color:"#fff" }} />
           ))}
+          <Chip label="Sample data — anonymized &amp; randomized" size="small" variant="outlined" sx={{ borderColor:"#95a5a6", color:"#7f8c8d", fontStyle:"italic" }} />
         </Box>
       </Box>
     </Paper>
@@ -152,9 +153,9 @@ const WineSalesImport = () => (
               <YAxis tickFormatter={(v) => `$${(v/1000).toFixed(0)}k`} tick={{ fontSize:11 }} />
               <Tooltip content={<CurrencyTooltip />} />
               <Legend />
-              <Bar dataKey="brg"   name="Blue Ridge Grill" fill={NAVY}   radius={[2,2,0,0]} />
-              <Bar dataKey="bones" name="Bones"            fill={BLUE}   radius={[2,2,0,0]} />
-              <Bar dataKey="okc"   name="OK Cafe"          fill={SILVER} radius={[2,2,0,0]} />
+              <Bar dataKey="brg"   name="Harborview Grille" fill={NAVY}   radius={[2,2,0,0]} />
+              <Bar dataKey="bones" name="Ironstone"        fill={BLUE}   radius={[2,2,0,0]} />
+              <Bar dataKey="okc"   name="Parkside Café"    fill={SILVER} radius={[2,2,0,0]} />
             </BarChart>
           </ResponsiveContainer>
         </Paper>

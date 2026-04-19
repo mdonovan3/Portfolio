@@ -82,6 +82,7 @@ const R365Transactions = () => {
             {["R","httr2","OData","PostgreSQL","tidyverse","AWS RDS"].map((t) => (
               <Chip key={t} label={t} size="small" sx={{ bgcolor:NAVY, color:"#fff" }} />
             ))}
+            <Chip label="Sample data — anonymized &amp; randomized" size="small" variant="outlined" sx={{ borderColor:"#95a5a6", color:"#7f8c8d", fontStyle:"italic" }} />
           </Box>
         </Box>
       </Paper>
