@@ -77,6 +77,10 @@ const WineSalesImport = () => (
             Automated nightly polling client that reads Aloha POS DBF exports from each restaurant,
             resolves location identity from Aloha.ini, and loads wine sales into per-location
             PostgreSQL databases on AWS RDS. Scheduled via Windows Task Scheduler, written in R.
+            The source data is genuinely messy — binary DBF format, latin-1 encoding, inconsistent
+            PLU mappings, missing days, and location identity buried in an .ini file rather than
+            the data itself. Handling these reliably and idempotently is the core engineering
+            challenge of the pipeline.
           </Typography>
         </Box>
         <Box sx={{ display:"flex", gap:1, flexWrap:"wrap", alignItems:"flex-start" }}>

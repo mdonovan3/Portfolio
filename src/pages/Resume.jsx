@@ -34,6 +34,7 @@ const skillGroups = [
       "Stored functions / procedures",
       "REST API design",
       "OData API integration",
+      "Real-world data wrangling: binary formats, API pagination, identity resolution, gap handling",
     ],
   },
   {

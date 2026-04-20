@@ -75,7 +75,11 @@ const R365Transactions = () => {
             <Typography variant="body1" color="text.secondary" sx={{ mt:1, maxWidth:600 }}>
               Automated import of Restaurant365 general ledger transactions via OData API.
               Pulls AP invoices, credit memos, journal entries, and budget records into
-              PostgreSQL for cross-system reporting. Written in R with httr2.
+              PostgreSQL for cross-system reporting. Written in R with httr2. Integration
+              challenges include OData pagination, joining transaction headers to GL account
+              detail, deriving parent accounts by substring, filtering noise records, and
+              deduplicating on re-runs — typical of real-world API data that arrives without
+              a clean primary key.
             </Typography>
           </Box>
           <Box sx={{ display:"flex", gap:1, flexWrap:"wrap", alignItems:"flex-start" }}>
