@@ -251,6 +251,8 @@ const WlmReact = () => {
             variant="contained"
             startIcon={<Launch />}
             href="http://react-wine-app-portfolio-env-1.eba-j5pgg9nh.us-east-1.elasticbeanstalk.com/"  /* TODO: replace with deployment URL once live */
+            target="_blank"
+            rel="noopener noreferrer"
             //disabled
             size="small"
             sx={{ textTransform: "none" }}
