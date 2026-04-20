@@ -25,7 +25,7 @@ const highlights = [
   { icon: <Storage sx={{ color: "#2c3e50" }} />, label: "Database design & ETL", detail: "PostgreSQL schema, stored functions, multi-tenant AWS RDS, automated R pipelines" },
   { icon: <BarChart sx={{ color: "#2c3e50" }} />, label: "Analytics & dashboards", detail: "R Shiny apps, DuckDB, multi-source joins (Aloha POS, OpenTable, R365)" },
   { icon: <AccountTree sx={{ color: "#2c3e50" }} />, label: "API & backend", detail: "Node.js / Express REST APIs, OData integration, fintech CSV pipelines" },
-  { icon: <Layers sx={{ color: "#2c3e50" }} />, label: "Data wrangling & integration", detail: "Real-world messy sources: binary POS formats (DBF), paginated OData APIs, fintech CSVs, manual entry — identity resolution, encoding issues, gap handling, idempotent loads" },
+  { icon: <Layers sx={{ color: "#2c3e50" }} />, label: "Data wrangling & integration", detail: "Real-world messy sources: binary POS formats (DBF), paginated OData APIs, fintech CSVs, Excel files, fixed-width text files, web scraping, PDF extraction, manual entry — identity resolution, encoding issues, format normalization, gap handling, idempotent loads" },
 ];
 
 const Home = () => {
