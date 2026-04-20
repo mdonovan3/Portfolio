@@ -103,29 +103,29 @@ const Resume = () => {
 
         <Typography variant="body1" paragraph sx={{ mt: 2 }}>
           Dual role combining wine program management with full-stack data systems
-          development across multiple restaurant locations.
+          development across multiple restaurant locations. Functioned as de facto
+          product owner of the data platform throughout — defining requirements,
+          managing scope, and driving architecture decisions independently across
+          twenty years and five technology generations.
         </Typography>
 
-        <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.8 }}>
-          Designed and built a complete wine inventory management platform from the ground up —
-          spanning a normalized PostgreSQL schema on AWS RDS, a Java desktop application
-          for catalog management, a Node.js/Express web application with a 14-endpoint
-          REST API, and a nightly automated R ETL pipeline ingesting Aloha POS data
-          across all locations. Oversaw the specification and rollout of a custom iOS
-          wine list application integrated with the same database, which increased both
-          overall wine sales and breadth of category sales.
-        </Typography>
-
-        <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.8 }}>
-          Built and maintain multiple R Shiny dashboards for operational reporting:
-          inventory period analysis with count variance detection, restaurant analytics
-          combining POS, OpenTable, and financial data, wine purchase reporting, and
-          storage pull recommendations. Developed an R connector to the Restaurant365
-          OData API for financial data integration.
-        </Typography>
+        <Box component="ul" sx={{ pl: 2.5, mt: 0, mb: 2 }}>
+          {[
+            "Designed and built a complete wine inventory management platform from scratch — normalized PostgreSQL schema on AWS RDS, Java desktop application, 14-endpoint Node.js/Express REST API, and a React SPA consolidating inventory, sales, purchasing, and analytics into one interface. Oversaw rollout of a custom iOS wine list app integrated with the same database, increasing both overall wine sales and category breadth.",
+            "Built and maintain multiple R Shiny dashboards for operational reporting: period-over-period inventory analysis with count variance detection, restaurant analytics combining Aloha POS, OpenTable, and R365 financial data, wine purchase reporting, and storage pull recommendations.",
+            "Developed analytics engineering pipeline using Python ingestion scripts (Aloha POS DBF, R365 OData), dbt for typed/tested transformations (staging views, materialized mart tables, lineage), and a Node.js API serving KPIs and COGS metrics. Deployed to AWS EC2 with S3 data lake via Terraform.",
+            "Extensive real-world data wrangling across varied source formats — binary DBF files, paginated OData APIs, fintech CSVs, Excel, fixed-width text files, web scraping, and PDF extraction — including identity resolution, encoding normalization, gap handling, and idempotent pipeline design.",
+          ].map((item, i) => (
+            <Box component="li" key={i} sx={{ mb: 1.5 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                {item}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
-          {["PostgreSQL", "R", "Python", "dbt", "Shiny", "Java", "Node.js", "AWS RDS", "Aloha POS", "R365 OData"].map((t) => (
+          {["PostgreSQL", "R", "Python", "dbt", "Shiny", "Java", "Node.js", "React", "React Native", "AWS RDS", "AWS EC2", "AWS S3", "Terraform", "Aloha POS", "R365 OData", "Parquet"].map((t) => (
             <Chip
               key={t}
               label={t}
