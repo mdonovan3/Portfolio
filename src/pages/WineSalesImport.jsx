@@ -2,7 +2,7 @@
 // Dependencies: recharts
 
 import {
-  Container, Paper, Typography, Box, Grid, Chip, Divider,
+  Container, Paper, Typography, Box, Grid, Chip, Divider, Link,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
 } from "@mui/material";
 import {
@@ -76,8 +76,11 @@ const WineSalesImport = () => (
           <Typography variant="body1" color="text.secondary" sx={{ mt:1, maxWidth:600 }}>
             Automated nightly polling client that reads Aloha POS DBF exports from each restaurant,
             resolves location identity from Aloha.ini, and loads wine sales into per-location
-            PostgreSQL databases on AWS RDS. Scheduled via Windows Task Scheduler, written in R.
-            The source data is genuinely messy — binary DBF format, latin-1 encoding, inconsistent
+            PostgreSQL databases on AWS RDS. Scheduled via Windows Task Scheduler, written in R (
+            <Link href="https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059" target="_blank" rel="noopener" sx={{ color: BLUE }}>
+              see multi-source POS aggregation gist
+            </Link>
+            ). The source data is genuinely messy — binary DBF format, latin-1 encoding, inconsistent
             PLU mappings, missing days, and location identity buried in an .ini file rather than
             the data itself. Handling these reliably and idempotently is the core engineering
             challenge of the pipeline.

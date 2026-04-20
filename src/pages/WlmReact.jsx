@@ -10,6 +10,7 @@ import {
   Button,
   Collapse,
   IconButton,
+  Link,
 } from "@mui/material";
 import {
   ExpandMore,
@@ -220,12 +221,22 @@ const WlmReact = () => {
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2.5, lineHeight: 1.7 }}>
           A full-stack React / Node.js / PostgreSQL application for managing wine operations
           across multiple restaurant locations — inventory counting, sales reporting, purchasing,
-          analysis, and product management. Built on top of the same PostgreSQL schema, data
-          model, SQL stored procedures, and Node.js backend as the earlier Express/EJS application,
-          with a substantially improved interface that consolidates features previously spread
-          across separate R Shiny apps, the web app, and manual spreadsheets. The backend and
-          all domain logic are my own work; the React frontend was built with Claude (AI) as a
-          primary tool.
+          analysis, and product management. Built on top of the same{" "}
+          <Link href="https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac" target="_blank" rel="noopener">
+            PostgreSQL schema
+          </Link>
+          , data model,{" "}
+          <Link href="https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79" target="_blank" rel="noopener">
+            SQL stored procedures
+          </Link>
+          , and{" "}
+          <Link href="https://gist.github.com/mdonovan3/132dbd29f68042ba9832476e8711fd90" target="_blank" rel="noopener">
+            Node.js backend
+          </Link>{" "}
+          as the earlier Express/EJS application, with a substantially improved interface that
+          consolidates features previously spread across separate R Shiny apps, the web app,
+          and manual spreadsheets. The backend and all domain logic are my own work; the React
+          frontend was built with Claude (AI) as a primary tool.
         </Typography>
 
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mb: 3 }}>

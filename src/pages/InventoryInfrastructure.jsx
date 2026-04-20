@@ -9,6 +9,7 @@ import {
   Chip,
   Collapse,
   Divider,
+  Link,
 } from "@mui/material";
 import {
   ExpandMore,
@@ -74,7 +75,7 @@ const timeline = [
       "Tiered formula pricing: cost-based markup by bracket, rounded to psychological price points",
       "Java DBF parser reading Aloha chkitems.dbf directly from the POS file system",
       "PLU-to-product-instance mapping table linking POS sales to inventory items",
-      "PostgreSQL stored function: perpetual inventory with glass-to-bottle unit conversion",
+      <span>PostgreSQL stored function: perpetual inventory with glass-to-bottle unit conversion (<Link href="https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79" target="_blank" rel="noopener">gist</Link>)</span>,
     ],
     outcome:
       "Production relational database. Perpetual inventory now computed in SQL. First multi-source join across POS and inventory.",
