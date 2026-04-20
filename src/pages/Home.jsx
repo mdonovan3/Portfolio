@@ -152,9 +152,14 @@ const Home = () => {
           data-informed purchasing decisions across multiple locations.
         </Typography>
         <Typography variant="body1">
-          I'm currently looking to bring this combination of computer science training,
-          deep domain expertise in hospitality data, and self-directed full-stack
-          development into a data engineering or analytics role.
+          Over time, as I've gone deeper into the technical side — designing schemas,
+          building pipelines, learning analytics engineering tooling like dbt, and
+          working through the full data lifecycle from raw source to reporting layer —
+          I've found that work increasingly compelling in its own right. What started
+          as building tools to solve restaurant problems has become a genuine interest
+          in data engineering as a discipline. I'm looking to make a deliberate pivot
+          toward that side of the work, bringing twenty years of production systems
+          experience and deep domain knowledge with me.
         </Typography>
       </Paper>
 
