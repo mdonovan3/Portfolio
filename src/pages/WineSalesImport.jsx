@@ -74,9 +74,9 @@ const WineSalesImport = () => (
         <Box>
           <Typography variant="h4" sx={{ color:NAVY, fontWeight:600 }}>Wine Sales ETL — Aloha POS Import</Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mt:1, maxWidth:600 }}>
-            Automated nightly polling client that reads Aloha POS DBF exports from each restaurant,
-            resolves location identity from Aloha.ini, and loads wine sales into per-location
-            PostgreSQL databases on AWS RDS. Scheduled via Windows Task Scheduler, written in R (
+            End-to-end ingestion pipeline that extracts nightly Aloha POS DBF exports from each
+            restaurant, resolves location identity from Aloha.ini, and loads wine sales into
+            per-location PostgreSQL databases on AWS RDS. Scheduled via Windows Task Scheduler, written in R (
             <Link href="https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059" target="_blank" rel="noopener" sx={{ color: BLUE }}>
               see multi-source POS aggregation gist
             </Link>
