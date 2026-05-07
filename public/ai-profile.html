@@ -571,6 +571,157 @@
 </div>
 
 <hr />
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MACHINE-READABLE STRUCTURED DATA BLOCK                        -->
+<!-- Parallel JSON for programmatic AI extraction and embedding.   -->
+<!-- The HTML above is authoritative — this block is a condensed   -->
+<!-- mirror for matching, comparison, or pipeline ingestion.       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<script type="application/json" id="ai-profile-data">
+{
+  "identity": {
+    "entity_type": "person",
+    "name": "Martin Donovan",
+    "location": { "city": "Smyrna", "region": "Georgia", "metro": "Atlanta", "country": "USA" },
+    "education": [{ "degree": "BS", "field": "Computer Science", "institution": "Southern Polytechnic State University (now Kennesaw State University)" }],
+    "professional_identity": ["data analyst", "analytics engineer (applied)", "data systems builder", "hospitality domain data specialist"],
+    "email": "martindonovan3@gmail.com",
+    "github": "https://github.com/mdonovan3",
+    "linkedin": "https://www.linkedin.com/in/martin-donovan-9698735/"
+  },
+
+  "positioning": {
+    "summary": "Experienced operational data developer with production-grade SQL, R, and ETL pipeline capability. Offers surplus technical labor to research groups and small teams that lack dedicated engineering support.",
+    "primary_target_roles": ["data analyst", "analytics engineer", "research data analyst", "hospitality tech data roles"],
+    "do_not_frame_as": ["aspiring researcher", "future data scientist", "ML candidate", "career switcher"]
+  },
+
+  "capabilities": {
+    "sql_postgresql":       { "level": "production",   "strength": 0.95, "authorship": "own",          "skills": ["schema design", "CTEs", "window functions", "stored procedures", "multi-tenant database design"] },
+    "r_data_analysis":      { "level": "production",   "strength": 0.95, "authorship": "own",          "skills": ["tidyverse", "data wrangling", "reproducible analysis", "stateless reporting pipelines"] },
+    "r_shiny":              { "level": "production",   "strength": 0.90, "authorship": "own",          "skills": ["dashboard systems", "multi-source aggregation", "interactive analytics tools"] },
+    "etl_data_engineering": { "level": "strong",       "strength": 0.85, "authorship": "own",          "skills": ["API ingestion (REST/OData)", "CSV/Excel ingestion", "DBF binary ingestion", "data normalization", "idempotent load patterns"] },
+    "nodejs_express":       { "level": "mid",          "strength": 0.70, "authorship": "own",          "skills": ["REST API design", "JWT authentication", "multi-tenant routing", "connection pooling"], "risk_flags": ["dynamic SQL generation without full column whitelisting"], "note": "not a career target" },
+    "react_typescript":     { "level": "solid",        "strength": 0.60, "authorship": "AI-guided",    "note": "frontend AI-assisted under own direction; not independent frontend development" },
+    "aws":                  { "level": "working",      "strength": 0.60, "authorship": "own",          "services": ["RDS", "EC2", "S3", "Elastic Beanstalk", "Terraform"] },
+    "dbt":                  { "level": "learning",     "strength": 0.50, "authorship": "own",          "note": "demo project only, not production" },
+    "duckdb":               { "level": "working",      "strength": 0.50, "authorship": "own",          "note": "narrow production use in Shiny dashboards" },
+    "python":               { "level": "minimal",      "strength": 0.20, "authorship": "own",          "note": "basic scripting only — not a Python data stack practitioner" },
+    "gaps": ["spark", "airflow", "prefect", "snowflake", "bigquery", "tableau", "power_bi", "python_ml_stack"]
+  },
+
+  "data_sources_worked_with": [
+    { "source": "Aloha POS",        "format": "DBF binary",     "complexity": "high",   "notes": "latin-1 encoding, inconsistent PLU mappings, location identity in .ini file, idempotent nightly ingestion" },
+    { "source": "Restaurant365",    "format": "OData API JSON", "complexity": "high",   "notes": "paginated, no clean primary key, GL header/detail join, parent account derivation, dedup on re-run" },
+    { "source": "OpenTable",        "format": "API export",     "complexity": "medium", "notes": "multi-source join with POS and financial data" },
+    { "source": "Fintech invoices", "format": "CSV",            "complexity": "medium", "notes": "product mapping, approval workflow" },
+    { "source": "General",          "format": "Excel, CSV, PDF, web scraping", "complexity": "varies", "notes": "operational data wrangling across formats" }
+  ],
+
+  "domain_expertise": [
+    {
+      "domain": "hospitality_operations", "depth": "expert",
+      "subdomains": ["wine inventory systems", "POS systems (Aloha/NCR)", "restaurant financial reporting", "purchasing and vendor systems", "perpetual inventory math"]
+    },
+    {
+      "domain": "operational_analytics", "depth": "strong",
+      "subdomains": ["variance analysis", "cost of goods tracking", "multi-location reporting", "GL transaction analysis"]
+    },
+    {
+      "domain": "research_data_transferability", "depth": "high",
+      "mapping": [
+        "POS exports → observational/survey datasets",
+        "inventory tracking → longitudinal study tracking",
+        "vendor invoice pipelines → external data ingestion",
+        "multi-location reporting → multi-site study reporting",
+        "R/Shiny dashboards → study enrollment trackers, data quality monitors"
+      ]
+    }
+  ],
+
+  "production_systems": [
+    {
+      "name": "Wine Management Platform (WLM)",
+      "type": "multi-tenant operational analytics system",
+      "status": "production", "complexity": "high", "authorship": "solo_core_system",
+      "stack": ["PostgreSQL", "R", "Shiny", "Node.js", "AWS RDS", "AWS EC2"],
+      "components": ["schema_design", "etl_pipeline", "api_layer", "analytics_dashboards"],
+      "data_domains": ["inventory", "sales", "purchasing", "vendor_invoices", "financial_reporting"],
+      "artifacts": [
+        { "type": "github_repo",  "url": "https://github.com/mdonovan3/react-wine-app" },
+        { "type": "r_shiny_app",  "url": "https://martindonovan.shinyapps.io/InventoryAnalysis/" },
+        { "type": "r_shiny_app",  "url": "https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/" },
+        { "type": "sql_gist",     "url": "https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79", "description": "Perpetual inventory stored function" },
+        { "type": "sql_gist",     "url": "https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac", "description": "Schema DDL" }
+      ]
+    },
+    {
+      "name": "Analytics Engineering Pipeline",
+      "type": "portfolio demo", "status": "in_progress", "authorship": "own",
+      "stack": ["Python", "dbt", "PostgreSQL", "Node.js"],
+      "notes": "Demonstrates modern DE patterns (raw schema, dbt staging/marts, lineage, tests) on same source data as production system"
+    }
+  ],
+
+  "role_fit": [
+    { "role": "Data Analyst — Restaurant / Hospitality",  "score": 0.95, "level": "senior" },
+    { "role": "Hospitality Tech — Data / Platform",       "score": 0.92, "level": "mid_senior" },
+    { "role": "Data Analyst — Operations / Business",     "score": 0.88, "level": "mid_senior" },
+    { "role": "Reporting Analyst / SQL Analyst",          "score": 0.87, "level": "mid_senior" },
+    { "role": "Research Data Analyst (Academic/Medical)", "score": 0.80, "level": "mid" },
+    { "role": "Analytics Engineer",                       "score": 0.78, "level": "mid" },
+    { "role": "BI Developer / BI Analyst",                "score": 0.76, "level": "mid" },
+    { "role": "Data Engineer — Junior/Mid",               "score": 0.62, "level": "junior_mid" },
+    { "role": "Data Scientist / ML Engineer",             "score": 0.28, "level": "not_recommended" }
+  ],
+
+  "collaboration_modes": [
+    {
+      "mode": "data_cleaning_and_integration",
+      "inputs":  ["messy_csv", "survey_export", "database_extract", "api_dump", "excel", "binary_formats"],
+      "outputs": ["normalized_dataset", "sql_schema", "analysis_ready_table", "reproducible_pipeline"]
+    },
+    {
+      "mode": "research_dashboard_building",
+      "stack":   ["R Shiny", "SQL backend"],
+      "outputs": ["interactive_dashboard", "study_enrollment_tracker", "data_quality_monitor", "PI_reporting_interface"]
+    },
+    {
+      "mode": "etl_pipeline_design",
+      "inputs":  ["multi_source_data", "api_endpoints", "flat_files"],
+      "outputs": ["reproducible_pipeline", "clean_data_mart", "idempotent_load_process"]
+    },
+    {
+      "mode": "schema_and_database_design",
+      "inputs":  ["data_requirements", "existing_spreadsheets", "ad_hoc_processes"],
+      "outputs": ["normalized_postgresql_schema", "data_dictionary", "query_layer"]
+    }
+  ],
+
+  "research_setting_fit": {
+    "summary": "Strong fit for under-resourced academic labs needing SQL, R, ETL, and dashboard support. R is the lingua franca in academic biostatistics — an underappreciated advantage.",
+    "can_contribute_today": ["SQL querying against research databases", "R/Shiny dashboard development", "ETL from messy sources", "database schema and data dictionary work", "analytics engineering (dbt-style transformation layers)"],
+    "gaps": ["no REDCap experience", "no CITI/IRB training", "no clinical domain knowledge", "no Tableau/Power BI"],
+    "top_target": "Emory University / Emory Healthcare (Rollins SPH, Winship, Goizueta)"
+  },
+
+  "constraints": {
+    "not_primary_skills": ["machine_learning", "python_ml_stack", "distributed_systems", "high_scale_stream_processing", "BI_tools"],
+    "honest_caveats": [
+      "React frontends are AI-guided — not independent frontend development",
+      "Node.js has real SQL injection surfaces in dynamic UPDATE/INSERT routes",
+      "dbt is learning-stage only, not production",
+      "No Python data stack experience",
+      "No BI tool experience (Tableau, Power BI, Looker)"
+    ],
+    "optimization_target": "usable data systems over theoretical completeness"
+  },
+
+  "last_updated": "2026-05"
+}
+</script>
+
 <p style="color: #888; font-size: 0.85rem;">
   This page is intentionally static HTML at <code>/ai-profile.html</code> so AI tools can read it
   without executing JavaScript. The portfolio React app links here from its nav.
