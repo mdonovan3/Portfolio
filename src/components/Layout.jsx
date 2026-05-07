@@ -26,6 +26,10 @@ import {
   Code,
   ImportantDevices,
   GitHub,
+  Web,
+  AccountTree,
+  Storage,
+  SmartToy,
 } from '@mui/icons-material';
 
 const drawerWidth = 280;
@@ -120,6 +124,17 @@ const Layout = () => {
             </ListItemButton>
 
             <ListItemButton
+              onClick={() => handleNavigation('/ai-profile')}
+              selected={isActive('/ai-profile')}
+              sx={{ '&.Mui-selected': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
+            >
+              <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                <SmartToy />
+              </ListItemIcon>
+              {open && <ListItemText primary="AI Profile" />}
+            </ListItemButton>
+
+            <ListItemButton
               onClick={() => setProjectsOpen(!projectsOpen)}
             >
               <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
@@ -145,6 +160,36 @@ const Layout = () => {
                       <ImportantDevices />
                     </ListItemIcon>
                     <ListItemText primary="Inventory Mangement Infrastructure" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/data-architecture')}
+                    selected={isActive('/projects/data-architecture')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <AccountTree />
+                    </ListItemIcon>
+                    <ListItemText primary="Data Architecture" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/de-pipeline')}
+                    selected={isActive('/projects/de-pipeline')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <Storage />
+                    </ListItemIcon>
+                    <ListItemText primary="Analytics Engineering" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/wlm-react')}
+                    selected={isActive('/projects/wlm-react')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <Web />
+                    </ListItemIcon>
+                    <ListItemText primary="WLM React App" />
                   </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}

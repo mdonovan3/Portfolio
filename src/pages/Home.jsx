@@ -7,6 +7,7 @@ import {
   IconButton,
   Chip,
   Divider,
+  Button,
 } from "@mui/material";
 import {
   GitHub,
@@ -18,6 +19,8 @@ import {
   Storage,
   BarChart,
   AccountTree,
+  SmartToy,
+  OpenInNew,
   Layers,
 } from "@mui/icons-material";
 
@@ -161,6 +164,38 @@ const Home = () => {
           toward that side of the work, bringing twenty years of production systems
           experience and deep domain knowledge with me.
         </Typography>
+      </Paper>
+
+      {/* AI Profile callout */}
+      <Paper elevation={2} sx={{ p: 4, mb: 3, borderLeft: "4px solid #2980b9" }}>
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+          <SmartToy sx={{ fontSize: 36, color: "#2980b9", flexShrink: 0, mt: 0.25 }} />
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" gutterBottom sx={{ color: "#2c3e50" }}>
+              AI-Readable Profile
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              A structured, static-HTML summary of skills, projects, role fit, and verifiable code
+              links — designed so Claude, ChatGPT, or any AI assistant can read it directly from a
+              URL. Useful for recruiters, collaborators, or anyone who wants to ask an AI "can this
+              person do this job?" and get a grounded answer with links to real code.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontStyle: "italic" }}>
+              Share the link below and ask your AI assistant: "Read this profile and tell me if
+              this person would be a fit for [role]."
+            </Typography>
+            <Button
+              variant="outlined"
+              size="small"
+              endIcon={<OpenInNew />}
+              href="/ai-profile.html"
+              target="_blank"
+              sx={{ borderColor: "#2980b9", color: "#2980b9" }}
+            >
+              Open AI Profile
+            </Button>
+          </Box>
+        </Box>
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4 }}>

@@ -14,6 +14,10 @@ import Repositories from "./pages/Repositories";
 import InventoryAnalysis from "./pages/InventoryAnalysis";
 import R365Transactions from "./pages/R365Transactions";
 import WineSalesImport from "./pages/WineSalesImport";
+import WlmReact from "./pages/WlmReact";
+import DataArchitecture from "./pages/DataArchitecture";
+import DEPipeline from "./pages/DEPipeline";
+import AIProfile from "./pages/AIProfile";
 
 function App() {
   return (
@@ -36,6 +40,10 @@ function App() {
             <Route path="projects/inventory-analysis" element={<InventoryAnalysis />} />
             <Route path="projects/r365-transactions" element={<R365Transactions />} />
             <Route path="projects/wine-sales-import" element={<WineSalesImport />} />
+            <Route path="projects/wlm-react" element={<WlmReact />} />
+            <Route path="projects/data-architecture" element={<DataArchitecture />} />
+            <Route path="projects/de-pipeline" element={<DEPipeline />} />
+            <Route path="ai-profile" element={<AIProfile />} />
           </Route>
         </Routes>
       </Router>
