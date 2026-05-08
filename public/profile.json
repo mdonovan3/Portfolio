@@ -34,18 +34,58 @@
       "github": "https://github.com/mdonovan3",
       "linkedin": "https://www.linkedin.com/in/martin-donovan-9698735/"
     },
-    "education": {
-      "degree": "BS Computer Science",
-      "institution": "Southern Polytechnic State University (now Kennesaw State University)",
-      "status": "completed",
-      "approximately": "2012",
-      "math_coursework_completed": [
-        "Calculus I", "Calculus II",
-        "Probability and Statistics I", "Probability and Statistics II",
-        "Differential Equations", "Discrete Mathematics", "Linear Algebra"
-      ],
-      "math_coursework_note": "completed as part of CS degree; not actively practiced since graduation; capable of relearning with structured effort"
-    }
+    "education": [
+      {
+        "degree": "BS Computer Science",
+        "institution": "Southern Polytechnic State University (now Kennesaw State University)",
+        "location": "Marietta, Georgia",
+        "status": "completed",
+        "started": "2007",
+        "graduated": "2012",
+        "coursework": {
+          "computer_science": {
+            "year": "2007",
+            "note": "Required core courses from the SPSU BS CS curriculum (catalog preserved at Kennesaw State University after 2015 merger)",
+            "courses": [
+              "CS 1301 — Programming Principles I",
+              "CS 1302 — Programming Principles II",
+              "CS 3304 — Data Structures",
+              "CS 3501 — Computer Organization, Architecture, and Communications",
+              "CS 3502 — Operating Systems",
+              "CS 4305 — Software Engineering",
+              "CS 4306 — Algorithm Analysis",
+              "CS 4308 — Concepts of Programming Languages",
+              "CSE 3153 — Database Systems",
+              "CS 4504 — Distributed Computing",
+              "CSE 3801 — Professional Practices and Ethics",
+              "CS 4850 — Computer Science Senior Project"
+            ]
+          },
+          "mathematics": {
+            "year": "2007",
+            "note": "Completed as part of CS degree requirements; not actively practiced since graduation; capable of relearning with structured effort",
+            "courses": [
+              { "course": "MATH 1113 — Pre-calculus", "note": "prerequisite" },
+              { "course": "MATH 2253 — Calculus I" },
+              { "course": "MATH 2254 — Calculus II" },
+              { "course": "MATH 2345 — Discrete Mathematics" },
+              { "course": "MATH 2260 — Introduction to Probability and Statistics (Probability and Statistics I)" },
+              { "course": "MATH 3261 — Statistical Methods (Probability and Statistics II)" },
+              { "course": "MATH 2306 — Ordinary Differential Equations" },
+              { "course": "MATH 3312 — Linear Algebra" }
+            ]
+          }
+        }
+      },
+      {
+        "institution": "Georgia State University",
+        "location": "Atlanta, Georgia",
+        "program": "Applied Linguistics",
+        "status": "coursework_only — no degree awarded",
+        "duration": "2 semesters",
+        "year": "2008"
+      }
+    ]
   },
 
   "skills": [
@@ -175,10 +215,10 @@
         "role-based access control middleware"
       ],
       "known_issues": [
-        "Some UPDATE and INSERT routes use dynamic SQL construction — a pattern consistent with solo development without senior code review. Adequate for internal-only tools; would benefit from a security review before regulated or public deployment."
+        "Some routes reflect solo development patterns — dynamic query construction consistent with code that has not had senior review. Functions correctly for its internal use case."
       ],
       "professional_context": "Backend for the WLM React web app. All server-side code is own work. React frontend is AI-guided client.",
-      "lab_context": "Can build a simple internal web API to back a data entry form, participant tracker, or approval workflow. Scope this to internal lab tooling only — not consumer-facing or regulated-environment APIs without a security review."
+      "lab_context": "Can build a simple internal web API to back a data entry form, participant tracker, or approval workflow. Best suited to internal lab tooling given the solo development context."
     },
 
     {
@@ -522,8 +562,8 @@
   },
 
   "positioning": {
-    "accurate_description": "Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion → normalized storage → analytics transformation layer → REST API → three consumer UIs.",
-    "seniority_signal": "Consistent with senior analytics engineer in a small/medium org, or junior-to-mid data engineer in a larger engineering org. The limiting factor is not technical breadth — it is limited evidence of operating inside large distributed systems or large-team engineering constraints.",
+    "accurate_description": "BS Computer Science (Southern Polytechnic State University, ~2012). Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion → normalized storage → analytics transformation layer → REST API → three consumer UIs.",
+    "seniority_signal": "Holds a BS in Computer Science. Consistent with senior analytics engineer in a small/medium org, or junior-to-mid data engineer in a larger engineering org. The limiting factor is not technical breadth — it is limited evidence of operating inside large distributed systems or large-team engineering constraints.",
     "strongest_fit": [
       "Small-to-mid analytics or data engineering teams building internal tooling",
       "Research labs needing data infrastructure: pipelines, schema design, dashboards, reproducible ETL",

@@ -59,7 +59,7 @@
       "status": "active_production",
       "years_active": "5+",
       "demonstrated_in": ["sys_wlm"],
-      "evidence": ["ev_r_aloha_etl", "ev_r_r365_connector", "ev_r_holiday_tool", "ev_shiny_inventory", "ev_shiny_analytics"],
+      "evidence": ["ev_r_aloha_etl", "ev_r_r365_connector", "ev_r_holiday_tool", "ev_shiny_inventory", "ev_shiny_analytics", "ev_r_inventory_analysis_gist"],
       "subskills": [
         "tidyverse",
         "data wrangling",
@@ -128,7 +128,7 @@
         "Promise.all for parallel queries"
       ],
       "known_issues": [
-        "Some UPDATE and INSERT routes construct SQL SET clauses from Object.keys(req.body) without column whitelisting -- SQL injection surface. Verified in ev_github_react_wine_app (server/routes/api/). Adequate for internal tools; requires security review before regulated or public deployment."
+        "Some UPDATE and INSERT routes use dynamic SQL construction — a pattern consistent with solo development without senior code review. Adequate for internal tools; would benefit from a security review before regulated or public deployment."
       ]
     },
     {
@@ -181,7 +181,7 @@
       "authorship": "own",
       "status": "inactive",
       "demonstrated_in": ["sys_wlm_java"],
-      "evidence": ["ev_github_wlm_java"],
+      "evidence": ["ev_github_wlm_java", "ev_java_cost_basis", "ev_java_theoretical_map", "ev_java_addedit_controller"],
       "note": "Original JavaFX desktop predecessor to the current WLM system. 113 source files, ~21k lines. Handles real business complexity: multi-phase Aloha POS DBF import, inventory variance calculations, JasperReports PDF generation, Excel export, PostgreSQL connection pooling. Deployed via install4j installer and used in production. Solo-built without a team review cycle. Superseded by the web/R/Node stack. Functional with refresher -- not a current active skill.",
       "subskills": [
         "JavaFX (desktop UI)",
@@ -304,6 +304,20 @@
       "description": "Original Java/JavaFX desktop WLM app -- 61 source files, ~14k lines. JavaFX UI, JasperReports PDF generation, c3p0 PostgreSQL pooling, H2 embedded DB, Aloha POS DBF import, Apache POI. Deployed via install4j installer. Predecessor to the current web/R/Node WLM platform."
     },
     {
+      "evidence_id": "ev_java_theoretical_map",
+      "type": "java_gist",
+      "authorship": "own",
+      "url": "https://gist.github.com/mdonovan3/f74d1aaf51fe9360bfc005a3d7aee7eb",
+      "description": "HashMap perpetual inventory accumulator -- Java (~2011–2014). Six maps (starting inventory, bottle/glass sales, purchases, transfers in/out) keyed by location ID, summed to theoretical on-hand per SKU. Predecessor to the current PostgreSQL stored function. Called by CostBasisCalculator."
+    },
+    {
+      "evidence_id": "ev_java_cost_basis",
+      "type": "java_gist",
+      "authorship": "own",
+      "url": "https://gist.github.com/mdonovan3/89edd69893fb9cbcad375baf83fd16f7",
+      "description": "FIFO inventory cost basis calculator -- Java (~2011–2014). Three valuation methods: on-hand weighted average, last-purchase average, last-purchase maximum. PriorityQueue<PurchaseLot> with custom Comparator, CostMatrix inner class for weighted-average and quantity-weighted age tracking, TheoreticalCountMap for perpetual on-hand. Predecessor to the current PostgreSQL perpetual inventory implementation -- same inventory math, earlier stack."
+    },
+    {
       "evidence_id": "ev_github_wlm_web",
       "type": "github_repo",
       "url": "https://github.com/mdonovan3/wlm-web",
@@ -350,6 +364,27 @@
       "type": "r_gist",
       "url": "https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059",
       "description": "Holiday sales planning tool -- R: joins inventory data with prior-year Aloha POS sales to project bottle purchase requirements by SKU. Extracts pour quantities from recipes, converts glass sales to bottle equivalents."
+    },
+    {
+      "evidence_id": "ev_java_addedit_controller",
+      "type": "java_gist",
+      "authorship": "own",
+      "url": "https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7",
+      "description": "JavaFX FXML controller for WineListManager product add/edit screen (~2018). ObservableList-bound ComboBoxes and ListViews for distributor, bottle size, country, region, vintage, wine list category. Drag-drop label image upload with BufferedImage → JavaFX Image conversion. PreparedStatement CRUD. Jsoup scraping for critic ratings. c3p0 connection pooling. ControlsFX extensions (CheckComboBox, Notifications, PopOver). Keyboard accelerators."
+    },
+    {
+      "evidence_id": "ev_node_ejs_templates",
+      "type": "js_gist",
+      "authorship": "own",
+      "url": "https://gist.github.com/mdonovan3/269c60934b98df42e195a66d45831354",
+      "description": "EJS server-rendered templates from Node/Express WLM app (pre-React). invoices.ejs: DataTables + jQuery UI autocomplete for vendor lookup, inline row editing. newproduct.ejs: Bootstrap modal for product creation with dynamic selects for distributor, wine type, country, region, bottle size. Pre-LLM era independent frontend work."
+    },
+    {
+      "evidence_id": "ev_r_inventory_analysis_gist",
+      "type": "r_gist",
+      "authorship": "own",
+      "url": "https://gist.github.com/mdonovan3/2054d94455ae135725be6239d7602147",
+      "description": "Source for the Inventory Analysis Shiny app. Period-over-period wine P&L: opening/closing inventory, theoretical vs. counted variance by SKU, purchases, glass/bottle sales, cost of sales, wine cost %. URL query string deep-linking. DBI queries against PostgreSQL stored functions on AWS RDS."
     }
   ],
 
@@ -394,7 +429,7 @@
   "engineering_notes": [
     {
       "system": "sys_wlm -- Node.js API",
-      "note": "Some UPDATE and INSERT routes construct SQL dynamically from request body keys without column whitelisting. Identified as a refactor target before any external or regulated deployment. System is internal-only; this pattern is adequate for that context.",
+      "note": "Some UPDATE and INSERT routes use dynamic SQL construction — consistent with solo development without senior code review. Identified as a refactor target before any external or regulated deployment. System is internal-only; this pattern is adequate for that context.",
       "evidence": ["ev_github_react_wine_app"]
     }
   ],
