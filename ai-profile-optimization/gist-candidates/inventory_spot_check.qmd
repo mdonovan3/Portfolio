@@ -1,0 +1,116 @@
+---
+title: "Inventory Spot Check"
+author: "Martin Donovan"
+format: html
+---
+
+```{r}
+#| echo: false
+#| output: false
+library(DBI)
+library(RPostgres)
+library(tidyverse)
+library(gt)
+library(gtExtras)
+
+# Spot-check sheet: lists only items that have had sales or purchases since the
+# last physical inventory count, with their theoretical on-hand quantity.
+# Rendered as a gt table grouped by room — designed to be printed and used for
+# a targeted physical recount rather than a full inventory.
+#
+# Calls two stored functions:
+#   get_theoreticals_active_product_instances_only($date) — current on-hand
+#   get_inventory_activity($start, $end)                  — activity since last count
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+`%+%` <- function(x, y) paste0(x, y)
+
+con <- dbConnect(
+  RPostgres::Postgres(),
+  dbname   = Sys.getenv("WINE_DB"),
+  host     = Sys.getenv("DB_HOST"),
+  port     = Sys.getenv("DB_PORT"),
+  user     = Sys.getenv("DB_USER"),
+  password = Sys.getenv("DB_PASS")
+)
+
+productLocationsQuery <-
+  "select pi.inventory_name, pila.* " %+%
+  "from product_instances pi " %+%
+  "inner join product_instance_location_associations pila " %+%
+  "  on pi.product_instance_id = pila.product_instance_id " %+%
+  "inner join products p on p.product_id = pi.product_id " %+%
+  "where pi.active = true and pila.active_location = true " %+%
+  "and p.major_category_id = " %+%
+  "  (select major_category_id from major_categories " %+%
+  "   where lower(major_category_name) = 'wine')"
+
+invCountQuery <-
+  "select * from inventories " %+%
+  "where inventory_major_category_id = " %+%
+  "  (select major_category_id from major_categories " %+%
+  "   where lower(major_category_name) = 'wine') " %+%
+  "order by inventory_date desc limit 1"
+
+invActivityQuery <-
+  "select product_instance_id, product_instance_location_id, " %+%
+  "bottle_sales, glass_sales, purchases " %+%
+  "from get_inventory_activity($1, $2) " %+%
+  "where bottle_sales <> 0 or glass_sales <> 0 or purchases <> 0"
+
+theoDF             <- dbGetQuery(con, "select * from get_theoreticals_active_product_instances_only($1)", list(Sys.Date()))
+roomsDF            <- dbGetQuery(con, "select * from rooms")
+invCountDF         <- dbGetQuery(con, invCountQuery)
+productLocationsDF <- dbGetQuery(con, productLocationsQuery)
+invActivityDF      <- dbGetQuery(con, invActivityQuery,
+                       list(as.Date(invCountDF$inventory_date) + 1, Sys.Date()))
+
+# Keep only items with post-count activity; join location, room, and theoretical on-hand
+finalDF <- productLocationsDF %>%
+  filter(product_instance_id %in% invActivityDF$product_instance_id) %>%
+  left_join(invActivityDF, by = "product_instance_location_id") %>%
+  inner_join(roomsDF,      by = c("location_room_id" = "room_id")) %>%
+  inner_join(theoDF,       by = "product_instance_location_id") %>%
+  mutate(
+    bottle_sales.x        = replace_na(bottle_sales.x, 0),
+    glass_sales.x         = replace_na(glass_sales.x,  0),
+    purchases.x           = replace_na(purchases.x,    0),
+    sales                 = round(bottle_sales.x + glass_sales.x, 1),
+    purchases.x           = round(purchases.x,    1),
+    theoretical_on_hand   = round(theoretical_on_hand, 1)
+  ) %>%
+  select(room_name, location_column, location_row,
+         inventory_name, sales, purchases.x, theoretical_on_hand) %>%
+  arrange(room_name, location_column, location_row, inventory_name)
+
+dbDisconnect(con)
+```
+
+```{r}
+#| echo: false
+# Render as a printable gt table grouped by storage room.
+# "actual" column left blank for staff to fill in during the physical recount.
+finalDF %>%
+  mutate(actual = "          ") %>%
+  group_by(room_name) %>%
+  gt() %>%
+  cols_label(
+    location_column     = "col",
+    location_row        = "row",
+    inventory_name      = "wine",
+    sales               = "sales",
+    purchases.x         = "purch",
+    theoretical_on_hand = "on hand",
+    actual              = "actual"
+  ) %>%
+  cols_width(
+    location_column     ~ px(25),
+    location_row        ~ px(25),
+    inventory_name      ~ px(275),
+    sales               ~ px(35),
+    purchases.x         ~ px(30),
+    theoretical_on_hand ~ px(35),
+    actual              ~ px(200)
+  )
+```

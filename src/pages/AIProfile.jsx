@@ -1,7 +1,18 @@
-import { Container, Paper, Typography, Box, Button, Divider } from "@mui/material";
-import { SmartToy, OpenInNew } from "@mui/icons-material";
+import { Container, Paper, Typography, Box, Button, Divider, Tooltip, IconButton } from "@mui/material";
+import { SmartToy, DataObject, ContentCopy } from "@mui/icons-material";
+import { useState } from "react";
+
+const PROFILE_URL = "https://portfolio.martindonovan.net/profile.json";
 
 export default function AIProfile() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(PROFILE_URL);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <Container maxWidth="md">
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
@@ -18,62 +29,74 @@ export default function AIProfile() {
         </Box>
         <Divider sx={{ mb: 2 }} />
         <Typography variant="body1" sx={{ mb: 2 }}>
-          This page links to a static HTML summary of Martin Donovan's skills, projects, and role
-          fit — structured so an AI assistant can read it directly from a URL and answer questions
-          like <em>"Can this person do this job?"</em>, <em>"What level is this person at?"</em>,
-          or <em>"Would this person be a fit for a research setting?"</em>
+          This portfolio is a React SPA. To make it readable by AI tools and crawlers, two static
+          files are served alongside the app:{" "}
+          <strong>profile.json</strong> (structured candidate data) and a full plain-text summary
+          of all portfolio content intended for machine consumption — both linked from the page head
+          via <code>&lt;link rel="alternate"&gt;</code> so bots can discover them without executing
+          JavaScript. Give an AI the URL below to evaluate this profile directly:
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          The static version is necessary because this portfolio is a React SPA — AI tools that
-          fetch the portfolio URL receive an empty HTML shell, not the rendered content. The static
-          page at <code>/ai-profile.html</code> is served directly and is fully readable without
-          JavaScript.
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Button
+            variant="contained"
+            size="large"
+            endIcon={<DataObject />}
+            href="/profile.json"
+            target="_blank"
+            sx={{ backgroundColor: "#2c3e50", "&:hover": { backgroundColor: "#34495e" } }}
+          >
+            profile.json — structured data
+          </Button>
+        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 2 }}>
+          <strong>profile.json</strong> is the primary data product: each skill has authorship tags,
+          each evidence item has an explicit <code>skills_demonstrated[]</code> field, and confirmed
+          gaps are enumerated. A static narrative HTML version and a full-text portfolio page are also
+          served alongside the app — linked via{" "}
+          <code>&lt;link rel="alternate"&gt;</code> in the page head so bots can discover them without JavaScript.
         </Typography>
-        <Button
-          variant="contained"
-          size="large"
-          endIcon={<OpenInNew />}
-          href="/ai-profile.html"
-          target="_blank"
-          sx={{ backgroundColor: "#2c3e50", "&:hover": { backgroundColor: "#34495e" } }}
-        >
-          Open AI-Readable Profile
-        </Button>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, bgcolor: "#f4f6f8", borderRadius: 1, px: 2, py: 1.25 }}>
+          <Typography variant="body2" sx={{ fontFamily: "monospace", flexGrow: 1, color: "#2c3e50" }}>
+            {PROFILE_URL}
+          </Typography>
+          <Tooltip title={copied ? "Copied!" : "Copy URL"}>
+            <IconButton size="small" onClick={handleCopy} sx={{ color: "#7f8c8d" }}>
+              <ContentCopy fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ color: "#2c3e50" }}>
-          What the profile covers
+          What profile.json contains
         </Typography>
         <Box component="ul" sx={{ pl: 2.5, "& li": { mb: 0.75 } }}>
-          <li><Typography variant="body2"><strong>Who he is</strong> — one-paragraph summary for context</Typography></li>
-          <li><Typography variant="body2"><strong>Skill levels</strong> — honest assessment (Primary / Strong / Solid / Minimal / Gap) for SQL, R, ETL, Node.js, React, dbt, Python, BI tools, cloud, and more</Typography></li>
-          <li><Typography variant="body2"><strong>Role-by-role fit</strong> — scored 0–100 with level, strengths, and gaps for 20+ data roles: data analyst, analytics engineer, BI developer, data engineer, research analyst, clinical data manager, hospitality tech, and others</Typography></li>
-          <li><Typography variant="body2"><strong>Research setting fit</strong> — specific assessment for academic / medical / pharma / nonprofit contexts (Emory, etc.), including what he can contribute paid or volunteer</Typography></li>
-          <li><Typography variant="body2"><strong>Domain expertise</strong> — hospitality tech, POS systems, perpetual inventory, restaurant analytics</Typography></li>
-          <li><Typography variant="body2"><strong>Verifiable links</strong> — GitHub repos, SQL gists, R gists, and live Shiny apps so an AI can read the actual code rather than just trusting the summary</Typography></li>
-          <li><Typography variant="body2"><strong>Lightweight internal tool builder</strong> — schema + API + AI-guided React or Shiny frontend; what this covers, honest scope, and where it breaks down</Typography></li>
-          <li><Typography variant="body2"><strong>Honest caveats</strong> — React frontends are AI-guided; genuine depth is at the data layer</Typography></li>
+          <li><Typography variant="body2"><strong>skills[]</strong> — each with authorship tag (own vs. AI-guided), status, years active, subskills, evidence IDs, and audience-specific context</Typography></li>
+          <li><Typography variant="body2"><strong>evidence[]</strong> — every verifiable artifact: GitHub repos, SQL gists, R gists, Node.js gists, live Shiny apps — each with a <code>skills_demonstrated[]</code> field naming exactly what it proves</Typography></li>
+          <li><Typography variant="body2"><strong>work_contexts</strong> — professional (WLM platform, paid employment) and lab_volunteer (research lab task fit) structured separately</Typography></li>
+          <li><Typography variant="body2"><strong>constraints[]</strong> — confirmed skill absences, authorship caveats, security notes</Typography></li>
+          <li><Typography variant="body2"><strong>No scoring or "great fit" narrative</strong> — the data supports your own conclusions</Typography></li>
         </Box>
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ color: "#2c3e50" }}>
-          How to use this with an AI assistant
+          How to use with an AI assistant
         </Typography>
         <Typography variant="body2" sx={{ mb: 1.5 }}>
-          Share the direct link to <code>/ai-profile.html</code> and ask:
+          Point the AI at <code>/profile.json</code> (or <code>/ai-profile.html</code> for prose) and ask:
         </Typography>
         <Box sx={{ bgcolor: "#f4f6f8", borderRadius: 1, p: 2, mb: 1.5 }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
-            {`"Here's a candidate profile: [url]/ai-profile.html
+            {`"Here's a candidate profile: ${PROFILE_URL}
 Can this person do [job title] at [company type]?
 What level would they come in at, and what would they need to ramp up?"`}
           </Typography>
         </Box>
         <Typography variant="body2" color="text.secondary">
-          The profile includes links to real code artifacts — the AI can follow them and verify
-          the claims rather than relying only on the summary.
+          The evidence items link to real code — the AI can follow them and verify claims directly
+          rather than relying on the summary.
         </Typography>
       </Paper>
     </Container>
