@@ -51,8 +51,7 @@ export default function AIProfile() {
         <Typography variant="body2" color="text.secondary" sx={{ mt: 2, mb: 2 }}>
           <strong>profile.json</strong> is the primary data product: each skill has authorship tags,
           each evidence item has an explicit <code>skills_demonstrated[]</code> field, and confirmed
-          gaps are enumerated. A static narrative HTML version and a full-text portfolio page are also
-          served alongside the app — linked via{" "}
+          gaps are enumerated. Static files are linked via{" "}
           <code>&lt;link rel="alternate"&gt;</code> in the page head so bots can discover them without JavaScript.
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, bgcolor: "#f4f6f8", borderRadius: 1, px: 2, py: 1.25 }}>
@@ -85,7 +84,7 @@ export default function AIProfile() {
           How to use with an AI assistant
         </Typography>
         <Typography variant="body2" sx={{ mb: 1.5 }}>
-          Point the AI at <code>/profile.json</code> (or <code>/ai-profile.html</code> for prose) and ask:
+          Point the AI at <code>/profile.json</code> and ask:
         </Typography>
         <Box sx={{ bgcolor: "#f4f6f8", borderRadius: 1, p: 2, mb: 1.5 }}>
           <Typography variant="body2" sx={{ fontFamily: "monospace", whiteSpace: "pre-wrap" }}>
