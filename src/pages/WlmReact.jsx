@@ -337,12 +337,64 @@ const WlmReact = () => {
             </Box>
           ))}
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-          The React app is the current consolidation point: one interface covering what
-          previously required a desktop app, a web app, four Shiny dashboards, and a set of
-          standalone R scripts. The underlying data model and business logic haven't changed —
-          the delivery layer has.
-        </Typography>
+        {/* Flow diagram */}
+        <Box sx={{ mt: 3, mb: 1 }}>
+          {/* Source boxes */}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, justifyContent: "center", mb: 1 }}>
+            {[
+              { label: "Java Desktop App", sub: "~2014–2018", color: "#8e44ad" },
+              { label: "Express / EJS Web App", sub: "~2018–present", color: "#2980b9" },
+              { label: "4 R Shiny Dashboards", sub: "~2020–present", color: "#2471a3" },
+              { label: "R ETL & Analysis Scripts", sub: "~2020–present", color: "#2471a3" },
+            ].map(({ label, sub, color }) => (
+              <Box
+                key={label}
+                sx={{
+                  border: `2px solid ${color}`,
+                  borderRadius: 1,
+                  px: 2,
+                  py: 1,
+                  minWidth: 160,
+                  textAlign: "center",
+                  flex: "1 1 140px",
+                  maxWidth: 220,
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 600, color, lineHeight: 1.3 }}>
+                  {label}
+                </Typography>
+                <Typography variant="caption" sx={{ color: "#7f8c8d" }}>{sub}</Typography>
+              </Box>
+            ))}
+          </Box>
+
+          {/* Arrow */}
+          <Box sx={{ display: "flex", justifyContent: "center", my: 0.5 }}>
+            <Typography sx={{ fontSize: "1.75rem", color: "#7f8c8d", lineHeight: 1 }}>↓</Typography>
+          </Box>
+
+          {/* React app box */}
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Box
+              sx={{
+                backgroundColor: "#2c3e50",
+                color: "#fff",
+                borderRadius: 1,
+                px: 3,
+                py: 1.5,
+                textAlign: "center",
+                minWidth: 260,
+              }}
+            >
+              <Typography variant="body1" sx={{ fontWeight: 700, color: "#ecf0f1" }}>
+                WLM React App
+              </Typography>
+              <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.65)" }}>
+                Domain knowledge + data layer: own work · UI: AI-generated
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
       </Paper>
 
       {/* Modules */}
