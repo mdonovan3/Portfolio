@@ -83,7 +83,15 @@
         "program": "Applied Linguistics",
         "status": "coursework_only — no degree awarded",
         "duration": "2 semesters",
-        "year": "2008",
+        "year": "2008"
+      }
+    ],
+    "certifications": [
+      {
+        "name": "Oracle Certified DBA",
+        "version": "Oracle 8i",
+        "status": "legacy",
+        "note": "Historical certification. Relevant as evidence of longstanding database background predating current PostgreSQL work."
       }
     ],
     "languages": {
@@ -244,6 +252,13 @@
         "Terraform — EC2 provisioning in analytics engineering demo project (not WLM production)"
       ],
       "professional_context": "WLM platform runs on AWS RDS + EC2. Owns deployment, environment configuration, and database connection management."
+    },
+
+    {
+      "skill": "Linux",
+      "authorship": "own",
+      "status": "active_production",
+      "note": "Daily use for approximately 20 years. Not an expert — figures out what's needed as it comes up. Comfortable in a terminal; not a sysadmin."
     },
 
     {
@@ -975,7 +990,7 @@
         "enterprise database administration (replication, HA, large-scale DBA)",
         "DevOps / cloud infrastructure engineering"
       ]
-    },
+    }
   ],
 
   "timeline_notes": [

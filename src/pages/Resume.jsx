@@ -84,6 +84,10 @@ const Resume = () => {
         <Typography variant="body1" color="text.secondary">
           Southern Polytechnic State University (now Kennesaw State University)
         </Typography>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="body2" color="text.secondary">
+          Oracle Certified DBA (legacy certification)
+        </Typography>
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
