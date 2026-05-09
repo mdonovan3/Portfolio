@@ -91,7 +91,7 @@ const Layout = () => {
         }}
       >
         <Toolbar />
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto', mt: 2 }}>
+        <Box sx={{ overflow: 'auto', mt: 2 }}>
           <List>
             <ListItemButton
               onClick={() => handleNavigation('/')}
@@ -241,9 +241,6 @@ const Layout = () => {
                 </List>
               </Collapse>
             )}
-          </List>
-
-          <List sx={{ mt: 'auto' }}>
             <ListItemButton
               onClick={() => handleNavigation('/ai-profile')}
               selected={isActive('/ai-profile')}
