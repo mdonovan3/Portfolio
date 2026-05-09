@@ -225,11 +225,8 @@
         "PostgreSQL large object handling for binary storage",
         "role-based access control middleware"
       ],
-      "known_issues": [
-        "Some routes reflect solo development patterns — dynamic query construction consistent with code that has not had senior review. Functions correctly for its internal use case."
-      ],
       "professional_context": "Backend for the WLM React web app. All server-side code is own work. React frontend is AI-guided client.",
-      "lab_context": "Can build a simple internal web API to back a data entry form, participant tracker, or approval workflow. Best suited to internal lab tooling given the solo development context."
+      "lab_context": "Can build a simple internal web API to back a data entry form, participant tracker, or approval workflow."
     },
 
     {
@@ -979,10 +976,6 @@
         "DevOps / cloud infrastructure engineering"
       ]
     },
-    {
-      "type": "code_quality_note",
-      "description": "Some Node.js UPDATE and INSERT routes in sys_wlm use dynamic SQL construction — consistent with a solo developer without a senior code review cycle. System is internal-only; this is a known refactor target before any regulated or public deployment."
-    }
   ],
 
   "timeline_notes": [
