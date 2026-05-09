@@ -91,7 +91,7 @@ const Layout = () => {
         }}
       >
         <Toolbar />
-        <Box sx={{ overflow: 'auto', mt: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'auto', mt: 2 }}>
           <List>
             <ListItemButton
               onClick={() => handleNavigation('/')}
@@ -121,17 +121,6 @@ const Layout = () => {
                 <Description />
               </ListItemIcon>
               {open && <ListItemText primary="Resume" />}
-            </ListItemButton>
-
-            <ListItemButton
-              onClick={() => handleNavigation('/ai-profile')}
-              selected={isActive('/ai-profile')}
-              sx={{ '&.Mui-selected': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
-            >
-              <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
-                <SmartToy />
-              </ListItemIcon>
-              {open && <ListItemText primary="AI Profile" />}
             </ListItemButton>
 
             <ListItemButton
@@ -252,6 +241,19 @@ const Layout = () => {
                 </List>
               </Collapse>
             )}
+          </List>
+
+          <List sx={{ mt: 'auto' }}>
+            <ListItemButton
+              onClick={() => handleNavigation('/ai-profile')}
+              selected={isActive('/ai-profile')}
+              sx={{ '&.Mui-selected': { backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}
+            >
+              <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                <SmartToy />
+              </ListItemIcon>
+              {open && <ListItemText primary="AI Profile" />}
+            </ListItemButton>
           </List>
         </Box>
       </Drawer>
