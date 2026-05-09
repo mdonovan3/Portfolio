@@ -37,6 +37,13 @@ const soloRepos = [
     tags: ["R", "Quarto", "PostgreSQL", "gt", "inventory", "restaurant analytics", "RDS"],
   },
   {
+    title: "Aloha POS Wine Sales ETL",
+    description:
+      "Nightly R pipeline ingesting Aloha POS DBF exports into PostgreSQL. Reads binary GNDITEM, CAT, ITM, and EMP tables; resolves PLU codes to product instances via a cross-reference table; routes each export to the correct restaurant database by reading the UNITNUMBER from Aloha.ini; and bulk-inserts via dbWriteTable in a transaction. Idempotent — already-imported dates are skipped on re-run. Credentials via .Renviron, not committed.",
+    url: "https://github.com/mdonovan3/ImportWineSalesPortfolio",
+    tags: ["R", "PostgreSQL", "ETL", "DBI", "RPostgres", "tidyverse", "DBF"],
+  },
+  {
     title: "Wine List Manager — Web Application (Express)",
     description:
       "Node.js/Express web application for managing a restaurant wine program across multiple locations. Server-rendered EJS views over a 14-endpoint REST API backed by PostgreSQL on AWS RDS. Covers product catalog management, cellar inventory, vendor invoice tracking, and wine list organization. User authentication via Passport.js with bcrypt; PostgreSQL on AWS RDS for all domain data; Passport.js with bcrypt for authentication.",
