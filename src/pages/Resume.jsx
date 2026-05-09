@@ -5,7 +5,6 @@ import {
   Box,
   Grid,
   Chip,
-  Divider,
 } from "@mui/material";
 import { Code, School, Work, LocationOn } from "@mui/icons-material";
 
@@ -16,7 +15,7 @@ const skillGroups = [
   },
   {
     label: "Databases",
-    items: ["PostgreSQL", "DuckDB", "SQLite", "Microsoft Access"],
+    items: ["PostgreSQL", "DuckDB", "SQLite", "Microsoft Access", { label: "Oracle", note: "certified DBA, older version" }],
   },
   {
     label: "Frameworks & Tools",
@@ -83,10 +82,6 @@ const Resume = () => {
         </Typography>
         <Typography variant="body1" color="text.secondary">
           Southern Polytechnic State University (now Kennesaw State University)
-        </Typography>
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="body2" color="text.secondary">
-          Oracle Certified DBA (legacy certification)
         </Typography>
       </Paper>
 
@@ -166,16 +161,30 @@ const Resume = () => {
               >
                 {group.label}
               </Typography>
-              {group.items.map((item) => (
-                <Typography
-                  key={item}
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 0.5, lineHeight: 1.6 }}
-                >
-                  {item}
-                </Typography>
-              ))}
+              {group.items.map((item) =>
+                typeof item === "string" ? (
+                  <Typography
+                    key={item}
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5, lineHeight: 1.6 }}
+                  >
+                    {item}
+                  </Typography>
+                ) : (
+                  <Typography
+                    key={item.label}
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5, lineHeight: 1.6 }}
+                  >
+                    {item.label}{" "}
+                    <Box component="span" sx={{ fontSize: "0.72rem", opacity: 0.7 }}>
+                      ({item.note})
+                    </Box>
+                  </Typography>
+                )
+              )}
             </Grid>
           ))}
         </Grid>
