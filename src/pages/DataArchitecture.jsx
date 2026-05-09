@@ -120,6 +120,9 @@ const DataArchitecture = () => {
           database on AWS RDS. From there, both R Shiny dashboards and a React/Node.js web
           application read from the same schema — with no separate analytics warehouse.
         </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5, fontStyle: "italic" }}>
+          Restaurant names and identifying details have been changed. All data shown is anonymized.
+        </Typography>
       </Paper>
 
       {/* Flow Diagram */}
