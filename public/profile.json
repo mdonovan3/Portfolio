@@ -90,8 +90,115 @@
       {
         "name": "Oracle Certified DBA",
         "version": "Oracle 8i",
+        "issuer": "Oracle",
         "status": "legacy",
         "note": "Historical certification. Relevant as evidence of longstanding database background predating current PostgreSQL work."
+      },
+      {
+        "name": "Data Science: Foundations using R",
+        "issuer": "Coursera — Johns Hopkins University",
+        "type": "specialization",
+        "date": "2020-10",
+        "credential_id": "JWRNT99W82Q5",
+        "courses": [
+          "The Data Scientist's Toolbox",
+          "R Programming",
+          "Getting and Cleaning Data",
+          "Exploratory Data Analysis",
+          "Reproducible Research"
+        ],
+        "note": "5-course specialization. Formal R foundation — predates current production R work."
+      },
+      {
+        "name": "Exploratory Data Analysis",
+        "issuer": "Coursera — Johns Hopkins University",
+        "type": "course",
+        "date": "2020-07",
+        "included_in": "Data Science: Foundations using R",
+        "topics": [
+          "Analytic graphics and base plotting system",
+          "Lattice and ggplot2",
+          "Hierarchical and k-means clustering, dimension reduction",
+          "Case studies (air pollution)"
+        ],
+        "note": "Also completed as standalone course. Part of Johns Hopkins Data Science series."
+      },
+      {
+        "name": "Reproducible Research",
+        "issuer": "Coursera — Johns Hopkins University",
+        "type": "course",
+        "date": "2020-08",
+        "included_in": "Data Science: Foundations using R",
+        "topics": [
+          "Reproducibility principles and analysis organization",
+          "Markdown and knitr — literate programming",
+          "Reproducible research checklist and evidence-based analysis",
+          "Case studies"
+        ],
+        "note": "Also completed as standalone course. Reproducible workflows in R — directly relevant to academic and lab contexts."
+      },
+      {
+        "name": "Node with React: Fullstack Web Development",
+        "issuer": "Udemy",
+        "date": "2022-03",
+        "credential_id": "UC-4eb2f8e1-e3cb-44e1-8991-6c89a0afb2ad",
+        "note": "Formal Node.js and React study — aligns with current production stack (Node.js API + React SPA)."
+      },
+      {
+        "name": "Introduction to Data Science in Python",
+        "issuer": "Coursera",
+        "date": "2023-06",
+        "credential_id": "3P83CBSH86EH",
+        "skills": ["NumPy", "Pandas"],
+        "note": "Python data stack exposure. Consistent with profile.json positioning as learning-stage Python, not independently proficient."
+      },
+      {
+        "name": "Spring Framework Specialization",
+        "issuer": "Coursera",
+        "type": "specialization",
+        "date": "2023-04",
+        "credential_id": "2308f7d359164406927a383570fc1ecb",
+        "courses": [
+          "Spring — Ecosystem and Core",
+          "Spring MVC, Spring Boot and Rest Controllers",
+          "Spring Data Repositories",
+          "Spring — Cloud Overview"
+        ],
+        "note": "4-course specialization. Java/Spring backend depth — supplements WineListManager Java desktop background."
+      },
+      {
+        "name": "Spring — Ecosystem and Core",
+        "issuer": "Coursera",
+        "type": "course",
+        "date": "2023-03",
+        "credential_id": "W869GV56XH4N",
+        "included_in": "Spring Framework Specialization",
+        "note": "Spring core concepts and dependency injection."
+      },
+      {
+        "name": "Spring MVC, Spring Boot and Rest Controllers",
+        "issuer": "Coursera",
+        "type": "course",
+        "date": "2023-03",
+        "included_in": "Spring Framework Specialization",
+        "note": "Spring REST API patterns — complements existing Node.js/Express REST API experience."
+      },
+      {
+        "name": "Spring Data Repositories",
+        "issuer": "Coursera",
+        "type": "course",
+        "date": "2023-04",
+        "included_in": "Spring Framework Specialization",
+        "note": "Spring Data persistence layer."
+      },
+      {
+        "name": "Spring — Cloud Overview",
+        "issuer": "Coursera",
+        "type": "course",
+        "date": "2023-04",
+        "credential_id": "BNPTD4KEG9BP",
+        "included_in": "Spring Framework Specialization",
+        "note": "Spring Cloud microservices overview."
       }
     ],
     "languages": {

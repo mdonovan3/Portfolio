@@ -5,8 +5,75 @@ import {
   Box,
   Grid,
   Chip,
+  Divider,
 } from "@mui/material";
 import { Code, School, Work, LocationOn } from "@mui/icons-material";
+
+const continuingEd = [
+  {
+    name: "Data Science: Foundations using R",
+    issuer: "Coursera — Johns Hopkins",
+    date: "Oct 2020",
+    credentialId: "JWRNT99W82Q5",
+    note: "5-course specialization: Data Scientist's Toolbox, R Programming, Getting and Cleaning Data, Exploratory Data Analysis, Reproducible Research. Formal R foundation — predates current production R work.",
+  },
+  {
+    name: "Exploratory Data Analysis",
+    issuer: "Coursera — Johns Hopkins",
+    date: "Jul 2020",
+    note: "Standalone completion — also included in Data Science: Foundations using R. Analytic graphics, ggplot2, clustering, dimension reduction.",
+  },
+  {
+    name: "Reproducible Research",
+    issuer: "Coursera — Johns Hopkins",
+    date: "Aug 2020",
+    note: "Standalone completion — also included in Data Science: Foundations using R. knitr, literate programming, reproducible workflows.",
+  },
+  {
+    name: "Node with React: Fullstack Web Development",
+    issuer: "Udemy",
+    date: "Mar 2022",
+    credentialId: "UC-4eb2f8e1-e3cb-44e1-8991-6c89a0afb2ad",
+    note: "Formal Node.js and React study — aligns with current stack",
+  },
+  {
+    name: "Introduction to Data Science in Python",
+    issuer: "Coursera",
+    date: "Jun 2023",
+    credentialId: "3P83CBSH86EH",
+    note: "Python data stack — NumPy, Pandas",
+  },
+  {
+    name: "Spring Framework Specialization",
+    issuer: "Coursera",
+    date: "Apr 2023",
+    note: "4-course specialization: Ecosystem & Core, MVC/Boot/REST, Data Repositories, Cloud Overview. Java/Spring backend depth — supplements Java desktop app background.",
+  },
+  {
+    name: "Spring — Ecosystem and Core",
+    issuer: "Coursera",
+    date: "Mar 2023",
+    note: "Spring core concepts and dependency injection",
+  },
+  {
+    name: "Spring MVC, Spring Boot and Rest Controllers",
+    issuer: "Coursera",
+    date: "Mar 2023",
+    note: "Spring REST API patterns",
+  },
+  {
+    name: "Spring Data Repositories",
+    issuer: "Coursera",
+    date: "Apr 2023",
+    note: "Spring Data persistence layer",
+  },
+  {
+    name: "Spring — Cloud Overview",
+    issuer: "Coursera",
+    date: "Apr 2023",
+    note: "Spring Cloud microservices overview",
+  },
+];
 
 const skillGroups = [
   {
@@ -83,6 +150,25 @@ const Resume = () => {
         <Typography variant="body1" color="text.secondary">
           Southern Polytechnic State University (now Kennesaw State University)
         </Typography>
+
+        <Divider sx={{ my: 3 }} />
+
+        <Typography variant="overline" sx={{ color: "#7f8c8d", fontWeight: 700, letterSpacing: "0.1em", display: "block", mb: 2 }}>
+          Continuing Education
+        </Typography>
+        {continuingEd.map((cert, i) => (
+          <Box key={cert.name} sx={{ mb: i < continuingEd.length - 1 ? 1.5 : 0 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: "#2c3e50", lineHeight: 1.5 }}>
+              {cert.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+              {cert.issuer} · {cert.date}{cert.credentialId ? ` · ID: ${cert.credentialId}` : ""}
+            </Typography>
+            <Typography variant="caption" sx={{ color: "#95a5a6", fontStyle: "italic" }}>
+              {cert.note}
+            </Typography>
+          </Box>
+        ))}
       </Paper>
 
       <Paper elevation={2} sx={{ p: 4, mb: 3 }}>
