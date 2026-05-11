@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Postgres function — PostgresFunction.sql</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Postgres function
+  files: PostgresFunction.sql
+  languages: PLpgSQL
+  github_url: https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/1565af77d4c93ca3450f5e64a40f4d79">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Postgres function</h1>
+
+<!-- file: PostgresFunction.sql | language: PLpgSQL -->
+<pre><code>drop function if exists get_theoreticals_active_product_instances_only(date);
+CREATE OR REPLACE FUNCTION public.get_theoreticals_active_product_instances_only(IN end_date DATE)
+  RETURNS TABLE(product_instance_id INT, product_instance_location_id INT,
+	beginning_inventory NUMERIC, bottle_sales NUMERIC, glass_sales NUMERIC, 
+	transfers_from NUMERIC, transfers_to NUMERIC, 
+	purchases NUMERIC, theoretical_on_hand NUMERIC) 
+AS
+$BODY$
+BEGIN
+   RETURN QUERY 
+   
+
+with pre_data as
+(
+
+select
+
+product_instance_location_associations.product_instance_location_id as pilid, 
+product_instance_location_associations.product_instance_id as piid,
+0 as initial, 0 as beg_inv,  0 as btl_sales, 0 as gl_sales, 0 as purch, 0 as trans_from, 0 as trans_to
+from product_instance_location_associations, product_instances
+where product_instance_location_associations.product_instance_id =
+product_instances.product_instance_id 
+and product_instances.active = true
+
+union
+
+select 
+inventory_details.product_instance_location_id as pilid, product_instance_location_associations.product_instance_id as piid, 
+0 as initial, 
+quantity_counted as beg_inv, 0 as btl_sales, 0 as gl_sales, 0 as purch, 0 as trans_from, 0 as trans_to
+from inventory_details, inventories, 
+product_instance_location_associations, product_instances 
+where inventories.inventory_id = inventory_details.inventory_id
+and product_instance_location_associations.product_instance_location_id = inventory_details.product_instance_location_id
+and product_instance_location_associations.product_instance_id = product_instances.product_instance_id
+and product_instances.active = true --or product_instances.active = active_only
+and inventory_date = (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+
+
+union 
+
+select 
+pc.product_instance_location_id as pilid, pila.product_instance_id as piid,
+0 as initial, 0 as beg_inv, 0 as btl_sales,
+round(sum( (vu.equivalent_ml * pc.sales_units_sold * pc.num_sold) /  bs.bottle_size * 
+(select equivalent_ml from volume_units where volume_unit_id = 
+  (select bottle_size_unit from bottle_sizes where bottle_size_id = pi.bottle_size_id)
+)),2) as gl_sales,
+0 as purch, 0 as trans_from, 0 as trans_to
+from pos_chkitems pc, volume_units vu, bottle_sizes bs, 
+product_instances pi, product_instance_location_associations pila
+where  
+pc.sales_volume_unit_id = vu.volume_unit_id 
+and pi.bottle_size_id = bs.bottle_size_id 
+and pc.product_instance_location_id = pila.product_instance_location_id
+and pila.product_instance_id = pi.product_instance_id                 
+and pc.is_inventory_unit = &#x27;false&#x27;
+and pc.deletion = 0  
+and date_of_sale &gt; (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+and date_of_sale &lt;= end_date
+group by pilid, piid
+
+union
+
+select 
+pc.product_instance_location_id as pilid, pila.product_instance_id as piid,
+0 as initial, 0 as beg_inv,
+sum(pc.num_sold )as btl_sales,
+0 as gl_sales, 0 as purch, 0 as trans_from, 0 as trans_to
+from pos_chkitems pc, product_instance_location_associations pila
+where  
+pc.product_instance_location_id = pila.product_instance_location_id         
+and pc.is_inventory_unit = &#x27;true&#x27; 
+and pc.deletion = 0 
+and date_of_sale &gt; (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+and date_of_sale &lt;= end_date
+group by pilid, piid
+
+union 
+
+select invoice_details.product_instance_location_id as pilid, product_instance_location_associations.product_instance_id as piid,
+0 as initial,
+0 as beg_inv, 0 as btl_sales, 0 as gl_sales, cast(sum(number_received) as numeric) as purch,
+0 as trans_from, 0 as trans_to
+from invoices, invoice_details, product_instance_location_associations, product_instances 
+where invoices.invoice_id = invoice_details.invoice_id
+and product_instance_location_associations.product_instance_location_id = invoice_details.product_instance_location_id
+and product_instance_location_associations.product_instance_id = product_instances.product_instance_id
+and product_instances.active = true --or product_instances.active = active_only
+and payment_date &gt; (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+and payment_date &lt;= end_date
+group by pilid, piid
+
+union 
+
+select from_location as pilid, product_instance_location_associations.product_instance_id as piid, 
+0 as initial,
+0 as beg_inv, 0 as btl_sales, 0 as gl_sales, 0 as purch, sum(quantity) as trans_from, 0 as trans_to
+from product_instance_location_transfers, product_instance_location_associations, product_instances 
+where transfer_date &gt; (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+ and transfer_date &lt;= end_date
+and product_instance_location_associations.product_instance_location_id = product_instance_location_transfers.from_location
+and product_instance_location_associations.product_instance_id = product_instances.product_instance_id
+and product_instances.active = true --or product_instances.active = active_only
+group by pilid, piid
+
+union
+
+select to_location as pilid, product_instance_location_associations.product_instance_id as piid, 
+0 as initial,
+0 as beg_inv, 0 as btl_sales, 0 as gl_sales, 0 as purch, 0 as trans_from, sum(quantity) as trans_to
+from product_instance_location_transfers, product_instance_location_associations, product_instances 
+where transfer_date &gt; (select max(inventory_date) from inventories where inventory_date &lt;= end_date)
+and transfer_date &lt;= end_date
+and product_instance_location_associations.product_instance_location_id = product_instance_location_transfers.to_location
+and product_instance_location_associations.product_instance_id = product_instances.product_instance_id
+and product_instances.active = true --or product_instances.active = active_only
+group by pilid, piid
+)
+
+select piid as product_instance_id, pilid as product_instance_location_id, 
+sum(beg_inv) as beginning_inventory, sum(btl_sales) as bottle_sales, sum(gl_sales) as glass_sales,
+sum(trans_from) as transfers_from, sum(trans_to) as transfers_to,
+sum(purch) as purchases, round( sum(initial) + sum(beg_inv) - sum(gl_sales) 
+- sum(btl_sales) + sum(purch) 
+- sum(trans_from) + sum(trans_to), 2) as theoretical_on_hand 
+from pre_data 
+group by pilid, product_instance_id
+order by product_instance_id, pilid;
+
+
+END; 
+$BODY$
+LANGUAGE plpgsql VOLATILE
+</code></pre>
+</body>
+</html>

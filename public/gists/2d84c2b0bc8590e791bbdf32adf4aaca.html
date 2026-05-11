@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>End-of-year wine purchase planner — R: computes current on-hand from last physical count + activity since then, joins against prior-year sales velocity for same calendar window, outputs prioritized buy list with dollar impact. Uses get_inventory_activity() stored proc and gt table output. — wine_purchase_planner.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/2d84c2b0bc8590e791bbdf32adf4aaca
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: End-of-year wine purchase planner — R: computes current on-hand from last physical count + activity since then, joins against prior-year sales velocity for same calendar window, outputs prioritized buy list with dollar impact. Uses get_inventory_activity() stored proc and gt table output.
+  files: wine_purchase_planner.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/2d84c2b0bc8590e791bbdf32adf4aaca
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/2d84c2b0bc8590e791bbdf32adf4aaca">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>End-of-year wine purchase planner — R: computes current on-hand from last physical count + activity since then, joins against prior-year sales velocity for same calendar window, outputs prioritized buy list with dollar impact. Uses get_inventory_activity() stored proc and gt table output.</h1>
+
+<!-- file: wine_purchase_planner.R | language: R -->
+<pre><code>library(lubridate)
+library(RPostgres)
+library(DBI)
+library(tidyverse)
+library(gt)
+library(gtExtras)
+
+# Estimates bottle purchases needed from today through end of calendar year.
+# Logic: compute current on-hand from last physical count + activity since then,
+# join against same date window from the previous year, compute quantity_needed.
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+con &lt;- dbConnect(
+  RPostgres::Postgres(),
+  dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+  host     = Sys.getenv(&quot;DB_HOST&quot;),
+  port     = Sys.getenv(&quot;DB_PORT&quot;),
+  user     = Sys.getenv(&quot;DB_USER&quot;),
+  password = Sys.getenv(&quot;DB_PASS&quot;)
+)
+
+sales_min_cutoff &lt;- 12
+
+start_date &lt;- Sys.Date()
+end_date   &lt;- ceiling_date(start_date, &quot;year&quot;) - days(1)
+
+inv_activity_query &lt;- &quot;
+  select ia.*, pi.product_id, pi.unit_price,
+         pi.inventory_name, p.product_name,
+         pi.bottle_size_id, bs.bottle_size
+  from get_inventory_activity($1, $2) ia
+  left join product_instances pi on ia.product_instance_id = pi.product_instance_id
+  left join products p           on p.product_id = pi.product_id
+  left join bottle_sizes bs      on bs.bottle_size_id = pi.bottle_size_id&quot;
+
+starting_inv_query &lt;- &quot;
+  select id.*, pi.product_id, pi.bottle_size_id, pi.unit_price,
+         bs.bottle_size, pi.inventory_name, p.product_name
+  from inventory_details id
+  left join product_instances pi on id.product_instance_id = pi.product_instance_id
+  left join products p           on p.product_id = pi.product_id
+  left join bottle_sizes bs      on bs.bottle_size_id = pi.bottle_size_id
+  where inventory_id = $1&quot;
+
+last_inv &lt;- dbGetQuery(con,
+  &quot;select inventory_id, inventory_date from inventories
+   where inventory_date = (select max(inventory_date) from inventories)&quot;)
+
+starting_inventory &lt;- dbGetQuery(con, starting_inv_query, list(last_inv$inventory_id))
+
+inv_activity_since_last_inv &lt;- dbGetQuery(
+  con, inv_activity_query, list(last_inv$inventory_date + 1, Sys.Date())
+)
+
+inv_activity_since_last_inv_summarized &lt;- inv_activity_since_last_inv %&gt;%
+  group_by(product_instance_id) %&gt;%
+  summarise(
+    glass_sales    = sum(glass_sales),
+    bottle_sales   = sum(bottle_sales),
+    purchases      = sum(purchases),
+    product_id     = first(product_id),
+    inventory_name = first(inventory_name),
+    product_name   = first(product_name),
+    bottle_size    = first(bottle_size),
+    unit_price     = first(unit_price)
+  )
+
+starting_inventory_summarized &lt;- starting_inventory %&gt;%
+  group_by(product_instance_id) %&gt;%
+  summarise(
+    quantity_counted = sum(quantity_counted),
+    product_id       = first(product_id),
+    inventory_name   = first(inventory_name),
+    product_name     = first(product_name),
+    bottle_size      = first(bottle_size),
+    unit_price       = first(unit_price)
+  )
+
+# on_hand = last physical count + purchases - sales since that count
+current_on_hand_inventory &lt;- full_join(
+    starting_inventory_summarized,
+    inv_activity_since_last_inv_summarized,
+    by = &quot;product_instance_id&quot;
+  ) %&gt;%
+  mutate(across(where(is.numeric), ~ replace_na(.x, 0))) %&gt;%
+  mutate(on_hand = quantity_counted + purchases - glass_sales - bottle_sales) %&gt;%
+  mutate(product_name   = product_name.x) %&gt;%
+  rename(inventory_name = inventory_name.x,
+         bottle_size    = bottle_size.x,
+         product_id     = product_id.x,
+         unit_price     = unit_price.x) %&gt;%
+  filter(!is.na(inventory_name)) %&gt;%
+  select(product_id, product_instance_id, inventory_name, on_hand, bottle_size,
+         quantity_counted, purchases, glass_sales, bottle_sales, product_name, unit_price) %&gt;%
+  arrange(desc(on_hand))
+
+# Pull same calendar window from prior year to use as demand forecast
+previous_year_inv_activity &lt;- dbGetQuery(
+  con, inv_activity_query,
+  list(Sys.Date() - 365, ceiling_date(Sys.Date() - 365, &quot;year&quot;) - days(1))
+) %&gt;%
+  mutate(total_sales = bottle_sales + glass_sales) %&gt;%
+  group_by(product_instance_id) %&gt;%
+  summarise(
+    total_sales    = sum(total_sales),
+    product_name   = first(product_name),
+    inventory_name = first(inventory_name),
+    bottle_sales   = sum(bottle_sales),
+    glass_sales    = sum(glass_sales),
+    bottle_size    = first(bottle_size),
+    unit_price     = first(unit_price)
+  ) %&gt;%
+  arrange(desc(total_sales))
+
+# quantity_needed = prior-year sales volume - current on-hand
+wines_to_purchase &lt;- left_join(
+    current_on_hand_inventory, previous_year_inv_activity,
+    by = &quot;product_instance_id&quot;
+  ) %&gt;%
+  mutate(across(where(is.numeric), ~ replace_na(.x, 0))) %&gt;%
+  mutate(quantity_needed = ceiling(total_sales - on_hand)) %&gt;%
+  arrange(desc(quantity_needed)) %&gt;%
+  relocate(inventory_name.x, on_hand, total_sales, quantity_needed)
+
+wtp_grouped_by_product &lt;- wines_to_purchase %&gt;%
+  rename(product_name = product_name.x,
+         bottle_size  = bottle_size.x,
+         unit_price   = unit_price.x) %&gt;%
+  group_by(product_name, bottle_size) %&gt;%
+  mutate(product_name = paste0(product_name, &quot; &quot;, bottle_size, &quot;ml&quot;)) %&gt;%
+  summarise(
+    total_sales = sum(total_sales),
+    on_hand     = sum(on_hand),
+    unit_price  = round(mean(unit_price), 2)
+  ) %&gt;%
+  mutate(quantity_needed        = ceiling(total_sales - on_hand),
+         increase_to_inventory  = ceiling(quantity_needed * unit_price)) %&gt;%
+  filter(total_sales &gt; sales_min_cutoff &amp; quantity_needed &gt; 0) %&gt;%
+  arrange(desc(increase_to_inventory)) %&gt;%
+  relocate(product_name, quantity_needed, increase_to_inventory) %&gt;%
+  ungroup()
+
+wtp_grouped_by_product %&gt;%
+  gt() %&gt;%
+  gt_theme_538()
+
+message(&quot;Total increase to inventory: $&quot;,
+        sum(wtp_grouped_by_product$increase_to_inventory))
+
+dbDisconnect(con)
+</code></pre>
+</body>
+</html>

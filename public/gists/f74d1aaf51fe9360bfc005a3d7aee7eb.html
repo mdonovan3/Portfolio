@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HashMap perpetual inventory accumulator — Java (~2011). Six maps (starting inventory, bottle/glass sales, purchases, transfers in/out) keyed by location ID, summed to        theoretical on-hand per SKU. Predecessor to the current PostgreSQL stored function. Called by CostBasisCalculator.  — TheoreticalCountMap.java</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/f74d1aaf51fe9360bfc005a3d7aee7eb
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: HashMap perpetual inventory accumulator — Java (~2011). Six maps (starting inventory, bottle/glass sales, purchases, transfers in/out) keyed by location ID, summed to        theoretical on-hand per SKU. Predecessor to the current PostgreSQL stored function. Called by CostBasisCalculator. 
+  files: TheoreticalCountMap.java
+  languages: Java
+  github_url: https://gist.github.com/mdonovan3/f74d1aaf51fe9360bfc005a3d7aee7eb
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/f74d1aaf51fe9360bfc005a3d7aee7eb">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>HashMap perpetual inventory accumulator — Java (~2011). Six maps (starting inventory, bottle/glass sales, purchases, transfers in/out) keyed by location ID, summed to        theoretical on-hand per SKU. Predecessor to the current PostgreSQL stored function. Called by CostBasisCalculator. </h1>
+
+<!-- file: TheoreticalCountMap.java | language: Java -->
+<pre><code>/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package net.martindonovan.Inventory;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.martindonovan.Inventory.util.ApplicationData;
+import net.martindonovan.Inventory.util.SimpleDate;
+
+/**
+ *
+ * @author Martin Donovan
+ */
+
+// TODO
+// change so that the correct previous inventory date is used for items
+// of each major category
+
+//TODO - make sure to adjust for beginning inventory + 1 in queries
+
+public class TheoreticalCountMap
+{
+//  private HashMap&lt;Integer, Vector&lt;Integer&gt;&gt; majorCategoryProductInstanceLocationMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; locationTheoreticalMap = new HashMap();
+  private HashMap&lt;Integer, Vector&lt;Integer&gt;&gt; productInstanceIDMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; startingInventoryMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; bottleSalesMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; glassSalesMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; purchasesMap = new HashMap();
+//  private HashMap&lt;Integer, Float&gt; creditPurchaseMap = new HashMap();
+//  private HashMap&lt;Integer, Float&gt; staffEducationCreditMap = new HashMap();
+//  private HashMap&lt;Integer, Float&gt; giveawayCreditsMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; transfersFromMap = new HashMap();
+  private HashMap&lt;Integer, Float&gt; transfersToMap = new HashMap();
+  private HashMap&lt;Integer, ArrayList&lt;Integer&gt;&gt; productInstancesMap = new HashMap();
+  private HashMap&lt;Integer, ArrayList&lt;Integer&gt;&gt; categoryMap;
+  private Connection conn;
+  private SimpleDate endDate;
+  private HashMap&lt;Integer, Inventory&gt; beginningInventoryMap = new HashMap();
+
+  public TheoreticalCountMap()
+  {
+    this.endDate = new SimpleDate();
+    try
+    {
+      conn = ApplicationData.getConnection();
+      getBeginningInventories();
+      getProductInstanceIDs();
+      getProductInstanceLocations();
+      for( Integer i : beginningInventoryMap.keySet() )
+      {
+        getLocationTheoreticals(i);
+      }
+      computeLocationTheoreticals();
+      conn.close();
+    }
+    catch (java.sql.SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  public HashMap&lt;Integer, ArrayList&lt;Integer&gt;&gt; getProductInstancesMap()
+  {
+    return productInstancesMap;
+  }
+
+  private void getProductInstanceIDs()
+  {
+    try
+    {
+      categoryMap = new HashMap();
+      Connection c = ApplicationData.getConnection();
+      String q = &quot;select pi.product_id, pi.product_instance_id, wine_list_category_id &quot; +
+//                 &quot;from product_instances pi where pi.active = ?&quot;;
+                 &quot;from product_instances pi&quot;;
+      PreparedStatement ps = conn.prepareStatement(q);
+//      ps.setBoolean(1, true);
+      ResultSet rs = ps.executeQuery();
+      while (rs.next())
+      {
+        int pid = rs.getInt(&quot;product_id&quot;);
+        int piid = rs.getInt(&quot;product_instance_id&quot;);
+        int wlcid = rs.getInt(&quot;wine_list_category_id&quot;);
+        if (! productInstancesMap.containsKey(pid))
+        {
+          productInstancesMap.put(pid, new ArrayList&lt;Integer&gt;());
+        }
+        productInstancesMap.get(pid).add(piid);
+        if (! categoryMap.containsKey(wlcid))
+          categoryMap.put(wlcid, new ArrayList&lt;Integer&gt;());
+        categoryMap.get(wlcid).add(piid);
+      }
+      c.close();
+    }
+    catch (SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  public TheoreticalCountMap(SimpleDate date)
+  {
+    this.endDate = date;
+    try
+    {
+      conn = ApplicationData.getConnection();
+      getBeginningInventories();
+      getProductInstanceLocations();
+      for( Integer i : beginningInventoryMap.keySet() )
+      {
+        getLocationTheoreticals(i);
+      }
+      computeLocationTheoreticals();
+      conn.close();
+    }
+    catch (java.sql.SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  public TheoreticalCountMap(java.util.Date date)
+  {
+    this.endDate = new SimpleDate(date);
+    try
+    {
+      conn = ApplicationData.getConnection();
+      getBeginningInventories();
+      getProductInstanceLocations();
+      for( Integer i : beginningInventoryMap.keySet() )
+      {
+        getLocationTheoreticals(i);
+      }
+      computeLocationTheoreticals();
+      conn.close();
+    }
+    catch (java.sql.SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  private void getBeginningInventories() throws SQLException
+  {
+    Connection conn = ApplicationData.getConnection();
+    String q = &quot;select major_category_id from major_categories where major_category_id in &quot; +
+               &quot;(select distinct(inventory_major_category_id) from inventories)&quot;;
+    // where clause - only major categories that have an inventory
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer cid = rs.getInt(&quot;major_category_id&quot;);
+      //TODO: handle case where getBeginningInventory returns null
+      //maybe insert an inventory before first invoice / credit / sales date for that category?
+      Inventory i = getBeginningInventory(cid);
+      beginningInventoryMap.put(cid, i);
+    }
+    conn.close();
+  }
+
+  private Inventory getBeginningInventory(Integer cid) throws SQLException
+  {
+    Inventory i;
+    Connection conn = ApplicationData.getConnection();
+    String q = &quot;select inventory_id, inventory_date from inventories &quot; +
+               &quot;where inventory_major_category_id = ? and &quot; +
+               &quot;inventory_date = &quot; +
+               &quot;(select max(inventory_date) from inventories where &quot; +
+               &quot;inventory_major_category_id = ? and inventory_date &lt; ?)&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, cid);
+    ps.setInt(2, cid);
+    ps.setDate(3, endDate.toSQLDate());
+    ResultSet rs = ps.executeQuery();
+    if (rs.next())
+      i = new Inventory(rs.getInt(&quot;inventory_id&quot;), new SimpleDate(rs.getDate(&quot;inventory_date&quot;)));
+    else
+      i = null;
+    conn.close();
+    return i;
+  }
+
+  public Float getTheoreticalByProductInstanceId(int pid)
+  {
+    Float total = 0f;
+    if (productInstanceIDMap.containsKey(pid))
+    {
+      for (Integer lid : productInstanceIDMap.get(pid))
+      {
+        total += locationTheoreticalMap.containsKey(lid) ? locationTheoreticalMap.get(lid) : 0;
+      }
+    }
+    return total;
+  }
+
+  public Float getTotalBottlesForWineListCategory(int wlcid)
+  {
+    Float total = null;
+    if (categoryMap.containsKey(wlcid))
+    {
+      float t = 0;
+      for (Integer piid : categoryMap.get(wlcid))
+      {
+        t += this.getTheoreticalByProductInstanceID(piid);
+      }
+    }
+    return total;
+  }
+
+  public ArrayList&lt;Integer&gt; getWineListCategoryProductInstanceIDs(Integer wlcid)
+  {
+    ArrayList al = null;
+    if (categoryMap.containsKey(wlcid))
+      al = categoryMap.get(wlcid);
+    return al;
+  }
+
+  public void refreshProductID(Integer id)
+  {
+    ArrayList&lt;Integer&gt; locationIds = new ArrayList();
+    String q = &quot;select pila.product_instance_location_id from &quot;
+            + &quot;product_instances pi, product_instanceLocation_associations pila &quot;
+            + &quot;where pi.product_instance_id = pila.product_instance_id &quot;
+            + &quot;and pi.product_id = ? &quot;;
+    PreparedStatement ps;
+    ResultSet rs;
+    Connection c = ApplicationData.getConnection();
+    try
+    {
+      ps = c.prepareCall(q);
+      ps.setInt(1, id);
+      rs = ps.executeQuery();
+      while (rs.next())
+      {
+        locationIds.add(rs.getInt(&quot;product_instance_location_id&quot;));
+      }
+    }
+    catch (SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+    for (Integer lid : locationIds)
+    {
+      refreshProductInstanceLocationID(lid);
+    }
+  }
+
+  public void refreshProductInstanceID(Integer id)
+  {
+    ArrayList&lt;Integer&gt; locationIds = new ArrayList();
+    String q = &quot;select pila.product_instance_location_id from &quot;
+            + &quot;product_instanceLocation_associations pila &quot;
+            + &quot;where pila.product_instance_id = ? &quot;;
+    PreparedStatement ps;
+    ResultSet rs;
+    Connection c = ApplicationData.getConnection();
+    try
+    {
+      ps = c.prepareCall(q);
+      ps.setInt(1, id);
+      rs = ps.executeQuery();
+      while (rs.next())
+      {
+        locationIds.add(rs.getInt(&quot;product_instance_location_id&quot;));
+      }
+    }
+    catch (SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+    for (Integer lid : locationIds)
+    {
+      refreshProductInstanceLocationID(lid);
+    }
+  }
+
+  public void refreshProductInstanceLocationID(Integer id)
+  {
+
+  }
+
+  public void addNewLocation(int pilid)
+  {
+    boolean exists = false;
+    Integer  piid = null;
+    String q = &quot;select pi.product_instance_id &quot;
+            + &quot;from product_instances pi, &quot;
+            + &quot;product_instance_location_associations pila &quot;
+            + &quot;where pila.product_instance_id = pi.product_instance_id &quot;
+            + &quot;and pila.product_instance_location_id = ?&quot;;
+    try
+    {
+      PreparedStatement ps = conn.prepareStatement(q);
+      ps.setInt(1, pilid);
+      ResultSet rs = ps.executeQuery();
+      if (rs.next())
+      {
+        exists = true;
+        piid = rs.getInt(&quot;product_instance_id&quot;);
+      }
+    }
+    catch (SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+    if (! locationTheoreticalMap.containsKey(pilid) &amp;&amp; exists)
+    {
+      if (productInstanceIDMap.containsKey(piid) )
+      {
+        locationTheoreticalMap.put(pilid, 0f);
+        productInstanceIDMap.get(piid).add(pilid);
+      }
+    }
+  }
+
+  // Should work correctly - could have a problem
+  public void refresh()
+  {
+    try
+    {
+      conn = ApplicationData.getConnection();
+      getBeginningInventories();
+      getProductInstanceLocations();
+      clearMaps();
+      for(Integer i:  beginningInventoryMap.keySet() )
+      {
+        getLocationTheoreticals(i);
+      }
+      computeLocationTheoreticals();
+      conn.close();
+    }
+    catch (java.sql.SQLException ex)
+    {
+      ex.printStackTrace();
+    }
+  }
+
+  private void clearMaps()
+  {
+    //TODO - clear all maps?
+    glassSalesMap.clear();
+  }
+
+  public Float getTheoreticalByLocationID(int plid)
+  {
+    Float theo = new Float(0);
+    if (locationTheoreticalMap.containsKey(plid))
+    {
+      theo = locationTheoreticalMap.get(plid);
+    }
+    else
+      theo = null;
+    return theo;
+  }
+
+  public Float getTheoreticalByProductID(int pid)
+  {
+    Float theo = null;
+    ArrayList&lt;Integer&gt; productInstanceIDs = productInstancesMap.get(pid);
+    if ( productInstanceIDs != null &amp;&amp; productInstanceIDs.size() &gt; 0)
+    {
+      theo = 0f;
+      for (Integer piid : productInstanceIDs)
+      {
+        theo += this.getTheoreticalByProductInstanceID(piid);
+      }
+    }
+    return theo;
+  }
+
+  public Float getTheoreticalByProductInstanceID(int pid)
+  {
+    Float theo = new Float(0);
+    if (productInstanceIDMap.containsKey(pid))
+    {
+      for(Integer i : productInstanceIDMap.get(pid))
+      {
+        theo += getTheoreticalByLocationID(i);
+      }
+    }
+    else
+      theo = null;
+    return theo;
+  }
+
+  private void getProductInstanceLocations() throws java.sql.SQLException
+  {
+    String q = &quot;select pila.product_instance_location_id, pila.product_instance_id &quot; +
+               &quot;from product_instance_location_associations pila &quot; ;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer piid = rs.getInt(&quot;product_instance_id&quot;);
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      locationTheoreticalMap.put(plid, new Float(0f));
+      if (! productInstanceIDMap.containsKey(piid))
+      {
+        productInstanceIDMap.put(piid, new Vector&lt;Integer&gt;());
+      }
+      productInstanceIDMap.get(piid).add(plid);
+    }
+  }
+
+  public HashMap&lt;Integer, Vector&lt;Integer&gt;&gt; getProductInstanceIDMap()
+  {
+    return productInstanceIDMap;
+  }
+
+  private void getLocationTheoreticals(Integer mcid) throws SQLException
+  {
+    getStartingInventory(mcid);
+    getPurchases(mcid);
+    getSales(mcid);
+    getTransfers(mcid);
+//    getCredits(mcid);
+  }
+
+  private void computeLocationTheoreticals()
+  {
+    for (Integer plid : locationTheoreticalMap.keySet())
+    {
+      Float si = startingInventoryMap.containsKey(plid) ? startingInventoryMap.get(plid) : 0f;
+      Float p = purchasesMap.containsKey(plid) ? purchasesMap.get(plid) : 0f;
+      Float tt = transfersToMap.containsKey(plid) ? transfersToMap.get(plid) : 0f;
+      Float tf = transfersFromMap.containsKey(plid) ? transfersFromMap.get(plid) : 0f;
+      Float gs = glassSalesMap.containsKey(plid) ? glassSalesMap.get(plid) : 0f;
+      Float bs = bottleSalesMap.containsKey(plid) ? bottleSalesMap.get(plid) : 0f;
+//      Float cp = creditPurchaseMap.containsKey(plid) ? creditPurchaseMap.get(plid) : 0f;
+//      Float sec = staffEducationCreditMap.containsKey(plid) ? staffEducationCreditMap.get(plid) : 0f;
+//      Float ga = giveawayCreditsMap.containsKey(plid) ? giveawayCreditsMap.get(plid) : 0f;
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) + si);
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) + p);
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) + tt);
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - tf);
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - gs);
+      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - bs);
+//      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - cp);
+//      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - sec);
+//      locationTheoreticalMap.put(plid, locationTheoreticalMap.get(plid) - ga);
+    }
+  }
+
+  private void getTransfersTo(Integer mcid) throws SQLException
+  {
+    String q = &quot;select  pilt.to_location,  sum (pilt.quantity) as total from &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p, &quot; +
+               &quot;product_instance_location_transfers pilt where &quot; +
+               &quot;pilt.to_location = pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and p.major_category_id = ? &quot; +
+               &quot;and transfer_date &gt; ? &quot; +
+               &quot;and transfer_date &lt;= ? &quot; +
+               &quot;group by to_location&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, mcid);
+    ps.setDate(2, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(3, endDate.toSQLDate());
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;to_location&quot;);
+      float total = rs.getFloat(&quot;total&quot;);
+      transfersToMap.put(plid, total);
+    }
+  }
+
+  private void getTransfersFrom(Integer mcid) throws SQLException
+  {
+        String q = &quot;select  pilt.from_location,  sum (pilt.quantity) as total from &quot; +
+                   &quot;product_instance_location_associations pila, &quot; +
+                   &quot;product_instances pi, products p, &quot; +
+                   &quot;product_instance_location_transfers pilt where &quot; +
+                   &quot;pilt.from_location = pila.product_instance_location_id &quot; +
+                   &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+                   &quot;and pi.product_id = p.product_id &quot; +
+                   &quot;and p.major_category_id = ? &quot; +
+                   &quot;and transfer_date &gt; ? &quot; +
+                   &quot;and transfer_date &lt;= ? &quot; +
+                   &quot;group by from_location&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, mcid);
+    ps.setDate(2, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(3, endDate.toSQLDate());
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;from_location&quot;);
+      float total = rs.getFloat(&quot;total&quot;);
+      transfersFromMap.put(plid, total);
+    }
+  }
+
+  private void getTransfers(Integer mcid) throws java.sql.SQLException
+  {
+    getTransfersTo(mcid);
+    getTransfersFrom(mcid);
+  }
+
+//  private void getCredits(Integer mcid) throws java.sql.SQLException
+//  {
+//    getStaffEducationCredits(mcid);
+//    getCreditPurchases(mcid);
+//    getGiveawayCredits(mcid);
+//  }
+
+//  private void getGiveawayCredits(Integer mcid) throws java.sql.SQLException
+//  {
+//
+//  }
+
+//  private void getCreditPurchases(Integer mcid) throws java.sql.SQLException
+//  {
+//    String q = &quot;select cprd.product_instance_location_id,  sum (cprd.quantity) as total from &quot; +
+//               &quot;credit_purchase_record_details cprd, credit_purchase_records cpr, &quot; +
+//               &quot;product_instance_location_associations pila, &quot; +
+//               &quot;product_instances pi, products p &quot; +
+//               &quot;where &quot; +
+//               &quot;cprd.product_instance_location_id = pila.product_instance_location_id &quot; +
+//               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+//               &quot;and pi.product_id = p.product_id &quot; +
+//               &quot;and cprd.credit_purchase_record_id = cpr.credit_purchase_record_id &quot; +
+//               &quot;and cpr.purchase_date &gt; ? &quot; +
+//               &quot;and cpr.purchase_date &lt;=  ? &quot; +
+//               &quot;and p.major_category_id = ? &quot; +
+//               &quot;group by cprd.product_instance_location_id&quot;;
+//    PreparedStatement ps = conn.prepareStatement(q);
+//    ps.setDate(1, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+//    ps.setDate(2, endDate.toSQLDate());
+//    ps.setInt(3, mcid);
+//    ResultSet rs = ps.executeQuery();
+//    while (rs.next())
+//    {
+//      Integer pil = rs.getInt(&quot;product_instance_location_id&quot;);
+//      Float tAmount = rs.getFloat(&quot;total&quot;);
+//      creditPurchaseMap.put(pil, tAmount);
+//    }
+//  }
+
+//  private void getStaffEducationCredits(Integer mcid) throws java.sql.SQLException
+//  {
+//    String q = &quot;select sec.product_instance_location_id,  sum (sec.quantity) as total from &quot; +
+//               &quot;staff_education_credits sec, &quot; +
+//               &quot;product_instance_location_associations pila, &quot; +
+//               &quot;product_instances pi, products p &quot; +
+//               &quot;where &quot; +
+//               &quot;sec.product_instance_location_id = pila.product_instance_location_id &quot; +
+//               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+//               &quot;and pi.product_id = p.product_id &quot; +
+//                  &quot;and (&quot; +
+//                    &quot;(sec.date_initiated &gt; ?  and expect_reimbursement = &#x27;true&#x27; &quot; +
+//                    &quot;and date_resolved is null) &quot; +
+//                    &quot;or&quot; +
+//                    &quot;( date_initiated &gt; ?  and date_initiated &lt;= ? and expect_reimbursement = &#x27;false&#x27; ) &quot; +
+//                 &quot;) &quot; +
+//               &quot;and p.major_category_id = ? &quot; +
+//               &quot;group by sec.product_instance_location_id&quot;;
+//    PreparedStatement ps = conn.prepareStatement(q);
+//    ps.setDate(1, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+//    ps.setDate(2, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+//    ps.setDate(3, endDate.toSQLDate());
+//    ps.setInt(4, mcid);
+//    ResultSet rs = ps.executeQuery();
+//    while (rs.next())
+//    {
+//      Integer pil = rs.getInt(&quot;product_instance_location_id&quot;);
+//      Float tAmount = rs.getFloat(&quot;total&quot;);
+//      staffEducationCreditMap.put(pil, tAmount);
+//    }
+//  }
+
+  private void getSales(Integer mcid) throws java.sql.SQLException
+  {
+    oldGetBottleSales(mcid);
+    oldGetGlassSales(mcid);
+  }
+
+  private void oldGetBottleSales(int mcid) throws java.sql.SQLException
+  {
+
+    String q = &quot;select pc.product_instance_location_id, sum (pc.num_sold) as total &quot; +
+               &quot;from pos_chkitems pc, &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p &quot; +
+               &quot;where &quot; +
+               &quot;pc.product_instance_location_id = pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and pc.date_of_sale &gt; ? &quot; +
+               &quot;and pc.date_of_sale &lt;=  ? &quot; +
+               &quot;and p.major_category_id = ? &quot; +
+               &quot;and pc.is_inventory_unit = &#x27;true&#x27; and &quot; +
+               //********* changed 7/16/2011 ////////////
+               &quot;pc.deletion = 0 &quot; + // and pc.overring = &#x27;false&#x27;&quot; +
+               &quot;group by pc.product_instance_location_id&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setDate(1, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(2, endDate.toSQLDate());
+    ps.setInt(3, mcid);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      Float bSales = rs.getFloat(&quot;total&quot;);
+      bottleSalesMap.put(plid, bSales);
+    }
+  }
+
+  private void getBottleSales(Integer mcid) throws SQLException
+  {
+          String q = &quot;select ds.product_instance_location_id, ds.bottle_sales_amount as total &quot; +
+               &quot;from daily_sales ds, &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p &quot; +
+               &quot;where &quot; +
+               &quot;ds.product_instance_location_id = pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and ds.date_of_sale &gt; ? &quot; +
+               &quot;and ds.date_of_sale &lt;=  ? &quot; +
+               &quot;and p.major_category_id = ? &quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setDate(1, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(2, endDate.toSQLDate());
+    ps.setInt(3, mcid);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      Float bSales = (float)  rs.getInt(&quot;total&quot;);
+      bottleSalesMap.put(plid, bSales);
+    }
+  }
+
+  private void getGlassSales(Integer mcid) throws SQLException
+  {
+    String q = &quot;select ds.product_instance_location_id,&quot;
+            + &quot; ds.glass_sales_amount as total_sold &quot; +
+               &quot;from daily_sales ds, &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p &quot; +
+               &quot;where  &quot; +
+               &quot;ds.product_instance_location_id = pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and p.major_category_id = ? &quot; +
+               &quot;and ds.date_of_sale &gt; ? &quot; +
+               &quot;and ds.date_of_sale &lt;=  ? &quot;;
+
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, mcid);
+    ps.setDate(2, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(3, endDate.toSQLDate());
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+
+      float totalSold = rs.getFloat(&quot;total_sold&quot;);
+      if (! glassSalesMap.containsKey(plid))
+        glassSalesMap.put(plid, totalSold);
+      else
+        glassSalesMap.put(plid, glassSalesMap.get(plid) + totalSold);
+    }
+  }
+
+  private void oldGetGlassSales(Integer mcid) throws SQLException
+  {
+    HashMap bs = getBottleSizes();
+    String q = &quot;select pc.product_instance_location_id, vu.equivalent_ml, &quot; +
+               &quot;pc.sales_units_sold, &quot; +
+               &quot;sum ( pc.num_sold ) as total_sold &quot; +
+               &quot;from pos_chkitems pc, volume_units vu, &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p &quot; +
+               &quot;where  &quot; +
+               &quot;pc.product_instance_location_id = pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and pc.sales_volume_unit_id = vu.volume_unit_id &quot; +
+               &quot;and p.major_category_id = ? &quot; +
+               &quot;and pc.is_inventory_unit = &#x27;false&#x27; &quot; +
+               &quot;and date_of_sale &gt; ? &quot; +
+               &quot;and date_of_sale &lt;=  ? &quot; +
+                //********* added 7/16/2011 ////////////
+               &quot;and pc.deletion = 0&quot; +
+               /////////////////////////////////////
+               &quot;group by pc.product_instance_location_id, vu.equivalent_ml, pc.sales_units_sold&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, mcid);
+    ps.setDate(2, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(3, endDate.toSQLDate());
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      float eqMl = rs.getFloat(&quot;equivalent_ml&quot;);
+      float sus = rs.getFloat(&quot;sales_units_sold&quot;);
+      float totalSold = rs.getFloat(&quot;total_sold&quot;);
+      float bottleMl = Float.parseFloat(bs.get(plid).toString());
+      Float gSales = (eqMl * sus * totalSold) / bottleMl;
+      if (! glassSalesMap.containsKey(plid))
+        glassSalesMap.put(plid, gSales);
+      else
+        glassSalesMap.put(plid, glassSalesMap.get(plid) + gSales);
+    }
+  }
+
+  private void getPurchases(Integer mcid) throws java.sql.SQLException
+  {
+
+    String q = &quot;select id.product_instance_location_id, sum (id.number_received) as total &quot; +
+               &quot;from invoice_details id, invoices i, &quot; +
+               &quot;product_instance_location_associations pila, &quot; +
+               &quot;product_instances pi, products p &quot; +
+               &quot;where id.product_instance_location_id = &quot; +
+               &quot;pila.product_instance_location_id &quot; +
+               &quot;and pila.product_instance_id = pi.product_instance_id &quot; +
+               &quot;and pi.product_id = p.product_id &quot; +
+               &quot;and i.invoice_id = id.invoice_id and &quot; +
+               &quot;i.payment_date &gt; ?&quot; +
+               &quot;and i.payment_date &lt;=  ? &quot; +
+               &quot;and p.major_category_id = ?&quot; +
+               &quot;group by id.product_instance_location_id&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setDate(1, beginningInventoryMap.get(mcid).inventoryDate.toSQLDate());
+    ps.setDate(2, endDate.toSQLDate());
+    ps.setInt(3, mcid);
+    ResultSet rs = ps.executeQuery();
+    while(rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      Float purch = rs.getFloat(&quot;total&quot;);
+      purchasesMap.put(plid, purch);
+    }
+  }
+
+  private void getStartingInventory(Integer mcid) throws java.sql.SQLException
+  {
+    String q = &quot;select product_instance_location_id, quantity_counted from &quot; +
+               &quot;inventory_details id &quot; +
+//               &quot;product_instances pi, products p &quot; +
+//               &quot;and id.inventory_id = ?&quot;;
+               &quot;where id.inventory_id = ?&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, beginningInventoryMap.get(mcid).inventoryID );
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer plid = rs.getInt(&quot;product_instance_location_id&quot;);
+      Float qc = rs.getFloat(&quot;quantity_counted&quot;);
+      startingInventoryMap.put(plid, qc);
+    }
+  }
+   private HashMap getBottleSizes() throws java.sql.SQLException
+   {
+    HashMap hm = new HashMap();
+    String q = &quot;select pc.product_instance_location_id, &quot; +
+                &quot;vu.equivalent_ml * bs.bottle_size as bottle_ml &quot; +
+                &quot;from pos_chkitems pc, product_instance_location_associations pil, &quot; +
+                &quot;product_instances pi, bottle_sizes bs, volume_units vu &quot; +
+                &quot;where pc.product_instance_location_id = pil.product_instance_location_id &quot; +
+                &quot;and pil.product_instance_id = pi.product_instance_id &quot; +
+                &quot;and pi.bottle_size_id = bs.bottle_size_id &quot; +
+                &quot;and bs.bottle_size_unit = vu.volume_unit_id &quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      hm.put(rs.getInt(&quot;product_instance_location_id&quot;) , rs.getFloat(&quot;bottle_ml&quot;));
+    }
+    return hm;
+  }
+
+  private class Inventory
+  {
+    public Integer inventoryID;
+    public SimpleDate inventoryDate;
+
+    public Inventory(Integer iid, SimpleDate id)
+    {
+      inventoryID = iid;
+      inventoryDate = id;
+    }
+  }
+}</code></pre>
+</body>
+</html>

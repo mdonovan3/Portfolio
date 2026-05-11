@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory spot-check sheet — Quarto: calls get_theoreticals_active_product_instances_only() and get_inventory_activity() stored procs, joins results to filter only items with post-count activity, and renders a gt table grouped by storage room with a blank &#x27;actual&#x27; column for physical recount. Designed to print and use on the floor. — inventory_spot_check.qmd</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/2a662fa7fae5743ac7f97020c9a4aeac
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Inventory spot-check sheet — Quarto: calls get_theoreticals_active_product_instances_only() and get_inventory_activity() stored procs, joins results to filter only items with post-count activity, and renders a gt table grouped by storage room with a blank &#x27;actual&#x27; column for physical recount. Designed to print and use on the floor.
+  files: inventory_spot_check.qmd
+  languages: RMarkdown
+  github_url: https://gist.github.com/mdonovan3/2a662fa7fae5743ac7f97020c9a4aeac
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/2a662fa7fae5743ac7f97020c9a4aeac">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Inventory spot-check sheet — Quarto: calls get_theoreticals_active_product_instances_only() and get_inventory_activity() stored procs, joins results to filter only items with post-count activity, and renders a gt table grouped by storage room with a blank &#x27;actual&#x27; column for physical recount. Designed to print and use on the floor.</h1>
+
+<!-- file: inventory_spot_check.qmd | language: RMarkdown -->
+<pre><code>---
+title: &quot;Inventory Spot Check&quot;
+author: &quot;Martin Donovan&quot;
+format: html
+---
+
+```{r}
+#| echo: false
+#| output: false
+library(DBI)
+library(RPostgres)
+library(tidyverse)
+library(gt)
+library(gtExtras)
+
+# Spot-check sheet: lists only items that have had sales or purchases since the
+# last physical inventory count, with their theoretical on-hand quantity.
+# Rendered as a gt table grouped by room — designed to be printed and used for
+# a targeted physical recount rather than a full inventory.
+#
+# Calls two stored functions:
+#   get_theoreticals_active_product_instances_only($date) — current on-hand
+#   get_inventory_activity($start, $end)                  — activity since last count
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+`%+%` &lt;- function(x, y) paste0(x, y)
+
+con &lt;- dbConnect(
+  RPostgres::Postgres(),
+  dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+  host     = Sys.getenv(&quot;DB_HOST&quot;),
+  port     = Sys.getenv(&quot;DB_PORT&quot;),
+  user     = Sys.getenv(&quot;DB_USER&quot;),
+  password = Sys.getenv(&quot;DB_PASS&quot;)
+)
+
+productLocationsQuery &lt;-
+  &quot;select pi.inventory_name, pila.* &quot; %+%
+  &quot;from product_instances pi &quot; %+%
+  &quot;inner join product_instance_location_associations pila &quot; %+%
+  &quot;  on pi.product_instance_id = pila.product_instance_id &quot; %+%
+  &quot;inner join products p on p.product_id = pi.product_id &quot; %+%
+  &quot;where pi.active = true and pila.active_location = true &quot; %+%
+  &quot;and p.major_category_id = &quot; %+%
+  &quot;  (select major_category_id from major_categories &quot; %+%
+  &quot;   where lower(major_category_name) = &#x27;wine&#x27;)&quot;
+
+invCountQuery &lt;-
+  &quot;select * from inventories &quot; %+%
+  &quot;where inventory_major_category_id = &quot; %+%
+  &quot;  (select major_category_id from major_categories &quot; %+%
+  &quot;   where lower(major_category_name) = &#x27;wine&#x27;) &quot; %+%
+  &quot;order by inventory_date desc limit 1&quot;
+
+invActivityQuery &lt;-
+  &quot;select product_instance_id, product_instance_location_id, &quot; %+%
+  &quot;bottle_sales, glass_sales, purchases &quot; %+%
+  &quot;from get_inventory_activity($1, $2) &quot; %+%
+  &quot;where bottle_sales &lt;&gt; 0 or glass_sales &lt;&gt; 0 or purchases &lt;&gt; 0&quot;
+
+theoDF             &lt;- dbGetQuery(con, &quot;select * from get_theoreticals_active_product_instances_only($1)&quot;, list(Sys.Date()))
+roomsDF            &lt;- dbGetQuery(con, &quot;select * from rooms&quot;)
+invCountDF         &lt;- dbGetQuery(con, invCountQuery)
+productLocationsDF &lt;- dbGetQuery(con, productLocationsQuery)
+invActivityDF      &lt;- dbGetQuery(con, invActivityQuery,
+                       list(as.Date(invCountDF$inventory_date) + 1, Sys.Date()))
+
+# Keep only items with post-count activity; join location, room, and theoretical on-hand
+finalDF &lt;- productLocationsDF %&gt;%
+  filter(product_instance_id %in% invActivityDF$product_instance_id) %&gt;%
+  left_join(invActivityDF, by = &quot;product_instance_location_id&quot;) %&gt;%
+  inner_join(roomsDF,      by = c(&quot;location_room_id&quot; = &quot;room_id&quot;)) %&gt;%
+  inner_join(theoDF,       by = &quot;product_instance_location_id&quot;) %&gt;%
+  mutate(
+    bottle_sales.x        = replace_na(bottle_sales.x, 0),
+    glass_sales.x         = replace_na(glass_sales.x,  0),
+    purchases.x           = replace_na(purchases.x,    0),
+    sales                 = round(bottle_sales.x + glass_sales.x, 1),
+    purchases.x           = round(purchases.x,    1),
+    theoretical_on_hand   = round(theoretical_on_hand, 1)
+  ) %&gt;%
+  select(room_name, location_column, location_row,
+         inventory_name, sales, purchases.x, theoretical_on_hand) %&gt;%
+  arrange(room_name, location_column, location_row, inventory_name)
+
+dbDisconnect(con)
+```
+
+```{r}
+#| echo: false
+# Render as a printable gt table grouped by storage room.
+# &quot;actual&quot; column left blank for staff to fill in during the physical recount.
+finalDF %&gt;%
+  mutate(actual = &quot;          &quot;) %&gt;%
+  group_by(room_name) %&gt;%
+  gt() %&gt;%
+  cols_label(
+    location_column     = &quot;col&quot;,
+    location_row        = &quot;row&quot;,
+    inventory_name      = &quot;wine&quot;,
+    sales               = &quot;sales&quot;,
+    purchases.x         = &quot;purch&quot;,
+    theoretical_on_hand = &quot;on hand&quot;,
+    actual              = &quot;actual&quot;
+  ) %&gt;%
+  cols_width(
+    location_column     ~ px(25),
+    location_row        ~ px(25),
+    inventory_name      ~ px(275),
+    sales               ~ px(35),
+    purchases.x         ~ px(30),
+    theoretical_on_hand ~ px(35),
+    actual              ~ px(200)
+  )
+```
+</code></pre>
+</body>
+</html>

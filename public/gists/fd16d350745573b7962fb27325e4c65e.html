@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory variance (shrinkage) report — R: reconciles two consecutive physical counts with sales and purchases between them to identify unexplained bottle losses. variance = start_count + purchases - glass_sales - bottle_sales - end_count. Filters to bottle-only SKUs (glass_sales == 0) to isolate losses not attributable to glass pours. — inventory_variance_report.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/fd16d350745573b7962fb27325e4c65e
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Inventory variance (shrinkage) report — R: reconciles two consecutive physical counts with sales and purchases between them to identify unexplained bottle losses. variance = start_count + purchases - glass_sales - bottle_sales - end_count. Filters to bottle-only SKUs (glass_sales == 0) to isolate losses not attributable to glass pours.
+  files: inventory_variance_report.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/fd16d350745573b7962fb27325e4c65e
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/fd16d350745573b7962fb27325e4c65e">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Inventory variance (shrinkage) report — R: reconciles two consecutive physical counts with sales and purchases between them to identify unexplained bottle losses. variance = start_count + purchases - glass_sales - bottle_sales - end_count. Filters to bottle-only SKUs (glass_sales == 0) to isolate losses not attributable to glass pours.</h1>
+
+<!-- file: inventory_variance_report.R | language: R -->
+<pre><code>library(RPostgres)
+library(DBI)
+library(tidyverse)
+library(gt)
+library(gtExtras)
+
+# Period-over-period inventory variance (shrinkage) report.
+# Pulls the two most recent inventory counts, computes activity between them,
+# and identifies bottle-level discrepancies unexplained by sales.
+#
+# variance = start_count + purchases - glass_sales - bottle_sales - end_count
+# A non-zero variance on a bottle-only SKU (glass_sales == 0) is unexplained loss.
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+con &lt;- dbConnect(
+  RPostgres::Postgres(),
+  dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+  host     = Sys.getenv(&quot;DB_HOST&quot;),
+  port     = Sys.getenv(&quot;DB_PORT&quot;),
+  user     = Sys.getenv(&quot;DB_USER&quot;),
+  password = Sys.getenv(&quot;DB_PASS&quot;)
+)
+
+ACTIVE_ONLY &lt;- TRUE
+
+inv_dates &lt;- dbGetQuery(con,
+  &quot;select * from inventories order by inventory_date desc limit 2&quot;)
+
+start_inv_date &lt;- as.Date(inv_dates$inventory_date[2])
+end_inv_date   &lt;- inv_dates$inventory_date[1]
+
+inv_activity &lt;- dbGetQuery(con,
+  &quot;select * from get_inventory_activity($1, $2)&quot;,
+  list(start_inv_date + 1, end_inv_date))
+
+inv_count_query &lt;- &quot;
+  select i.*, id.*, pi.inventory_name, pi.active
+  from inventories i, inventory_details id, product_instances pi
+  where i.inventory_id = id.inventory_id
+  and   pi.product_instance_id = id.product_instance_id
+  and   i.inventory_date = $1&quot;
+
+start_inv_count &lt;- dbGetQuery(con, inv_count_query, list(start_inv_date)) %&gt;%
+  select(active, product_instance_id, product_instance_location_id,
+         inventory_name, theoretical_quantity, quantity_counted, product_cost) %&gt;%
+  filter(active == ACTIVE_ONLY)
+
+end_inv_count &lt;- dbGetQuery(con, inv_count_query, list(end_inv_date)) %&gt;%
+  select(active, product_instance_id, product_instance_location_id,
+         inventory_name, theoretical_quantity, quantity_counted, product_cost) %&gt;%
+  filter(active == ACTIVE_ONLY)
+
+si &lt;- start_inv_count %&gt;%
+  select(-c(active, theoretical_quantity)) %&gt;%
+  group_by(product_instance_id, inventory_name, product_cost) %&gt;%
+  summarize(start_count = sum(quantity_counted)) %&gt;%
+  arrange(inventory_name)
+
+ei &lt;- end_inv_count %&gt;%
+  select(-c(active, theoretical_quantity)) %&gt;%
+  group_by(product_instance_id, inventory_name, product_cost) %&gt;%
+  summarize(end_count = sum(quantity_counted)) %&gt;%
+  arrange(inventory_name)
+
+ia &lt;- inv_activity %&gt;%
+  select(product_instance_id, glass_sales, bottle_sales, purchases) %&gt;%
+  mutate(across(c(glass_sales, bottle_sales, purchases), ~ ifelse(is.na(.), 0, .))) %&gt;%
+  group_by(product_instance_id) %&gt;%
+  summarize(
+    glass_sales  = sum(glass_sales),
+    bottle_sales = sum(bottle_sales),
+    purchases    = sum(purchases)
+  )
+
+variance_df &lt;- full_join(si, ei, by = &quot;product_instance_id&quot;) %&gt;%
+  mutate(
+    inventory_name.x = ifelse(is.na(inventory_name.x), inventory_name.y, inventory_name.x),
+    start_count      = ifelse(is.na(start_count), 0, start_count),
+    end_count        = ifelse(is.na(end_count),   0, end_count)
+  ) %&gt;%
+  left_join(ia, by = &quot;product_instance_id&quot;) %&gt;%
+  mutate(across(c(glass_sales, bottle_sales, purchases), ~ ifelse(is.na(.), 0, .))) %&gt;%
+  select(-inventory_name.y) %&gt;%
+  mutate(
+    variance     = start_count + purchases - glass_sales - bottle_sales - end_count,
+    variance_ext = variance * product_cost.y
+  ) %&gt;%
+  filter(variance != 0) %&gt;%
+  arrange(desc(abs(variance_ext))) %&gt;%
+  ungroup() %&gt;%
+  select(-product_instance_id) %&gt;%
+  rename(
+    product_instance = inventory_name.x,
+    start_inv_cost   = product_cost.x,
+    end_inv_cost     = product_cost.y
+  ) %&gt;%
+  filter(abs(variance) != 0) %&gt;%
+  filter(glass_sales == 0)   # bottle-only: variance not attributable to glass pours
+
+message(&quot;Total variance (extended): $&quot;, round(sum(variance_df$variance_ext), 2))
+
+dbDisconnect(con)
+</code></pre>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Aloha POS DBF-to-PostgreSQL ETL — R: reads binary DBF files (GNDITEM, CAT, ITM, EMP), joins across 5 lookup tables including PLU-to-product-instance mapping, renames to DB schema columns, and bulk-inserts via dbWriteTable in a transaction. Orchestrator reads Aloha.ini for unit number, routes per entity to the correct database, and skips already-imported dates. — aloha_import_functions.R, aloha_import_process.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/e5e77cdc68b3e03e13d0925a80f3f399
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Aloha POS DBF-to-PostgreSQL ETL — R: reads binary DBF files (GNDITEM, CAT, ITM, EMP), joins across 5 lookup tables including PLU-to-product-instance mapping, renames to DB schema columns, and bulk-inserts via dbWriteTable in a transaction. Orchestrator reads Aloha.ini for unit number, routes per entity to the correct database, and skips already-imported dates.
+  files: aloha_import_functions.R, aloha_import_process.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/e5e77cdc68b3e03e13d0925a80f3f399
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/e5e77cdc68b3e03e13d0925a80f3f399">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Aloha POS DBF-to-PostgreSQL ETL — R: reads binary DBF files (GNDITEM, CAT, ITM, EMP), joins across 5 lookup tables including PLU-to-product-instance mapping, renames to DB schema columns, and bulk-inserts via dbWriteTable in a transaction. Orchestrator reads Aloha.ini for unit number, routes per entity to the correct database, and skips already-imported dates.</h1>
+
+<!-- file: aloha_import_functions.R | language: R -->
+<pre><code>
+getEntityId &lt;- function(alohaId, con) {
+  df &lt;- dbGetQuery(con, &quot;select entity_id from entities where aloha_id = $1&quot;, params = list(alohaId))
+  as.integer(df[1, 1])
+}
+
+
+getDBConnection &lt;- function(db) {
+  dbConnect(
+    RPostgres::Postgres(),
+    dbname   = db,
+    host     = Sys.getenv(&quot;db_host&quot;),
+    port     = Sys.getenv(&quot;db_port&quot;),
+    user     = Sys.getenv(&quot;db_user&quot;),
+    password = Sys.getenv(&quot;db_pass&quot;)
+  )
+}
+
+importExistsInDB &lt;- function(date, entity, con) {
+  df &lt;- dbGetQuery(con,
+    &quot;select count(*) from pos_chkitems where date_of_sale = $1&quot;,
+    params = list(date))
+  df[[1]] &gt; 0
+}
+
+importWineSales &lt;- function(dataDir, majorId, minorId, db, test = FALSE) {
+  con &lt;- db
+
+  bottleSizeDF    &lt;- dbGetQuery(con, &quot;select * from bottle_sizes&quot;)
+  productLocationDF &lt;- dbGetQuery(con,
+    &quot;select pila.product_instance_location_id, pila.product_instance_id
+     from product_instances pi, product_instance_location_associations pila
+     where pi.product_instance_id = pila.product_instance_id
+     and pi.active = true and pila.active_location = true
+     and pila.default_sale_location = true&quot;)
+  PLUDF &lt;- dbGetQuery(con,
+    &quot;select pppia.*,
+     pi.unit_price, pi.is_club_list_selection,
+     pi.is_clearance, pi.bottle_size_id
+     from pos_plu_product_instance_associations pppia,
+     product_instances pi
+     where pi.product_instance_id = pppia.product_instance_id&quot;)
+
+  catDF &lt;- read.dbf(paste(dataDir, &quot;/CAT.DBF&quot;, sep = &quot;&quot;)) %&gt;% select(ID, NAME)
+  itmDF &lt;- read.dbf(paste(dataDir, &quot;/ITM.DBF&quot;, sep = &quot;&quot;)) %&gt;% select(ID, LONGNAME)
+  empDF &lt;- read.dbf(paste(dataDir, &quot;/EMP.DBF&quot;, sep = &quot;&quot;)) %&gt;% select(ID, FIRSTNAME, LASTNAME)
+
+  gnditemDF &lt;- read.dbf(paste(dataDir, &quot;/GNDITEM.dbf&quot;, sep = &quot;&quot;)) %&gt;%
+    select(EMPLOYEE, CHECK, HOUR, MINUTE, ITEM, QUANTITY, MODCODE, PRICE, SYSDATE, CATEGORY, TABLEID) %&gt;%
+    filter(!is.na(ITEM))
+
+  salesDataDF &lt;- merge(gnditemDF, empDF, by.x = &quot;EMPLOYEE&quot;, by.y = &quot;ID&quot;)
+  salesDataDF &lt;- merge(salesDataDF, catDF, by.x = &quot;CATEGORY&quot;, by.y = &quot;ID&quot;)
+  salesDataDF &lt;- merge(salesDataDF, itmDF, by.x = &quot;ITEM&quot;,     by.y = &quot;ID&quot;) %&gt;%
+    filter(NAME %in% c(&quot;WINE&quot;, &quot;BOTTLE WINE&quot;, &quot;GLASS WINE&quot;)) %&gt;%
+    mutate(
+      FIRSTNAME = as.character(FIRSTNAME),
+      LASTNAME  = as.character(LASTNAME),
+      LONGNAME  = as.character(LONGNAME),
+      NAME      = as.character(NAME)
+    )
+
+  salesDataDF &lt;- data.frame(salesDataDF)
+  salesDataDF &lt;- merge(salesDataDF, PLUDF,            by.x = &quot;ITEM&quot;,            by.y = &quot;pos_plu&quot;)
+  salesDataDF &lt;- merge(salesDataDF, productLocationDF, by.x = &quot;product_instance_id&quot;, by.y = &quot;product_instance_id&quot;)
+  salesDataDF &lt;- merge(salesDataDF, bottleSizeDF,      by.x = &quot;bottle_size_id&quot;,  by.y = &quot;bottle_size_id&quot;)
+
+  salesDataDF &lt;- salesDataDF %&gt;%
+    mutate(
+      is_clearance           = replace_na(is_clearance, FALSE),
+      is_club_list_selection = replace_na(is_club_list_selection, FALSE),
+      major                  = majorId,
+      minor                  = minorId,
+      menu_price             = PRICE,
+      sales_amt              = PRICE,
+      is_option              = FALSE,
+      disc_num               = 0,
+      tax_code               = 1,
+      deletion               = 0,
+      overring               = FALSE,
+      shift                  = NA
+    ) %&gt;%
+    arrange(CHECK, HOUR, MINUTE) %&gt;%
+    rename(
+      date_of_sale              = SYSDATE,
+      check_num                 = CHECK,
+      sales_cat                 = CATEGORY,
+      num_sold                  = QUANTITY,
+      user_name_first           = FIRSTNAME,
+      user_name_last            = LASTNAME,
+      pos_product_name          = LONGNAME,
+      sales_units_sold          = number_sales_units,
+      unit_cost_at_time_of_sale = unit_price,
+      is_club_list_sale         = is_club_list_selection,
+      is_clearance_sale         = is_clearance,
+      sales_volume_unit_id      = sales_unit_id,
+      sale_hour                 = HOUR,
+      sale_minute               = MINUTE,
+      table_number              = TABLEID,
+      user_num                  = EMPLOYEE,
+      item_num                  = ITEM
+    ) %&gt;%
+    mutate(time_of_sale = as.integer(paste(sale_hour, sale_minute, sep = &quot;&quot;))) %&gt;%
+    select(-c(PRICE, bottle_size_id, MODCODE, NAME,
+              is_wine_list_bin_number, bottle_size, bottle_size_unit))
+
+  if (test) {
+    dbExecute(con, &quot;delete from pos_chkitems where date_of_sale = &#x27;1999-12-31&#x27;&quot;)
+    salesDataDF &lt;- salesDataDF %&gt;% mutate(date_of_sale = &quot;1999-12-31&quot;)
+    dbWriteTable(con, &quot;pos_chkitems&quot;, salesDataDF,
+      row.names = FALSE, overwrite = FALSE, append = TRUE,
+      field.types = NULL, temporary = FALSE, copy = TRUE)
+  } else {
+    dbWithTransaction(con, {
+      dbWriteTable(con, &quot;pos_chkitems&quot;, salesDataDF,
+        row.names = FALSE, overwrite = FALSE, append = TRUE,
+        field.types = NULL, temporary = FALSE, copy = TRUE)
+    })
+  }
+}
+
+getAlohaDataSourceId &lt;- function(con) {
+  df &lt;- dbGetQuery(con,
+    &quot;select data_import_source_id from data_import_sources where lower(data_import_source_name) = &#x27;aloha&#x27;&quot;)
+  df[[1]]
+}
+
+folderIsValid &lt;- function(folder) {
+  ini  &lt;- paste(folder, &quot;/Aloha.ini&quot;,  sep = &quot;&quot;)
+  line &lt;- paste(folder, &quot;/GNDLINE.dbf&quot;, sep = &quot;&quot;)
+
+  if (!file.exists(ini) || !file.exists(line) || file.size(line) &lt;= 1000) {
+    return(FALSE)
+  }
+
+  iniDF &lt;- read.csv2(ini, sep = &quot;=&quot;, skip = 1, header = FALSE)
+  rNum  &lt;- as.integer(iniDF[iniDF$V1 == &quot;UNITNUMBER&quot;, ][&quot;V2&quot;])
+  !is.na(rNum)
+}
+
+</code></pre><!-- file: aloha_import_process.R | language: R -->
+<pre><code>if (!require(&quot;pacman&quot;)) install.packages(&quot;pacman&quot;)
+pacman::p_load(tidyverse, foreign, RCurl, zip, here, DBI, RPostgreSQL, gtools, RPostgres)
+
+test &lt;- FALSE
+
+baseDir    &lt;- case_when(Sys.info()[[&quot;sysname&quot;]] == &quot;Windows&quot; ~ &quot;c:/scripts/WineSalesImport&quot;, .default = here())
+AlohaPath  &lt;- case_when(Sys.info()[[&quot;sysname&quot;]] == &quot;Windows&quot; ~ &quot;c:/BootDrv/Aloha&quot;,          .default = paste(here(), &quot;/data&quot;, sep = &quot;&quot;))
+
+# Load credentials from .Renviron (db_host, db_port, db_user, db_pass)
+readRenviron(paste(baseDir, &quot;/.Renviron&quot;, sep = &quot;&quot;))
+source(paste(baseDir, &quot;/functions.R&quot;, sep = &quot;&quot;), echo = FALSE)
+
+LHRCCon      &lt;- getDBConnection(&quot;lhrc_data&quot;)
+entitiesDF   &lt;- dbGetQuery(LHRCCon, &quot;select * from entities&quot;)
+dataSourceID &lt;- getAlohaDataSourceId(LHRCCon)
+
+wineDBCon &lt;- NULL
+
+numFolderToProcess &lt;- 14
+
+# Get most recent N date-named folders under AlohaPath
+folders &lt;- list.dirs(AlohaPath, recursive = FALSE)
+folders &lt;- folders[grepl(&quot;/\\d{8}$&quot;, folders)]
+temp    &lt;- as.Date(sub(&quot;^\\S+([0-9]{8})&quot;, &quot;\\1&quot;, folders), &quot;%Y%m%d&quot;)
+folders &lt;- folders[order(temp, decreasing = TRUE)]
+folders &lt;- folders[1:numFolderToProcess]
+
+for (folder in folders) {
+  if (folderIsValid(folder)) {
+    bname      &lt;- basename(folder)
+    folderDate &lt;- as.Date(bname, format = &quot;%Y%m%d&quot;)
+
+    ini   &lt;- read.csv2(paste(folder, &quot;/Aloha.ini&quot;, sep = &quot;&quot;), sep = &quot;=&quot;, skip = 1, header = FALSE)
+    rNum  &lt;- as.integer(ini[ini$V1 == &quot;UNITNUMBER&quot;, ][&quot;V2&quot;])
+
+    entityRow     &lt;- entitiesDF %&gt;% filter(aloha_id == rNum)
+    entityNumber  &lt;- as.integer(unlist(entityRow %&gt;% select(entity_id)))
+    wineDBName    &lt;- as.character(unlist(entityRow %&gt;% select(wine_db_name)))
+    majorId       &lt;- as.integer(unlist(entityRow %&gt;% select(wine_major_category_id)))
+    minorId       &lt;- as.integer(unlist(entityRow %&gt;% select(wine_minor_category_id)))
+
+    message(&quot;Processing folder: &quot;, bname, &quot; | entity: &quot;, entityNumber, &quot; | db: &quot;, wineDBName)
+
+    wineDBCon &lt;- getDBConnection(wineDBName)
+
+    if (test || !importExistsInDB(folderDate, entityNumber, wineDBCon)) {
+      importWineSales(folder, majorId, minorId, wineDBCon, test)
+    } else {
+      message(&quot;  Already imported, skipping.&quot;)
+    }
+
+    dbDisconnect(wineDBCon)
+  }
+}
+
+dbDisconnect(LHRCCon)
+
+</code></pre>
+</body>
+</html>

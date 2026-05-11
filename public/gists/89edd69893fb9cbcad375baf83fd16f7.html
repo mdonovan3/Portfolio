@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FIFO inventory cost basis calculator — Java (2011)                                                                                                                                                                                                                                                                                                          Computes per-product-instance cost basis using three methods (on-hand weighted average, last-purchase average, last-purchase maximum) against a FIFO purchase lot queue       ordered by date descending. Uses a PriorityQueue&lt;PurchaseLot&gt; with a custom Comparator, a CostMatrix inner class for weighted-average and inventory age tracking, and a   TheoreticalCountMap for perpetual on-hand quantities. Predecessor to the current PostgreSQL perpetual inventory implementation.  — CostBasisCalculator.java</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/89edd69893fb9cbcad375baf83fd16f7
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: FIFO inventory cost basis calculator — Java (2011)                                                                                                                                                                                                                                                                                                          Computes per-product-instance cost basis using three methods (on-hand weighted average, last-purchase average, last-purchase maximum) against a FIFO purchase lot queue       ordered by date descending. Uses a PriorityQueue&lt;PurchaseLot&gt; with a custom Comparator, a CostMatrix inner class for weighted-average and inventory age tracking, and a   TheoreticalCountMap for perpetual on-hand quantities. Predecessor to the current PostgreSQL perpetual inventory implementation. 
+  files: CostBasisCalculator.java
+  languages: Java
+  github_url: https://gist.github.com/mdonovan3/89edd69893fb9cbcad375baf83fd16f7
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/89edd69893fb9cbcad375baf83fd16f7">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>FIFO inventory cost basis calculator — Java (2011)                                                                                                                                                                                                                                                                                                          Computes per-product-instance cost basis using three methods (on-hand weighted average, last-purchase average, last-purchase maximum) against a FIFO purchase lot queue       ordered by date descending. Uses a PriorityQueue&lt;PurchaseLot&gt; with a custom Comparator, a CostMatrix inner class for weighted-average and inventory age tracking, and a   TheoreticalCountMap for perpetual on-hand quantities. Predecessor to the current PostgreSQL perpetual inventory implementation. </h1>
+
+<!-- file: CostBasisCalculator.java | language: Java -->
+<pre><code>/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+package net.martindonovan.Inventory;
+
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.PriorityQueue;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import net.martindonovan.Inventory.util.ApplicationData;
+
+/**
+ *
+ * @author Martin Donovan
+ */
+
+public class CostBasisCalculator
+{
+  public CostBasisCalculator(Date d)
+  {
+    try
+    {
+      date = d;
+      conn = ApplicationData.getConnection();
+      tcm = new TheoreticalCountMap(date);
+//      getProductInstanceIDs(tcm.getProductInstanceIDMap());
+      getProductInstanceIDs();
+      getProductInstanceLocationIDs();
+      getPurchases();
+      getPurchasesGroupedByDate();
+      calulateCost();
+      conn.close();
+    }
+    catch (SQLException ex)
+    {
+      Logger.getLogger(CostBasisCalculator.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+
+  public Float getTheoreticalByProductInstanceID(Integer piid)
+  {
+    return tcm.getTheoreticalByProductInstanceID(piid);
+  }
+
+  public PriorityQueue&lt;CostBasisCalculator.PurchaseLot&gt; getPurchaseLotsByProductInstanceID(Integer piid)
+  {
+    return productInstancePurchaseMap.containsKey(piid) ?
+           productInstancePurchaseMap.get(piid) : null;
+  }
+
+  public CostBasisCalculator()
+  {
+    this(new java.sql.Date(Calendar.getInstance().getTimeInMillis()));
+  }
+
+
+  private void getProductInstanceLocationIDs() throws SQLException
+  {
+    productInstanceLocationMap = new HashMap();
+    productInstancePurchaseMap = new HashMap();
+    productInstancePurchaseByDateMap = new HashMap();
+    for (Integer piid : productInstanceIDs)
+    {
+      productInstanceLocationMap.put(piid, new ArrayList&lt;Integer&gt;() );
+      productInstancePurchaseMap.put(piid, new PriorityQueue(5, purchaseLotComparator));
+      productInstancePurchaseByDateMap.put(piid, new PriorityQueue(5, purchaseLotComparator));
+    }
+    String q = &quot;select product_instance_id, product_instance_location_id &quot;
+            + &quot;from product_instance_location_associations&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      Integer pid = rs.getInt(&quot;product_instance_id&quot;);
+      Integer pilid = rs.getInt(&quot;product_instance_location_id&quot;);
+      //////////// CHANGED
+//      if (! productInstanceLocationMap.containsKey(pid))
+//        productInstanceLocationMap.put(pid, new ArrayList&lt;Integer&gt;());
+      if (productInstanceLocationMap.containsKey(pid))
+        productInstanceLocationMap.get(pid).add(pilid);
+    }
+  }
+
+  private void getProductInstanceIDs() throws SQLException
+  {
+    productInstanceIDs = new ArrayList&lt;Integer&gt;();
+    String q = &quot;select product_instance_id from product_instance_location_associations&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs = ps.executeQuery();
+    while (rs.next())
+    {
+      productInstanceIDs.add(rs.getInt(&quot;product_instance_id&quot;));
+    }
+  }
+
+  private void getPurchases() throws SQLException
+  {
+    Float sum = 0f;
+    Float onHand;
+    String q = &quot;select * from invoices i, invoice_details id &quot;
+            + &quot;where i.invoice_id = id.invoice_id &quot;
+            + &quot;and payment_date &lt;= ? &quot;
+            + &quot;and product_instance_location_id in &quot;
+            + &quot;(select product_instance_location_id from &quot;
+            + &quot;product_instance_location_associations where &quot;
+            + &quot;product_instance_id = ?) &quot;
+            + &quot;order by payment_date desc&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setDate(1, date);
+    for (Integer piid : productInstanceLocationMap.keySet())
+    {
+      onHand = tcm.getTheoreticalByProductInstanceID(piid);
+      sum = 0f;
+      ps.setInt(2, piid);
+      ResultSet rs = ps.executeQuery();
+      while (rs.next())
+      {
+        Integer numRec = rs.getInt(&quot;number_received&quot;);
+        Float cost = rs.getFloat(&quot;price_per_unit&quot;);
+        java.sql.Date paymentDate = rs.getDate(&quot;payment_date&quot;);
+        Integer invID = rs.getInt(&quot;invoice_id&quot;);
+        if ( (  sum &lt; onHand ) ||
+             ( /* productInstancePurchaseMap.get(piid) != null &amp;&amp; */
+               productInstancePurchaseMap.get(piid).peek() != null &amp;&amp;
+               containsDate(paymentDate, productInstancePurchaseMap.get(piid))
+             )
+           )
+        {
+          if (productInstancePurchaseMap.get(piid) == null)
+          {
+            productInstancePurchaseMap.put(piid, new PriorityQueue(5, purchaseLotComparator));
+          }
+          productInstancePurchaseMap.get(piid).add(new PurchaseLot(paymentDate, invID, numRec, cost));
+        }
+        if (sum &gt; onHand)
+          break;
+        sum += numRec;
+      }
+    }
+  }
+
+  public HashMap&lt;Integer, Vector&lt;Integer&gt;&gt; getTCMProductInstanceIDMap()
+  {
+    return tcm.getProductInstanceIDMap();
+  }
+
+  private void getPurchasesGroupedByDate() throws SQLException
+  {
+    Float sum = 0f;
+    Float onHand;
+    String q = &quot;select i.payment_date, sum(id.number_received) as total_received, &quot; +
+            &quot;sum(id.number_received * id.price_per_unit) as total_cost &quot; +
+            &quot; from invoices i, invoice_details id &quot;
+            + &quot;where i.invoice_id = id.invoice_id &quot;
+            + &quot;and payment_date &lt;= ? &quot;
+            + &quot;and product_instance_location_id in &quot;
+            + &quot;(select product_instance_location_id from &quot;
+            + &quot;product_instance_location_associations where &quot;
+            + &quot;product_instance_id = ?) &quot; +
+            &quot;group by i.payment_date &quot;
+            + &quot;order by payment_date desc&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setDate(1, date);
+    for (Integer piid : productInstanceLocationMap.keySet())
+    {
+      onHand = tcm.getTheoreticalByProductInstanceID(piid);
+      sum = 0f;
+      ps.setInt(2, piid);
+      ResultSet rs = ps.executeQuery();
+      while (rs.next())
+      {
+        Integer numRec = rs.getInt(&quot;total_received&quot;);
+        Float cost = rs.getFloat(&quot;total_cost&quot;);
+        java.sql.Date paymentDate = rs.getDate(&quot;payment_date&quot;);
+        Integer invID = 0;
+        if ( (  sum &lt; onHand ) ||
+             ( /* productInstancePurchaseMap.get(piid) != null &amp;&amp; */
+               productInstancePurchaseByDateMap.get(piid).peek() != null &amp;&amp;
+               containsDate(paymentDate, productInstancePurchaseMap.get(piid))
+             )
+           )
+        {
+          if (productInstancePurchaseByDateMap.get(piid) == null)
+          {
+            productInstancePurchaseByDateMap.put(piid, new PriorityQueue(5, purchaseLotComparator));
+          }
+          productInstancePurchaseByDateMap.get(piid).add(new PurchaseLot(paymentDate, invID, numRec, cost / numRec));
+        }
+        if (sum &gt; onHand)
+          break;
+        sum += numRec;
+      }
+    }
+  }
+
+  private boolean containsDate (java.sql.Date d, PriorityQueue&lt;PurchaseLot&gt; plq)
+  {
+    Iterator iter = plq.iterator();
+    while (iter.hasNext())
+    {
+      PurchaseLot pl = (PurchaseLot) iter.next();
+      if (pl.purchaseDate.equals(d))
+        return true;
+    }
+    return false;
+  }
+
+  private void calulateCost() throws SQLException
+  {
+    getProductInstanceNames();
+    productInstanceCostBasisMap = new HashMap();
+    for (Integer piid : productInstanceIDs)
+      productInstanceCostBasisMap.put(piid, new HashMap());
+    getLastPurchaseMaximumCosts();
+    getOnHandAverageCosts();
+    getLastPurchaseAverageCosts();
+    //listCostBases();
+    //listPurchases();
+  }
+
+  private void getProductInstanceNames() throws SQLException
+  {
+    String q = &quot;select inventory_name from product_instances &quot; +
+               &quot; where product_instance_id = ?&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ResultSet rs;
+    for (Integer piid : productInstancePurchaseMap.keySet())
+    {
+      ps.setInt(1, piid);
+      rs = ps.executeQuery();
+      if (rs.next())
+        productInstanceNameMap.put(piid, rs.getString(&quot;inventory_name&quot;));
+    }
+  }
+
+  private void listCostBases()
+  {
+    for (Integer piid : productInstanceCostBasisMap.keySet())
+    {
+      System.out.println( productInstanceNameMap.get(piid) + &quot; : &quot; + piid  );
+      for (CostBasisType cbt : productInstanceCostBasisMap.get(piid).keySet())
+      {
+          System.out.println(&quot;  Type: &quot; + cbt + &quot; Cost: &quot; + productInstanceCostBasisMap.get(piid).get(cbt));
+      }
+    }
+  }
+
+  private void getLastPurchaseAverageCosts() throws SQLException
+  {
+    for (Integer piid : productInstanceCostBasisMap.keySet())
+    {
+      Float c = calculateLastPurchaseAverageCost(piid);
+      productInstanceCostBasisMap.get(piid).put(CostBasisType.LAST_PURCHASE_AVERAGE, c);
+    }
+  }
+
+  private void getLastPurchaseMaximumCosts() throws SQLException
+  {
+    for (Integer piid : productInstanceCostBasisMap.keySet())
+    {
+      Float c = calculateLastPurchaseMaximumCost(piid);
+      productInstanceCostBasisMap.get(piid).put(CostBasisType.LAST_PURCHASE_MAXIMUM, c);
+    }
+  }
+
+  private void getOnHandAverageCosts() throws SQLException
+  {
+    for (Integer piid : productInstanceCostBasisMap.keySet())
+    {
+      Float c = calculateOnHandAverageCost(piid);
+      productInstanceCostBasisMap.get(piid).put(CostBasisType.ON_HAND_AVERAGE, c);
+    }
+  }
+
+  //TODO - check this
+  private PriorityQueue&lt;PurchaseLot&gt; combinePurchaseLotsByDate(PriorityQueue plq)
+  {
+
+    Iterator iter = plq.iterator();
+    PriorityQueue&lt;PurchaseLot&gt; byDateQueue = new PriorityQueue&lt;PurchaseLot&gt;(5, purchaseLotComparator);
+    java.sql.Date currDate = null;
+    boolean first = true;
+    CostMatrix costMatrix = new CostMatrix();
+    while (iter.hasNext())
+    {
+      PurchaseLot pl = (PurchaseLot) iter.next();
+      if (first)
+      {
+        first = false;
+        currDate = pl.purchaseDate;
+        costMatrix.clear();
+      }
+      if( ! currDate.equals(pl.purchaseDate)  )
+      {
+        byDateQueue.add(new PurchaseLot(currDate, 0, costMatrix.getTotalQuantity(), costMatrix.getAverageCost()));
+        costMatrix.clear();
+        currDate = pl.purchaseDate;
+        if(pl.lotQuantity &gt; 0 &amp;&amp; pl.unitCost &gt; 0)
+          costMatrix.addLine(pl.lotQuantity.floatValue(), pl.unitCost);
+      }
+      else
+      {
+//        if(pl.lotQuantity &gt; 0 &amp;&amp; pl.unitCost &gt; 0)
+        costMatrix.addLine(pl.lotQuantity.floatValue(), pl.unitCost);
+      }
+      if ( ! iter.hasNext() )
+      {
+        byDateQueue.add(new PurchaseLot(currDate, 0, costMatrix.getTotalQuantity(), costMatrix.getAverageCost()));
+      }
+      // Does not handle case with only one purchase date
+    }
+    return byDateQueue;
+  }
+
+  //TODO - Change to group by day
+  private Float calculateOnHandAverageCost(int piid) throws SQLException
+  {
+    Float theo = tcm.getTheoreticalByProductInstanceID(piid);
+    Float counted = 0f;
+    Float cost = 0f;
+    final Float THRESHHOLD = 1f;
+    final Float EPSILON = .1f;
+    boolean done = false;
+    CostMatrix costMatrix = new CostMatrix();
+    PriorityQueue plq = productInstancePurchaseByDateMap.get(piid);
+//    PriorityQueue&lt;PurchaseLot&gt; byDateQueue =
+//            combinePurchaseLotsByDate(productInstancePurchaseMap.get(piid));
+    Iterator iter = plq.iterator();
+//    Iterator iter = byDateQueue.iterator();
+
+    if ( plq == null)
+      return getCurrentInventoryValue(piid);
+    while (! done &amp;&amp; iter.hasNext())
+    {
+      PurchaseLot pl = (PurchaseLot) iter.next();
+      Float amountToAdd = getAmountToAdd(theo, counted, pl.getLotQuantity().floatValue());
+      counted += amountToAdd;
+      // ADDED 7/5/2011
+      // CHECK THIS !!!!!!!!!!!!!!!!!11
+      if (pl.getLotQuantity() &gt; 0)
+        costMatrix.addLine(amountToAdd, pl.unitCost, pl.purchaseDate);
+      if ( (theo - counted) &lt; EPSILON )
+        done = true;
+    }
+    cost = costMatrix.getAverageCost();
+    productInstanceOnHandAverageAgeMap.put(piid, costMatrix.getAverageAge());
+    if (cost &lt; THRESHHOLD)
+      return getCurrentInventoryValue(piid);
+    else return cost;
+  }
+
+  private Float getAmountToAdd(Float theo, Float rt, Float lq)
+  {
+    final Float EPSILON = .1f;
+    if ( (theo - (rt + lq) ) &gt;= EPSILON )
+      return lq;
+    else
+      return theo - rt;
+  }
+
+  private Float calculateLastPurchaseAverageCost(int piid) throws SQLException
+  {
+    Float cost = 0f;
+    CostMatrix costMatrix = new CostMatrix();
+    PriorityQueue plq = productInstancePurchaseMap.get(piid);
+    if (plq == null)
+    {
+      return getCurrentInventoryValue(piid);
+    }
+    else
+    {
+      final Float THRESHHOLD = 1f;
+      boolean sameDate = true;
+      boolean first  = true;
+      boolean valid = false;
+      java.sql.Date currDate = null;
+      Iterator iter = plq.iterator();
+      while (iter.hasNext())
+      {
+        PurchaseLot pl = (PurchaseLot) iter.next();
+        if (first)
+        {
+          currDate = pl.purchaseDate;
+          first = false;
+        }
+        //still on first date
+        if (currDate.equals(pl.purchaseDate))
+        {
+          // necessary ??
+          if (pl.getLotQuantity() &gt; 0 &amp;&amp; pl.unitCost &gt; 0)
+            costMatrix.addLine(pl.getLotQuantity().floatValue(), pl.unitCost);
+        }
+        // date has advanced
+        else
+        {
+          //determine if the average cost is above threshold
+          //if so, return it, if not, process next date in the queue
+          if (costMatrix.getAverageCost() &gt;= THRESHHOLD)
+          {
+            return costMatrix.getAverageCost();
+          }
+          else
+          {
+            currDate = pl.purchaseDate;
+            costMatrix.clear();
+            //TODO check next 2 lines
+            if (pl.getLotQuantity() &gt; 0 &amp;&amp; pl.unitCost &gt; 0)
+              costMatrix.addLine(pl.getLotQuantity().floatValue(), pl.unitCost);
+          }
+        }
+      }
+      //failed to get a value above threshhold - return curr inv value
+      if (costMatrix.getAverageCost() &gt;= THRESHHOLD)
+      {
+        return costMatrix.getAverageCost();
+      }
+      else
+        return getCurrentInventoryValue(piid);
+    }
+  }
+
+  //returns the maximum purchase price from the most recent purchase date,
+  //if it is more than $1. If it cannot find one, it returns the inventory value
+  private Float calculateLastPurchaseMaximumCost(int piid) throws SQLException
+  {
+    Float cost = null;
+    PriorityQueue plq = productInstancePurchaseMap.get(piid);
+    if (plq == null)
+    {
+      return getCurrentInventoryValue(piid);
+    }
+    else
+    {
+      final Float THRESHHOLD = 1f;
+      boolean sameDate = true;
+      boolean first  = true;
+      boolean valid = false;
+      java.sql.Date currDate = null;
+      Iterator iter = plq.iterator();
+      while (iter.hasNext())
+      {
+        PurchaseLot pl = (PurchaseLot) iter.next();
+        if (first)
+        {
+          currDate = pl.purchaseDate;
+          first = false;
+        }
+        if (currDate.equals(pl.purchaseDate))
+        {
+          if (pl.unitCost &gt;= THRESHHOLD &amp;&amp; pl.getLotQuantity() &gt; 0)
+          {
+            cost = (cost == null ) ? pl.unitCost : Math.max(cost, pl.unitCost);
+          }
+        }
+        else
+        {
+          currDate = pl.purchaseDate;
+          if (cost != null &amp;&amp; cost &gt;= THRESHHOLD)
+          {
+            return cost;
+          }
+          else
+          {
+            if (pl.unitCost &gt;= THRESHHOLD)
+            {
+              if (pl.unitCost &gt;= THRESHHOLD)
+              {
+                cost = (cost == null ) ? pl.unitCost : Math.max(cost, pl.unitCost);
+              }
+            }
+          }
+        }
+      }
+    }
+    return cost == null ? getCurrentInventoryValue(piid) : cost;
+  }
+
+  private float getCurrentInventoryValue(int piid) throws SQLException
+  {
+    Float civ = null;
+    String q = &quot;select unit_price from product_instances where &quot;
+            + &quot;product_instance_id = ?&quot;;
+    PreparedStatement ps = conn.prepareStatement(q);
+    ps.setInt(1, piid);
+    ResultSet rs = ps.executeQuery();
+    if (rs.next())
+    {
+      civ = rs.getFloat(&quot;unit_price&quot;);
+      if (rs.wasNull())
+        civ = null;
+    }
+    return civ == null ? 0f : civ;
+  }
+
+  public Float getCostBasisForProductInstance(int piid, CostBasisType cbt)
+  {
+    if (productInstanceCostBasisMap.containsKey(piid))
+    {
+      return productInstanceCostBasisMap.get(piid).get(cbt);
+    }
+    else
+    {
+      return 0f;
+    }
+  }
+
+  public Float getCostBasisForProductInstanceLocation(int pilid, CostBasisType cbt)
+  {
+    Connection c = ApplicationData.getConnection();
+    String q = &quot;select product_instance_id from &quot;
+            + &quot;product_instance_location_associations &quot;
+            + &quot;where product_instance_location_id = ?&quot;;
+    try
+    {
+      PreparedStatement ps = c.prepareStatement(q);
+      ps.setInt(1, pilid);
+      ResultSet rs = ps.executeQuery();
+      rs.next();
+      c.close();
+      return getCostBasisForProductInstance(rs.getInt(&quot;product_instance_id&quot;), cbt);
+    }
+    catch (SQLException ex)
+    {
+      Logger.getLogger(CostBasisCalculator.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
+    }
+  }
+
+  public String getProductInstanceName(int piid)
+  {
+    return productInstanceNameMap.get(piid);
+  }
+
+  public Float getOnHandAverageAgeByProductInstanceID(int piid)
+  {
+    return productInstanceOnHandAverageAgeMap.get(piid);
+  }
+
+  public Float getTotalCostProductInstanceTheoreticalOnHand(Integer piid, CostBasisType cbt)
+  {
+    return 0f;
+  }
+
+   private Integer majorCategoryID = null;
+   private TheoreticalCountMap tcm;
+   private HashMap&lt;Integer, PriorityQueue&lt;PurchaseLot&gt;&gt; productInstancePurchaseMap;
+   private HashMap&lt;Integer, PriorityQueue&lt;PurchaseLot&gt;&gt; productInstancePurchaseByDateMap;
+   private HashMap&lt;Integer, HashMap&lt;CostBasisType,Float&gt;&gt; productInstanceCostBasisMap;
+   private ArrayList&lt;Integer&gt; productInstanceIDs;
+   private HashMap&lt;Integer, ArrayList&lt;Integer&gt;&gt; productInstanceLocationMap;
+   private HashMap&lt;Integer, Float&gt; productInstanceOnHandAverageAgeMap = new HashMap();
+   private java.sql.Date date;
+   private Connection conn;
+   private PurchaseLotComparator purchaseLotComparator = new PurchaseLotComparator();
+   private HashMap&lt;Integer, String&gt; productInstanceNameMap = new HashMap();
+
+   public enum CostBasisType
+   {
+     ON_HAND_AVERAGE(&quot;On Hand Average&quot;),
+     LAST_PURCHASE_AVERAGE(&quot;Last Purchase Average&quot;),
+     LAST_PURCHASE_MAXIMUM(&quot;Last Purchase Maximum&quot;);
+
+     private final String typeName;
+     CostBasisType(String s)
+     {
+       typeName = s;
+     }
+     public String toString()
+     {
+       return typeName;
+     }
+   }
+
+
+//   private class ProductInstanceCost
+//   {
+//     public CostBasisType costBasisType;
+//     public Float costBasis;
+//
+//     public ProductInstanceCost(CostBasisType cbt, Float cb)
+//     {
+//       this.costBasisType = cbt;
+//       this.costBasis = cb;
+//     }
+//   }
+
+   private class CostMatrix
+   {
+     public ArrayList&lt;Line&gt; lines;
+
+     public CostMatrix()
+     {
+        lines = new ArrayList();
+     }
+
+     public void addLine(Float q, Float c)
+     {
+       lines.add(new Line(q,c));
+     }
+
+     public void addLine(Float q, Float c, java.sql.Date d)
+     {
+       lines.add(new Line(q,c, d));
+     }
+
+     public void clear()
+     {
+        lines.clear();
+     }
+
+     public String toString()
+     {
+        StringBuilder sb = new StringBuilder();
+        for (Line l : lines)
+        {
+          sb.append(l + &quot;\n&quot;);
+        }
+        return sb.toString();
+     }
+
+     public Float getAverageCost()
+     {
+       Float totalQuantity = 0f;
+       Float totalExtendedCost = 0f;
+       for (Line l : lines)
+       {
+         totalQuantity += l.quantity;
+         totalExtendedCost += l.cost * l.quantity;
+       }
+//       System.out.println(&quot;avg cost &quot; + totalExtendedCost + &quot; &quot; + totalQuantity);
+       return totalQuantity &lt;= 0 ? 0 : totalExtendedCost / totalQuantity;
+     }
+
+     public Integer getTotalQuantity()
+     {
+       Integer totalQuantity = 0;
+       for (Line l : lines)
+       {
+         totalQuantity += l.quantity.intValue();
+       }
+       return totalQuantity;
+     }
+
+      public Float getAverageAge()
+     {
+       java.sql.Date currentDate = new java.sql.Date(Calendar.getInstance().getTimeInMillis());
+       Float quantityTimesAge = 0f;
+       Float totalQuantity = 0f;
+       for (Line l : lines)
+       {
+         quantityTimesAge += l.quantity * getAgeInYears(currentDate, l.date);
+         totalQuantity +=l.quantity;
+       }
+       return quantityTimesAge / totalQuantity;
+     }
+
+     private float getAgeInYears(java.sql.Date curr, java.sql.Date id)
+     {
+        final long MILLISEC_PER_YEAR = 1000 * 60 *60 * 24 * 365;
+        return (float)(curr.getTime() - id.getTime()) / MILLISEC_PER_YEAR;
+     }
+
+     private class Line
+     {
+       public Line (Float q, Float c)
+       {
+         quantity = q;
+         cost = c;
+       }
+
+       public Line (Float q, Float c, java.sql.Date d)
+       {
+         quantity = q;
+         cost = c;
+         date = d;
+       }
+
+       Float quantity;
+       Float cost;
+       java.sql.Date date;
+
+       public String toString()
+       {
+         return &quot;Quantity &quot; + quantity + &quot;  cost &quot; + cost;
+       }
+     }
+   }
+
+   public class PurchaseLot
+   {
+     private Integer lotQuantity;
+     Float unitCost;
+     java.sql.Date purchaseDate;
+     Integer invoiceID;
+
+     public PurchaseLot(java.sql.Date d, Integer invID, Integer q, Float c)
+     {
+       purchaseDate = d;
+       lotQuantity = q;
+       unitCost = c;
+       invoiceID = invID;
+     }
+
+     public String toString()
+     {
+       return purchaseDate.toString() + &quot; &quot; + invoiceID
+               + &quot; &quot; + getLotQuantity() + &quot; &quot; + unitCost;
+     }
+
+    /**
+     * @return the lotQuantity
+     */
+    public Integer getLotQuantity()
+    {
+      return lotQuantity;
+    }
+
+    /**
+     * @param lotQuantity the lotQuantity to set
+     */
+    public void setLotQuantity(Integer lotQuantity)
+    {
+      this.lotQuantity = lotQuantity;
+    }
+   }
+
+    public class PurchaseLotComparator implements Comparator
+    {
+
+    @Override
+    public int compare(Object o1, Object o2)
+    {
+      PurchaseLot pl1 = (PurchaseLot) o1;
+      PurchaseLot pl2 = (PurchaseLot) o2;
+      if (pl1.purchaseDate.equals(pl2.purchaseDate) )
+      {
+        return pl2.invoiceID.compareTo(pl1.invoiceID);
+      }
+      else
+      {
+        return pl2.purchaseDate.compareTo(pl1.purchaseDate);
+      }
+    }
+   }
+
+ }</code></pre>
+</body>
+</html>

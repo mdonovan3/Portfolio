@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Multi-source restaurant data aggregator — R: joins Aloha POS staging tables (gnditem, gndvoid, gndline) with OpenTable reservation data and Restaurant365 GL transactions. Runs per-day due to Aloha&#x27;s day-level consistency constraint. Features DuckDB local cache with PostgreSQL fallback, purrr::possibly for error-safe date iteration, and comp/promo resolution via gndline type codes. — aggregate_restaurant_data.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Multi-source restaurant data aggregator — R: joins Aloha POS staging tables (gnditem, gndvoid, gndline) with OpenTable reservation data and Restaurant365 GL transactions. Runs per-day due to Aloha&#x27;s day-level consistency constraint. Features DuckDB local cache with PostgreSQL fallback, purrr::possibly for error-safe date iteration, and comp/promo resolution via gndline type codes.
+  files: aggregate_restaurant_data.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Multi-source restaurant data aggregator — R: joins Aloha POS staging tables (gnditem, gndvoid, gndline) with OpenTable reservation data and Restaurant365 GL transactions. Runs per-day due to Aloha&#x27;s day-level consistency constraint. Features DuckDB local cache with PostgreSQL fallback, purrr::possibly for error-safe date iteration, and comp/promo resolution via gndline type codes.</h1>
+
+<!-- file: aggregate_restaurant_data.R | language: R -->
+<pre><code>library(DBI)
+library(RPostgreSQL)
+library(lubridate)
+library(purrr)
+library(tidyr)
+library(glue)
+library(dplyr)
+library(duckdb)
+
+# Multi-source restaurant data aggregator — joins Aloha POS staging tables
+# (gnditem, gndvoid, gndline) with OpenTable reservation data and Restaurant365
+# GL transactions already staged in PostgreSQL.
+#
+# Table relations are only guaranteed consistent within a single day, so each
+# day is retrieved and appended separately (get_ot_aloha_data_for_date).
+#
+# DuckDB cache fallback: get_ot_aloha_data_for_date_range() checks for a local
+# DuckDB file first; falls back to remote PostgreSQL if not present or incomplete.
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+get_db_connection &lt;- function() {
+  dbConnect(
+    PostgreSQL(),
+    dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+    host     = Sys.getenv(&quot;DB_HOST&quot;),
+    port     = Sys.getenv(&quot;DB_PORT&quot;),
+    user     = Sys.getenv(&quot;DB_USER&quot;),
+    password = Sys.getenv(&quot;DB_PASS&quot;)
+  )
+}
+
+get_r365_data_for_date_range &lt;- function(start_date, end_date, entity_id) {
+  con &lt;- get_db_connection()
+  on.exit(dbDisconnect(con))
+  dbGetQuery(con,
+    &quot;select * from r365_transactions where date between $1 and $2 and entity_id = $3&quot;,
+    params = list(format(as.Date(start_date), &quot;%Y-%m-%d&quot;),
+                  format(as.Date(end_date),   &quot;%Y-%m-%d&quot;),
+                  entity_id))
+}
+
+# Retrieves one day of joined Aloha + OpenTable data from PostgreSQL.
+# Runs ~15 queries in a named list via purrr::map, then joins all tables.
+get_ot_aloha_data_for_date &lt;- function(query_date, entity_id) {
+  con        &lt;- get_db_connection()
+  param_list &lt;- list(format(query_date, &quot;%Y-%m-%d&quot;), entity_id)
+
+  queries &lt;- list(
+    ot_query      = &quot;select visit_date, visit_time, guest_name, size as ot_size, pos_check_i_ds as pos_check_ids, \&quot;table\&quot; as ot_table from opentable where visit_date = $1 and entity_id = $2&quot;,
+    gnd_line_query = &quot;select &#x27;gndline&#x27; as source, FALSE as is_void, FALSE as is_normal_sale, checkid as \&quot;check\&quot;, itemid as item, catid as category, grind_date::date, type as cmp_promo_type, typeid as cmp_promo_type_id, price as cmp_promo_price, oprice as cmp_promo_oprice from alohadbf_gndline where grind_date = $1 and entity_id = $2&quot;,
+    gnd_item_query = &quot;select &#x27;gnditem&#x27; as source, TRUE as is_normal_sale, FALSE as is_void, FALSE as is_comp, FALSE as is_promo, grind_date::date, \&quot;check\&quot;, item, price as gnd_item_price, quantity, tableid, revid, termid, employee, seat, hour, minute, origin, category from alohadbf_gnditem where grind_date = $1 and entity_id = $2&quot;,
+    gnd_void_query = &quot;select &#x27;gndvoid&#x27; as source, \&quot;check\&quot; as check, TRUE as is_void, FALSE as is_comp, FALSE as is_promo, FALSE as is_normal_sale, inventory as void_inventory, tablename, item, price as void_price, hour as void_hour, minute as void_minute, reason, manager as void_manager, grind_date::date from alohadbf_gndvoid where grind_date = $1 and entity_id = $2&quot;,
+    itm_query     = &quot;select id as item_id, usernumber, shortname, chitname, longname, cost, price as price_from_itm from alohadbf_itm where grind_date = $1 and entity_id = $2&quot;,
+    trm_query     = &quot;select id as terminal_id, name as terminal_name, revenue as revenue_id from alohadbf_trm where grind_date = $1 and entity_id = $2&quot;,
+    emp_query     = &quot;select id as employee_id, firstname as emp_first_name, lastname as emp_last_name from alohadbf_emp where grind_date = $1 and entity_id = $2&quot;,
+    tndr_query    = &quot;select \&quot;check\&quot; as tndr_check, amount as tndr_amount, tip as tndr_tip from alohadbf_gndtndr where grind_date = $1 and entity_id = $2&quot;,
+    cat_query     = &quot;select id as category_id, name as category_name from alohadbf_cat where grind_date = $1 and entity_id = $2&quot;,
+    rev_query     = &quot;select name as revenue_name, id as revenue_id from alohadbf_rev where grind_date = $1 and entity_id = $2&quot;,
+    table_query   = &quot;select id as table_id, \&quot;desc\&quot;, revcenter as tbl_revcenter, numseats from alohadbf_tab where grind_date = $1 and entity_id = $2&quot;,
+    gnd_sale_query = &quot;SELECT DISTINCT ON (\&quot;check\&quot;) \&quot;check\&quot;, openhour, openmin, closehour, closemin FROM alohadbf_gndsale where grind_date = $1 and entity_id = $2 and \&quot;check\&quot; &gt; 0 ORDER BY \&quot;check\&quot;, closehour DESC, closemin DESC&quot;,
+    rsn_query     = &quot;select id as rsn_id, name as void_reason from alohadbf_rsn where grind_date = $1 and entity_id = $2&quot;,
+    cmp_query     = &quot;select distinct id as cmp_id, name as cmp_name from alohadbf_cmp where grind_date = $1 and entity_id = $2&quot;,
+    pro_query     = &quot;select distinct id as pro_id, name as pro_name from alohadbf_pro where grind_date = $1 and entity_id = $2&quot;
+  )
+
+  result_dfs &lt;- queries %&gt;%
+    map(~ dbGetQuery(con, .x, params = param_list)) %&gt;%
+    set_names(paste0(names(queries), &quot;_df&quot;))
+  dbDisconnect(con)
+
+  # Expand OpenTable check IDs (pipe-delimited string → one row per check)
+  result_dfs$ot_query_df &lt;- result_dfs$ot_query_df %&gt;%
+    separate_longer_delim(pos_check_ids, delim = &quot;|&quot;) %&gt;%
+    filter(!is.na(pos_check_ids) &amp; pos_check_ids != &quot;&quot;) %&gt;%
+    mutate(pos_check_ids = as.integer(pos_check_ids)) %&gt;%
+    rename(pos_check_id = pos_check_ids)
+
+  # gndline type: 2 = promo, 3 = comp — join to cmp/pro tables for names
+  gndline_cmp_promo &lt;- result_dfs$gnd_line_query_df %&gt;%
+    mutate(is_comp  = (cmp_promo_type == 3),
+           is_promo = (cmp_promo_type == 2)) %&gt;%
+    left_join(result_dfs$cmp_query_df %&gt;% select(cmp_id, cmp_name),
+              by = c(&quot;cmp_promo_type_id&quot; = &quot;cmp_id&quot;)) %&gt;%
+    left_join(result_dfs$pro_query_df %&gt;% select(pro_id, pro_name),
+              by = c(&quot;cmp_promo_type_id&quot; = &quot;pro_id&quot;)) %&gt;%
+    mutate(comp_promo_code = case_when(
+      cmp_promo_type == 3 ~ cmp_name,
+      cmp_promo_type == 2 ~ pro_name,
+      TRUE ~ NA_character_)) %&gt;%
+    select(-c(cmp_name, pro_name, cmp_promo_type, cmp_promo_type_id))
+
+  # Join void reason names onto gndvoid
+  result_dfs$gnd_void_query_df &lt;- left_join(
+    result_dfs$gnd_void_query_df, result_dfs$rsn_query_df,
+    by = c(&quot;reason&quot; = &quot;rsn_id&quot;))
+
+  # Bind gnditem + gndvoid + gndline, then join all lookup tables
+  list(result_dfs$gnd_item_query_df,
+       result_dfs$gnd_void_query_df,
+       gndline_cmp_promo) %&gt;%
+    purrr::keep(~ nrow(.) &gt; 0) %&gt;%
+    dplyr::bind_rows() %&gt;%
+    left_join(result_dfs$itm_query_df,  by = c(&quot;item&quot;     = &quot;item_id&quot;)) %&gt;%
+    left_join(result_dfs$ot_query_df,   by = c(&quot;check&quot;    = &quot;pos_check_id&quot;)) %&gt;%
+    left_join(result_dfs$trm_query_df,  by = c(&quot;termid&quot;   = &quot;terminal_id&quot;)) %&gt;%
+    left_join(result_dfs$cat_query_df,  by = c(&quot;category&quot; = &quot;category_id&quot;)) %&gt;%
+    left_join(result_dfs$emp_query_df,  by = c(&quot;employee&quot; = &quot;employee_id&quot;)) %&gt;%
+    left_join(result_dfs$rev_query_df,  by = c(&quot;revid&quot;    = &quot;revenue_id&quot;)) %&gt;%
+    left_join(
+      result_dfs$tndr_query_df %&gt;%
+        group_by(tndr_check) %&gt;%
+        summarise(tndr_amount = max(tndr_amount), tndr_tip = max(tndr_tip)),
+      by = c(&quot;check&quot; = &quot;tndr_check&quot;)) %&gt;%
+    filter(category_name != &quot;RETAIL&quot; | is.na(category_name)) %&gt;%
+    mutate(ot_date_time = parse_date_time(
+             paste(visit_time, visit_date, sep = &quot; &quot;), orders = &quot;IMp ymd&quot;)) %&gt;%
+    arrange(grind_date, check, hour, minute) %&gt;%
+    relocate(grind_date, check, guest_name, emp_first_name, emp_last_name,
+             tndr_amount, tndr_tip, shortname, revenue_name, category_name,
+             terminal_name, is_normal_sale, is_void, is_comp, is_promo)
+}
+
+# Iterates a date sequence; uses possibly() to skip days with no data
+get_ot_aloha_data_from_remote_db_for_date_range &lt;- function(start_date, end_date, entity_id) {
+  seq(from = as.Date(start_date), to = as.Date(end_date), by = &quot;day&quot;) %&gt;%
+    map(possibly(
+      ~ get_ot_aloha_data_for_date(.x, entity_id) %&gt;%
+          mutate(grind_date = as.Date(grind_date, format = &quot;%Y-%m-%d&quot;)),
+      otherwise = NULL)) %&gt;%
+    compact() %&gt;%
+    keep(~ nrow(.) &gt; 0) %&gt;%
+    map(~ mutate(., grind_date = as.Date(grind_date))) %&gt;%
+    bind_rows()
+}
+
+# Reads from a local DuckDB file if present and covering the full date range;
+# returns NULL if the file is missing, the table is absent, or data is incomplete.
+get_ot_aloha_data_from_duckdb_for_date_range &lt;- function(start_date, end_date, entity_id) {
+  duckdb_path &lt;- &quot;database_file.duckdb&quot;
+  table_name  &lt;- &quot;2024_data&quot;
+  date_col    &lt;- &quot;grind_date&quot;
+  start_date  &lt;- as.Date(start_date)
+  end_date    &lt;- as.Date(end_date)
+
+  if (!file.exists(duckdb_path)) return(NULL)
+
+  con &lt;- tryCatch(
+    dbConnect(duckdb(), dbdir = duckdb_path, read_only = TRUE),
+    error = function(e) NULL)
+  if (is.null(con)) return(NULL)
+  on.exit(dbDisconnect(con, shutdown = TRUE))
+
+  if (!dbExistsTable(con, table_name)) return(NULL)
+
+  coverage &lt;- tryCatch(dbGetQuery(con, sprintf(
+    &quot;SELECT MIN(%s) AS min_date, MAX(%s) AS max_date, COUNT(*) AS n
+     FROM \&quot;%s\&quot; WHERE %s BETWEEN &#x27;%s&#x27; AND &#x27;%s&#x27;&quot;,
+    date_col, date_col, table_name, date_col, start_date, end_date)),
+    error = function(e) NULL)
+
+  if (is.null(coverage) || coverage$n == 0) return(NULL)
+  if (as.Date(coverage$min_date) &gt; start_date ||
+      as.Date(coverage$max_date) &lt; end_date)  return(NULL)
+
+  dbGetQuery(con, sprintf(
+    &quot;SELECT * FROM \&quot;%s\&quot; WHERE %s BETWEEN &#x27;%s&#x27; AND &#x27;%s&#x27; ORDER BY %s&quot;,
+    table_name, date_col, start_date, end_date, date_col))
+}
+
+# Public entry point: DuckDB cache first, remote PostgreSQL as fallback
+get_ot_aloha_data_for_date_range &lt;- function(start_date, end_date, entity_id) {
+  df &lt;- get_ot_aloha_data_from_duckdb_for_date_range(start_date, end_date, entity_id)
+  if (is.null(df)) {
+    df &lt;- get_ot_aloha_data_from_remote_db_for_date_range(start_date, end_date, entity_id)
+  }
+  df
+}
+</code></pre>
+</body>
+</html>

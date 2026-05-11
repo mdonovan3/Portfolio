@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bevspot liquor &amp; beer purchase planner — R: reads four Bevspot Excel exports (sales, expected inventory, recipes, items catalog), parses multi-ingredient cocktail recipe strings via regex, converts glass sales to bottle equivalents, joins against current Bevspot theoretical on-hand, and outputs a ranked purchase list with dollar impact. No database required — runs from exported Excel files. — bevspot_liquor_purchase_planner.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Bevspot liquor &amp; beer purchase planner — R: reads four Bevspot Excel exports (sales, expected inventory, recipes, items catalog), parses multi-ingredient cocktail recipe strings via regex, converts glass sales to bottle equivalents, joins against current Bevspot theoretical on-hand, and outputs a ranked purchase list with dollar impact. No database required — runs from exported Excel files.
+  files: bevspot_liquor_purchase_planner.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/b1a30326299a0a8c0c8d286e4f1eea1e">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Bevspot liquor &amp; beer purchase planner — R: reads four Bevspot Excel exports (sales, expected inventory, recipes, items catalog), parses multi-ingredient cocktail recipe strings via regex, converts glass sales to bottle equivalents, joins against current Bevspot theoretical on-hand, and outputs a ranked purchase list with dollar impact. No database required — runs from exported Excel files.</h1>
+
+<!-- file: bevspot_liquor_purchase_planner.R | language: R -->
+<pre><code>library(readxl)
+library(janitor)
+library(tidyverse)
+library(stringr)
+
+# Liquor &amp; Beer Purchase Planner — Bevspot Excel export → purchase order.
+#
+# Reads four Bevspot Excel exports via file.choose():
+#   1. Sales report (period to analyze)
+#   2. Expected inventory (current theoretical on-hand from Bevspot)
+#   3. Recipes (cocktail ingredients with quantities, e.g. &quot;Vodka (1.5 oz), OJ (2 oz)&quot;)
+#   4. Items catalog (product names, sizes, unit costs, distributors)
+#
+# Core logic: expand multi-ingredient recipe strings → join to sales counts →
+# sum ounce consumption per base spirit → convert to bottle equivalents →
+# subtract on-hand → output sorted purchase list with dollar impact.
+# Filters to Spirit/Liquor category; supports 750mL and 1L bottles.
+
+ounces_in_750  &lt;- 25.3605
+ounces_in_liter &lt;- 33.815
+
+get_tables_from_files &lt;- function() {
+  sales_DF &lt;&lt;- read_excel(file.choose()) %&gt;%
+    slice(-1) %&gt;%
+    janitor::clean_names() %&gt;%
+    select(item_name, pos_id, number_sold, sales_price) %&gt;%
+    arrange(item_name)
+
+  expected_inventory_DF &lt;&lt;- read_excel(file.choose()) %&gt;%
+    janitor::clean_names() %&gt;%
+    select(c(1, 7)) %&gt;%
+    rename(product_name = 1) %&gt;%
+    rename(expected = 2) %&gt;%
+    filter(!is.na(expected)) %&gt;%
+    mutate(expected = round(as.numeric(expected), 1)) %&gt;%
+    filter(!is.na(expected))
+
+  recipes_DF &lt;&lt;- read_excel(file.choose()) %&gt;%
+    janitor::clean_names()
+
+  items_DF &lt;&lt;- read_excel(file.choose()) %&gt;%
+    janitor::clean_names() %&gt;%
+    select(x2, x3, x4, x5, x6, x7) %&gt;%
+    slice(-1) %&gt;%
+    rename(product_name = x2,
+           category     = x3,
+           subcategory  = x4,
+           distributor  = x5,
+           bottle_size  = x6,
+           unit_price   = x7)
+}
+
+# Parses Bevspot recipe strings (&quot;Vodka (1.5 oz), OJ (2 oz)&quot;) into one row
+# per ingredient, extracting ingredient name, quantity, and unit.
+get_all_ingredients &lt;- function(recipes_df) {
+  recipes_df %&gt;%
+    mutate(ingredient_list = str_split(x3, &quot;\\)\\s*,\\s*&quot;, simplify = FALSE)) %&gt;%
+    unnest(ingredient_list) %&gt;%
+    mutate(ingredient_list = str_c(str_trim(ingredient_list), &quot;)&quot;),
+           ingredient_list = str_replace(ingredient_list, &quot;\\)+$&quot;, &quot;)&quot;)) %&gt;%
+    mutate(
+      quantity     = str_extract(ingredient_list, &quot;(?&lt;=\\()[0-9.]+&quot;),
+      unit         = str_extract(ingredient_list, &quot;(?&lt;=\\()[0-9.]+\\s*[^)]+&quot;) %&gt;%
+                       str_remove(&quot;^[0-9.]+\\s*&quot;),
+      product_name = str_remove(ingredient_list, &quot;\\s*\\([^)]*\\)&quot;) %&gt;% str_trim()
+    ) %&gt;%
+    select(x2, all_items, product_name, quantity, unit) %&gt;%
+    rename(recipe_name = all_items,
+           pos_id      = x2)
+}
+
+# Joins sales to recipe ingredients, sums ounce consumption per spirit,
+# converts to bottle counts.
+get_merged_mod_DF &lt;- function(sales_df, all_recipes_df) {
+  left_join(sales_df, all_recipes_df, by = &quot;pos_id&quot;) %&gt;%
+    mutate(ounces = as.numeric(quantity)) %&gt;%
+    select(-quantity) %&gt;%
+    filter(lengths(ounces) == 1) %&gt;%
+    group_by(product_name) %&gt;%
+    summarise(ounce_total = sum(ounces * number_sold)) %&gt;%
+    mutate(sevenfifty_ml_bottles = ceiling(ounce_total / ounces_in_750),
+           liter_bottles         = ceiling(ounce_total / ounces_in_liter)) %&gt;%
+    arrange(desc(ounce_total))
+}
+
+merge_sales_recipes_items &lt;- function(sales_recipes_df, items_df) {
+  left_join(sales_recipes_df, items_df, by = &quot;product_name&quot;)
+}
+
+# Joins on-hand inventory, computes purchase quantities, and formats output.
+merge_final &lt;- function(sales_recipes_items_df, expected_inventory_df) {
+  left_join(sales_recipes_items_df, expected_inventory_df, by = &quot;product_name&quot;) %&gt;%
+    mutate(bottle_size = case_when(
+      str_detect(bottle_size, &quot;750mL&quot;) ~ 750,
+      str_detect(bottle_size, &quot;1L&quot;)    ~ 1000,
+      TRUE                             ~ NA_real_
+    )) %&gt;%
+    mutate(bottles_sold = case_when(
+      bottle_size == 1000 ~ liter_bottles,
+      bottle_size == 750  ~ sevenfifty_ml_bottles
+    )) %&gt;%
+    filter(category %in% c(&quot;Spirit&quot;, &quot;Liquor&quot;)) %&gt;%
+    rename(on_hand = expected) %&gt;%
+    mutate(on_hand = round(on_hand, 0),
+           amt_to_purchase = case_when(
+             bottle_size == 1000 ~ liter_bottles - on_hand,
+             bottle_size == 750  ~ sevenfifty_ml_bottles - on_hand,
+             TRUE                ~ 0
+           ),
+           unit_price          = as.numeric(str_remove(unit_price, &quot;\\$&quot;)),
+           increase_to_inventory = amt_to_purchase * unit_price) %&gt;%
+    filter(!is.na(unit_price), amt_to_purchase &gt; 0) %&gt;%
+    select(-c(liter_bottles, sevenfifty_ml_bottles, ounce_total, category, subcategory)) %&gt;%
+    arrange(desc(amt_to_purchase)) %&gt;%
+    relocate(product_name, amt_to_purchase, increase_to_inventory,
+             on_hand, bottles_sold, unit_price, distributor, bottle_size)
+}
+
+# --- Run ---
+
+get_tables_from_files()
+
+recipes_all_DF        &lt;- get_all_ingredients(recipes_DF)
+sales_recipes_DF      &lt;- get_merged_mod_DF(sales_DF, recipes_all_DF)
+sales_recipes_items_DF &lt;- merge_sales_recipes_items(sales_recipes_DF, items_DF)
+final_DF              &lt;- merge_final(sales_recipes_items_DF, expected_inventory_DF)</code></pre>
+</body>
+</html>

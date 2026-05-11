@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Restaurant365 OData API connector — R: paginated OData retrieval with basic auth ($count + $skip loop), GL account lookups, transaction header-to-detail joins, multi-location and single-location date-range queries. Renames response columns to match PostgreSQL schema. Idempotency guard via hasTransactionsForDate() before insert. — r365_odata_connector.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Restaurant365 OData API connector — R: paginated OData retrieval with basic auth ($count + $skip loop), GL account lookups, transaction header-to-detail joins, multi-location and single-location date-range queries. Renames response columns to match PostgreSQL schema. Idempotency guard via hasTransactionsForDate() before insert.
+  files: r365_odata_connector.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/8fe35f6fab90876aea05bdc367beb5e7">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Restaurant365 OData API connector — R: paginated OData retrieval with basic auth ($count + $skip loop), GL account lookups, transaction header-to-detail joins, multi-location and single-location date-range queries. Renames response columns to match PostgreSQL schema. Idempotency guard via hasTransactionsForDate() before insert.</h1>
+
+<!-- file: r365_odata_connector.R | language: R -->
+<pre><code>library(tidyverse)
+library(httr2)
+library(tidyjson)
+library(DBI)
+library(RPostgres)
+
+# Restaurant365 OData API connector — R functions for retrieving GL transaction
+# data from the Restaurant365 financial system.
+#
+# Core pattern: getDFFromEndpoint() handles paginated OData retrieval with basic
+# auth. Callers build date/location-filtered URLs and pass them in.
+# Transaction headers and line-item details are fetched separately and joined.
+# Column names are renamed to match the PostgreSQL schema before insert.
+# Idempotency: hasTransactionsForDate() guards against duplicate imports.
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS, WINE_DB
+
+getDBConnection &lt;- function() {
+  dbConnect(
+    RPostgres::Postgres(),
+    dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+    host     = Sys.getenv(&quot;DB_HOST&quot;),
+    port     = Sys.getenv(&quot;DB_PORT&quot;),
+    user     = Sys.getenv(&quot;DB_USER&quot;),
+    password = Sys.getenv(&quot;DB_PASS&quot;)
+  )
+}
+
+# --- OData pagination ---------------------------------------------------------
+# Fetches all pages from an OData endpoint using $count + $skip pagination.
+# Returns a flat dataframe. Handles URL encoding and basic auth.
+
+getDFFromEndpoint &lt;- function(endpointURL, user, password) {
+  endpointURL &lt;- gsub(&quot; &quot;, &quot;%20&quot;, endpointURL)
+  endpointURL &lt;- gsub(&quot;&#x27;&quot;, &quot;%27&quot;, endpointURL)
+  x &lt;- ifelse(grepl(&quot;[?]&quot;, endpointURL), &quot;&amp;$count=true&quot;, &quot;?$count=true&quot;)
+  endpointURL &lt;- paste(endpointURL, x, sep = &quot;&quot;)
+
+  req  &lt;- request(endpointURL) |&gt; req_auth_basic(user, password)
+  resp &lt;- req_perform(req)
+  respJSON &lt;- resp |&gt; httr2::resp_body_json()
+  count &lt;- respJSON$`@odata.count`
+  DF    &lt;- respJSON$value %&gt;% spread_all()
+  pageSize &lt;- nrow(DF)
+
+  i &lt;- 1
+  while (nrow(DF) &lt; count) {
+    epurl &lt;- paste(endpointURL, &quot;&amp;$skip=&quot;, i * pageSize, sep = &quot;&quot;)
+    req  &lt;- request(epurl) |&gt; req_auth_basic(user, password)
+    resp &lt;- req_perform(req)
+    respJSON &lt;- resp |&gt; httr2::resp_body_json()
+    df &lt;- respJSON$value %&gt;% spread_all()
+    DF &lt;- bind_rows(DF, df)
+    i  &lt;- i + 1
+  }
+
+  as.data.frame(DF) %&gt;% select(-c(`..JSON`))
+}
+
+# --- GL accounts --------------------------------------------------------------
+
+getGLAccountsDF &lt;- function(user, password) {
+  getDFFromEndpoint(&quot;https://odata.restaurant365.net/api/v2/views/GlAccount&quot;,
+                    user, password) %&gt;%
+    select(glAccountId, name, glAccountNumber, glType)
+}
+
+getCompanies &lt;- function(user, password) {
+  getDFFromEndpoint(&quot;https://odata.restaurant365.net/api/v2/views/Company&quot;,
+                    user, password)
+}
+
+getCompanyNameFromId &lt;- function(companyDF, compId) {
+  compName &lt;- unlist(companyDF %&gt;% filter(companyId == compId) %&gt;% select(name))[1]
+  as.character(compName)
+}
+getCompanyNameFromIdVectorized &lt;- Vectorize(getCompanyNameFromId,
+                                            vectorize.args = c(&quot;compId&quot;))
+
+getEntityId &lt;- function(entities, locId) {
+  as.integer(entities %&gt;% filter(r365_id == locId) %&gt;% select(entity_id))
+}
+getEntityIdVectorized &lt;- Vectorize(getEntityId, vectorize.args = c(&quot;locId&quot;))
+
+# --- Transaction retrieval ----------------------------------------------------
+
+getTransactionDetails &lt;- function(txID, user, password) {
+  txDetEndpoint &lt;- stringr::str_glue(
+    &quot;https://odata.restaurant365.net/api/v2/views/TransactionDetail&quot;,
+    &quot;?$filter=transactionId%20eq%20({txID})&quot;
+  )
+  GLAccounts &lt;- getGLAccountsDF(user, password)
+  DF &lt;- getDFFromEndpoint(txDetEndpoint, user, password)
+  if (nrow(DF) &gt; 0) {
+    DF &lt;- DF %&gt;%
+      group_by(transactionId, glAccountId) %&gt;%
+      summarise(credit = sum(credit), debit = sum(debit), .groups = &quot;drop&quot;)
+    left_join(DF,
+              GLAccounts %&gt;% select(glAccountId, name, glAccountNumber, glType),
+              by = &quot;glAccountId&quot;)
+  } else {
+    NULL
+  }
+}
+
+getTransactionDetailsDF &lt;- function(txIDs, user, password) {
+  DF &lt;- NULL
+  for (row in 1:nrow(txIDs)) {
+    result &lt;- getTransactionDetails(txIDs[row, &quot;transactionId&quot;], user, password)
+    if (!is.null(result)) {
+      DF &lt;- if (is.null(DF)) result else dplyr::bind_rows(DF, result)
+    }
+  }
+  DF
+}
+
+getTransactionsForAllLocationsBetweenDF &lt;- function(startDate, endDate, user, password) {
+  startDate &lt;- as.Date(startDate, origin = &quot;1970-01-01&quot;)
+  endDate   &lt;- as.Date(endDate,   origin = &quot;1970-01-01&quot;)
+  txEndpoint &lt;- stringr::str_glue(
+    &quot;https://odata.restaurant365.net/api/v2/views/Transaction&quot;,
+    &quot;?$filter=date%20ge%20{startDate}T00:00:00Z%20and%20date%20lt%20{endDate}T23:59:59Z&quot;
+  )
+  txDF &lt;- getDFFromEndpoint(txEndpoint, user, password)
+  combinedDF &lt;- tibble(.rows = 0)
+  if (!is.null(txDF) &amp;&amp; nrow(txDF) &gt; 0) {
+    detailDF &lt;- getTransactionDetailsDF(txDF %&gt;% select(transactionId), user, password)
+    if (!is.null(detailDF)) {
+      combinedDF &lt;- left_join(detailDF, txDF, by = &quot;transactionId&quot;)
+    }
+  }
+  combinedDF
+}
+
+getTransactionsForLocationBetweenDF &lt;- function(locationID, startDate, endDate, user, password) {
+  txEndpoint &lt;- stringr::str_glue(
+    &quot;https://odata.restaurant365.net/api/v2/views/Transaction&quot;,
+    &quot;?$filter=locationId%20eq%20{locationID}&quot;,
+    &quot;%20and%20date%20ge%20{startDate}T00:00:00Z%20and%20date%20lt%20{endDate}T23:59:59Z&quot;
+  )
+  txDF &lt;- getDFFromEndpoint(txEndpoint, user, password)
+  combinedDF &lt;- tibble(.rows = 0)
+  if (!is.null(txDF) &amp;&amp; nrow(txDF) &gt; 0) {
+    detailDF &lt;- getTransactionDetailsDF(txDF %&gt;% select(transactionId), user, password)
+    if (!is.null(detailDF)) {
+      combinedDF &lt;- left_join(detailDF, txDF, by = &quot;transactionId&quot;)
+    }
+  }
+  combinedDF
+}
+
+# --- Column rename + insert ---------------------------------------------------
+# Renames OData response columns to match the PostgreSQL r365_transactions schema,
+# derives entity_id from locationId via the entities lookup table,
+# and derives gl_parent_account_code as the 5-char account prefix.
+
+rename_transactionDFColumnsForDB &lt;- function(DF, companies, entities) {
+  DF %&gt;%
+    rename(
+      gl_account_code      = glAccountNumber,
+      r_365_transaction_id = transactionId,
+      credit_amount        = credit,
+      debit_amount         = debit,
+      gl_account_name      = name.x,
+      gl_type              = glType,
+      transaction_type     = type,
+      row_version          = rowVersion,
+      is_approved          = isApproved,
+      transaction_name     = name.y,
+      created_by           = createdBy,
+      modified_by          = modifiedBy,
+      created_on           = createdOn,
+      modified_on          = modifiedOn,
+      transaction_number   = transactionNumber,
+      company_id           = companyId
+    ) %&gt;%
+    mutate(
+      company_name           = getCompanyNameFromIdVectorized(companies, company_id),
+      entity_id              = getEntityIdVectorized(entities, locationId),
+      gl_parent_account_code = substring(gl_account_code, 1, 5)
+    ) %&gt;%
+    select(-c(glAccountId, document.id, locationId, locationName))
+}
+
+insert_DF &lt;- function(df) {
+  con &lt;- getDBConnection()
+  on.exit(dbDisconnect(con))
+  DBI::dbWithTransaction(con,
+    DBI::dbAppendTable(con, &quot;r365_transactions&quot;, df))
+}
+
+# --- Idempotency helpers ------------------------------------------------------
+
+hasTransactionsForDate &lt;- function(date, con) {
+  DF &lt;- dbGetQuery(con,
+    paste(&quot;select count(*) from r365_transactions where date = &#x27;&quot;, date, &quot;&#x27;&quot;, sep = &quot;&quot;))
+  DF[1, 1] &gt; 0
+}
+
+deleteTransactionsForDate &lt;- function(date, con) {
+  DBI::dbExecute(con,
+    paste(&quot;delete from r365_transactions where date = &#x27;&quot;, date, &quot;&#x27;&quot;, sep = &quot;&quot;))
+}
+
+get_missing_dates &lt;- function(origin_date) {
+  con &lt;- getDBConnection()
+  on.exit(dbDisconnect(con))
+  result &lt;- DBI::dbGetQuery(con,
+    &quot;select distinct date from r365_transactions where date between $1 and $2&quot;,
+    params = list(origin_date, Sys.Date() - 1)) %&gt;%
+    pull(date) %&gt;%
+    as.Date()
+  date_seq      &lt;- seq.Date(from = as.Date(origin_date), to = Sys.Date() - 1, by = &quot;day&quot;)
+  missing_dates &lt;- lubridate::setdiff(date_seq, result) %&gt;% lubridate::as_date()
+  missing_dates
+}
+</code></pre>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Automated purchase order drafts via Microsoft365R — R: iterates a distributor contact dataframe and creates one draft email per rep per restaurant using the Microsoft Graph API (get_business_outlook). Demonstrates M365 OAuth2 from R and dataframe-driven parameterized email generation. — email_order_drafts.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/4982e370f6729d670e53d6e54e4b25b0
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Automated purchase order drafts via Microsoft365R — R: iterates a distributor contact dataframe and creates one draft email per rep per restaurant using the Microsoft Graph API (get_business_outlook). Demonstrates M365 OAuth2 from R and dataframe-driven parameterized email generation.
+  files: email_order_drafts.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/4982e370f6729d670e53d6e54e4b25b0
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/4982e370f6729d670e53d6e54e4b25b0">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Automated purchase order drafts via Microsoft365R — R: iterates a distributor contact dataframe and creates one draft email per rep per restaurant using the Microsoft Graph API (get_business_outlook). Demonstrates M365 OAuth2 from R and dataframe-driven parameterized email generation.</h1>
+
+<!-- file: email_order_drafts.R | language: R -->
+<pre><code>library(Microsoft365R)
+library(dplyr)
+
+# Generates per-distributor purchase order draft emails via Microsoft Graph API.
+# One draft is created per rep per restaurant — ready to fill in order details
+# and send. Authenticates via Microsoft365R (OAuth2 against M365 tenant).
+#
+# Pattern: build a contact dataframe, lapply over rows, create_email() for each.
+
+# --- Contact lists -----------------------------------------------------------
+# One row per distributor rep. BCC goes to the buyer&#x27;s manager.
+
+bones_df &lt;- data.frame(
+  Distributors = c(&quot;United&quot;, &quot;RNDC&quot;, &quot;Winebow&quot;, &quot;GA Crown&quot;,
+                   &quot;Empire&quot;, &quot;Prime&quot;, &quot;General Wholesale&quot;,
+                   &quot;Savannah&quot;, &quot;Ultimate&quot;, &quot;Avant Partir&quot;, &quot;Bon Vin&quot;,
+                   &quot;Hemispheres&quot;, &quot;Atlanta Beverage&quot;),
+  RepNames     = c(&quot;Rep1&quot;, &quot;Rep2&quot;, &quot;Rep3&quot;, &quot;Rep4&quot;, &quot;Rep5&quot;,
+                   &quot;Rep6&quot;, &quot;Rep7&quot;, &quot;Rep8&quot;, &quot;Rep9&quot;, &quot;Rep10&quot;,
+                   &quot;Rep11&quot;, &quot;Rep12&quot;, &quot;Rep13&quot;),
+  Emails       = c(&quot;rep1@distributor1.com&quot;, &quot;rep2@distributor2.com&quot;,
+                   &quot;rep3@distributor3.com&quot;, &quot;rep4@distributor4.com&quot;,
+                   &quot;rep5@distributor5.com&quot;, &quot;rep6@distributor6.com&quot;,
+                   &quot;rep7@distributor7.com&quot;, &quot;rep8@distributor8.com&quot;,
+                   &quot;rep9@distributor9.com&quot;, &quot;rep10@distributor10.com&quot;,
+                   &quot;rep11@distributor11.com&quot;, &quot;rep12@distributor12.com&quot;,
+                   &quot;rep13@distributor13.com&quot;)
+)
+
+brg_df &lt;- data.frame(
+  Distributors = c(&quot;United&quot;, &quot;RNDC&quot;, &quot;Winebow&quot;, &quot;GA Crown&quot;, &quot;Empire&quot;,
+                   &quot;Prime&quot;, &quot;General Wholesale&quot;, &quot;Savannah&quot;, &quot;Ultimate&quot;,
+                   &quot;Avant Partir&quot;, &quot;Bon Vin&quot;),
+  RepNames     = c(&quot;Rep1&quot;, &quot;Rep2&quot;, &quot;Rep3&quot;, &quot;Rep4&quot;, &quot;Rep5&quot;,
+                   &quot;Rep6&quot;, &quot;Rep7&quot;, &quot;Rep8&quot;, &quot;Rep9&quot;, &quot;Rep10&quot;, &quot;Rep11&quot;),
+  Emails       = c(&quot;rep1@distributor1.com&quot;, &quot;rep2@distributor2.com&quot;,
+                   &quot;rep3@distributor3.com&quot;, &quot;rep4@distributor4.com&quot;,
+                   &quot;rep5@distributor5.com&quot;, &quot;rep6@distributor6.com&quot;,
+                   &quot;rep7@distributor7.com&quot;, &quot;rep8@distributor8.com&quot;,
+                   &quot;rep9@distributor9.com&quot;, &quot;rep10@distributor10.com&quot;,
+                   &quot;rep11@distributor11.com&quot;)
+)
+
+bones_bcc &lt;- &quot;manager@restaurant.com&quot;
+brg_bcc   &lt;- &quot;manager@restaurant.com&quot;
+
+em_signature &lt;- &quot;Thank You\n\nMartin Donovan\nWine Buyer&quot;
+
+bns_body_template &lt;- function(rep_name) {
+  paste0(&quot;Hello &quot;, rep_name,
+         &quot;,\n\nCan you please send the following order to Bones for Wednesday:\n\n&quot;,
+         &quot;1 case:\n\n\n&quot;,
+         em_signature)
+}
+
+brg_body_template &lt;- function(rep_name) {
+  paste0(&quot;Hello &quot;, rep_name,
+         &quot;,\n\nCan you please send the following order to BRG for Wednesday:\n\n&quot;,
+         &quot;1 case:\n\n\n&quot;,
+         em_signature)
+}
+
+# --- Authenticate and generate drafts ----------------------------------------
+# get_business_outlook() opens an OAuth2 browser flow on first run;
+# subsequent calls reuse a cached token.
+
+outlb &lt;- get_business_outlook(tenant = &quot;yourcompany.com&quot;)
+
+lapply(seq_len(nrow(bones_df)), function(r) {
+  em &lt;- outlb$create_email()
+  em$set_body(bns_body_template(bones_df$RepNames[r]))
+  em$set_subject(paste(&quot;Bones Order -&quot;, bones_df$Distributors[r]))
+  em$set_recipients(to = bones_df$Emails[r], bcc = bones_bcc)
+})
+
+lapply(seq_len(nrow(brg_df)), function(r) {
+  em &lt;- outlb$create_email()
+  em$set_body(brg_body_template(brg_df$RepNames[r]))
+  em$set_subject(paste(&quot;BRG Order -&quot;, brg_df$Distributors[r]))
+  em$set_recipients(to = brg_df$Emails[r], bcc = brg_bcc)
+})
+</code></pre>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Inventory Analysis Shiny dashboard — R: period-over-period wine P&amp;L with beginning/ending inventory values, count variances vs. theoretical on-hand, purchases, glass/bottle sales, cost of sales, and wine cost %. URL query string deep-linking (?startdate=&amp;enddate=). Parameterized SQL via RPostgres, DT tables with export buttons, ggplot trend chart. — app.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/2054d94455ae135725be6239d7602147
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Inventory Analysis Shiny dashboard — R: period-over-period wine P&amp;L with beginning/ending inventory values, count variances vs. theoretical on-hand, purchases, glass/bottle sales, cost of sales, and wine cost %. URL query string deep-linking (?startdate=&amp;enddate=). Parameterized SQL via RPostgres, DT tables with export buttons, ggplot trend chart.
+  files: app.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/2054d94455ae135725be6239d7602147
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/2054d94455ae135725be6239d7602147">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Inventory Analysis Shiny dashboard — R: period-over-period wine P&amp;L with beginning/ending inventory values, count variances vs. theoretical on-hand, purchases, glass/bottle sales, cost of sales, and wine cost %. URL query string deep-linking (?startdate=&amp;enddate=). Parameterized SQL via RPostgres, DT tables with export buttons, ggplot trend chart.</h1>
+
+<!-- file: app.R | language: R -->
+<pre><code>library(shiny)
+library(shinydashboard)
+library(dplyr)
+library(DT)
+library(DBI)
+library(RPostgres)
+library(stringr)
+library(shinyjs)
+
+# Inventory Analysis Shiny dashboard — period-over-period wine P&amp;L.
+# Tracks beginning/ending inventory values, count variances vs. theoretical
+# on-hand, purchases, glass/bottle sales, cost of sales, and wine cost %.
+# Supports URL query string deep-linking (?startdate=YYYY-MM-DD&amp;enddate=...).
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS, WINE_DB
+
+db    &lt;- Sys.getenv(&quot;WINE_DB&quot;)
+color &lt;- if (db == &quot;bones_wine&quot;) &quot;red&quot; else &quot;blue&quot;
+
+con &lt;- dbConnect(
+  RPostgres::Postgres(),
+  dbname   = db,
+  host     = Sys.getenv(&quot;DB_HOST&quot;),
+  port     = Sys.getenv(&quot;DB_PORT&quot;),
+  user     = Sys.getenv(&quot;DB_USER&quot;),
+  password = Sys.getenv(&quot;DB_PASS&quot;)
+)
+
+getInventoriesQuery &lt;- &quot;
+  select * from inventories
+  where inventory_major_category_id =
+    (select major_category_id from major_categories
+     where lower(major_category_name) = &#x27;wine&#x27;)
+  order by inventory_date desc&quot;
+
+inventories &lt;- dbGetQuery(con, getInventoriesQuery)
+
+ui &lt;- dashboardPage(
+  skin = color,
+  dashboardHeader(title = &quot;Inventory Analysis&quot;),
+  dashboardSidebar(
+    selectInput(&quot;startDate&quot;, &quot;Starting Date&quot;, inventories$inventory_date,
+                selected = inventories$inventory_date[2]),
+    selectInput(&quot;endDate&quot;, &quot;Ending Date&quot;, inventories$inventory_date)
+  ),
+  dashboardBody(
+    shinyjs::useShinyjs(),
+    tabsetPanel(id = &quot;tabSet&quot;,
+      tabPanel(&quot;Summary&quot;,
+        fluidPage(
+          fluidRow(column(4, valueBoxOutput(&quot;begInvOutput&quot;,    width = 10)),
+                   column(4, valueBoxOutput(&quot;endInvOutput&quot;,    width = 10)),
+                   column(4, valueBoxOutput(&quot;invChangeOutput&quot;, width = 10))),
+          fluidRow(column(4, valueBoxOutput(&quot;begInvVarOutput&quot;, width = 10)),
+                   column(4, valueBoxOutput(&quot;endInvVarOutput&quot;, width = 10)),
+                   column(4, valueBoxOutput(&quot;purchaseOutput&quot;,  width = 10))),
+          fluidRow(column(4, valueBoxOutput(&quot;glSalesOutput&quot;,   width = 10)),
+                   column(4, valueBoxOutput(&quot;btlSalesOutput&quot;,  width = 10)),
+                   column(4, valueBoxOutput(&quot;salesOutput&quot;,     width = 10))),
+          fluidRow(column(4, valueBoxOutput(&quot;cosOutput&quot;,       width = 10)),
+                   column(4, valueBoxOutput(&quot;costPercentOutput&quot;, width = 10)),
+                   column(4, valueBoxOutput(&quot;profitOutput&quot;,    width = 10))),
+          fluidRow(plotOutput(&quot;invTrendPlot&quot;), width = &quot;100%&quot;, height = &quot;400px&quot;)
+        )
+      ),
+      tabPanel(&quot;Beg. Inv.&quot;,     DT::dataTableOutput(&quot;begInvTable&quot;)),
+      tabPanel(&quot;End. Inv.&quot;,     DT::dataTableOutput(&quot;endInvTable&quot;)),
+      tabPanel(&quot;Sales&quot;,         DT::dataTableOutput(&quot;salesTable&quot;)),
+      tabPanel(&quot;Purch.&quot;,        DT::dataTableOutput(&quot;purchasesTable&quot;)),
+      tabPanel(&quot;Beg. Inv. Var.&quot;, DT::dataTableOutput(&quot;begInvVarTable&quot;)),
+      tabPanel(&quot;End. Inv. Var.&quot;, DT::dataTableOutput(&quot;endInvVarTable&quot;))
+    )
+  )
+)
+
+server &lt;- function(input, output, session) {
+
+  getInventoryQuery &lt;- &quot;
+    select pi.inventory_name, r.room_name,
+           pila.location_column, pila.location_row,
+           id.quantity_counted, id.theoretical_quantity,
+           id.product_cost,
+           round(id.product_cost * id.quantity_counted, 2) as ext
+    from inventories i, inventory_details id,
+         product_instances pi, product_instance_location_associations pila,
+         rooms r
+    where i.inventory_id = id.inventory_id
+      and id.product_instance_location_id = pila.product_instance_location_id
+      and pila.product_instance_id = pi.product_instance_id
+      and pila.location_room_id = r.room_id
+      and inventory_date = ($1)
+      and i.inventory_major_category_id =
+          (select major_category_id from major_categories
+           where lower(major_category_name) = &#x27;wine&#x27;)
+    order by room_name, location_column, location_row, inventory_name&quot;
+
+  getSalesQuery &lt;- &quot;
+    select pi.inventory_name,
+           gia.average_sales_unit_cost as unit_cost,
+           gia.bottle_sales as btl_sales,
+           gia.bottle_sales_extended as btl_sales_ext,
+           case when gia.bottle_sales = 0 or gia.bottle_sales_extended = 0 then NULL
+                else round(gia.average_sales_unit_cost /
+                           (gia.bottle_sales_extended / gia.bottle_sales), 2)
+           end as btl_cost_percent,
+           gia.glass_sales as gl_sales,
+           gia.glass_sales_extended as gl_sales_ext,
+           case when gia.glass_sales = 0 or gia.glass_sales_extended = 0 then NULL
+                else round(gia.average_sales_unit_cost /
+                           (gia.glass_sales_extended / gia.glass_sales), 2)
+           end as gls_cost_percent,
+           coalesce(gia.bottle_sales, 0) + coalesce(gia.glass_sales, 0) as total_sales,
+           coalesce(gia.bottle_sales_extended, 0) +
+             coalesce(gia.glass_sales_extended, 0) as total_sales_ext,
+           case when coalesce(gia.glass_sales_extended, 0) +
+                     coalesce(gia.bottle_sales_extended, 0) = 0 then null
+                else round(
+                  (gia.glass_sales * gia.average_sales_unit_cost +
+                   gia.bottle_sales * gia.average_sales_unit_cost) /
+                  (coalesce(gia.glass_sales_extended, 0) +
+                   coalesce(gia.bottle_sales_extended, 0)), 2)
+           end as cost_percent
+    from get_inventory_activity($1, $2) gia,
+         product_instances pi, products p
+    where pi.product_instance_id = gia.product_instance_id
+      and pi.product_id = p.product_id
+      and p.major_category_id =
+          (select major_category_id from major_categories
+           where lower(major_category_name) = &#x27;wine&#x27;)
+      and (gia.glass_sales &gt; 0 or gia.bottle_sales &gt; 0)
+    order by inventory_name&quot;
+
+  getPurchQuery &lt;- &quot;
+    select pi.inventory_name, c.company_name, i.vendor_invoice_id,
+           i.invoice_date, i.payment_date, id.number_received,
+           id.price_per_unit,
+           round(id.number_received * id.price_per_unit, 2) as ext
+    from invoices i, invoice_details id,
+         product_instances pi, companies c, products p,
+         product_instance_location_associations pila
+    where i.invoice_id = id.invoice_id
+      and id.product_instance_location_id = pila.product_instance_location_id
+      and pila.product_instance_id = pi.product_instance_id
+      and i.vendor_company_id = c.company_id
+      and p.product_id = pi.product_id
+      and p.major_category_id =
+          (select major_category_id from major_categories
+           where lower(major_category_name) = &#x27;wine&#x27;)
+      and i.payment_date &gt; ($1)
+      and payment_date &lt;= ($2)
+    order by company_name, vendor_invoice_id&quot;
+
+  getInvTotalsQuery &lt;- &quot;
+    select inventory_date,
+           coalesce(sum(quantity_counted * product_cost) / 1000000, 0)
+             as inv_total_hun_thousand
+    from inventories i, inventory_details id
+    where i.inventory_id = id.inventory_id
+      and i.inventory_major_category_id =
+          (select major_category_id from major_categories
+           where lower(major_category_name) = &#x27;wine&#x27;)
+      and i.inventory_date between ($1) and ($2)
+    group by inventory_date&quot;
+
+  dtOptions &lt;- list(
+    pageLength = -1,
+    lengthMenu = list(c(20, 50, 100, -1), c(&quot;20&quot;, &quot;50&quot;, &quot;100&quot;, &quot;All&quot;)),
+    lengthChange = TRUE,
+    dom = &quot;Bfrtip&quot;,
+    buttons = c(&quot;pageLength&quot;, &quot;copy&quot;, &quot;csv&quot;, &quot;excel&quot;, &quot;pdf&quot;, &quot;print&quot;)
+  )
+
+  varSummary &lt;- function(invData) {
+    invData[invData$quantity_counted != invData$theoretical_quantity, ] %&gt;%
+      mutate(var = round(quantity_counted - theoretical_quantity, 1),
+             ext = round(product_cost * var, 2)) %&gt;%
+      select(inventory_name, quantity_counted, theoretical_quantity,
+             product_cost, var, ext) %&gt;%
+      group_by(inventory_name) %&gt;%
+      summarize(total_counted = sum(quantity_counted),
+                p_cost        = mean(product_cost),
+                total_theo    = sum(theoretical_quantity),
+                total_var     = sum(var),
+                total_ext     = sum(ext)) %&gt;%
+      mutate(total_abs_ext = abs(total_ext)) %&gt;%
+      filter(total_var != 0) %&gt;%
+      arrange(total_ext)
+  }
+
+  observe({
+    startdate &lt;- input$startDate
+    enddate   &lt;- input$endDate
+    query     &lt;- parseQueryString(session$clientData$url_search)
+
+    if (!is.null(query$startdate) &amp;&amp; !is.null(query$enddate)) {
+      startdate &lt;- query$startdate
+      enddate   &lt;- query$enddate
+      shinyjs::addClass(selector = &quot;body&quot;, class = &quot;sidebar-collapse&quot;)
+    }
+
+    begInvData    &lt;- dbGetQuery(con, getInventoryQuery, list(startdate))
+    endInvData    &lt;- dbGetQuery(con, getInventoryQuery, list(enddate))
+    salesData     &lt;- dbGetQuery(con, getSalesQuery,
+                                list(as.character(as.Date(startdate) + 1), enddate))
+    purchasesData &lt;- dbGetQuery(con, getPurchQuery, list(startdate, enddate))
+    invTotalsData &lt;- dbGetQuery(con, getInvTotalsQuery, list(startdate, enddate))
+    begInvVarData &lt;- varSummary(begInvData)
+    endInvVarData &lt;- varSummary(endInvData)
+
+    output$begInvTable &lt;- DT::renderDataTable(
+      datatable(begInvData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions) %&gt;%
+        formatCurrency(c(&quot;ext&quot;, &quot;product_cost&quot;), &quot;$&quot;))
+
+    output$endInvTable &lt;- DT::renderDataTable(
+      datatable(endInvData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions) %&gt;%
+        formatCurrency(c(&quot;ext&quot;, &quot;product_cost&quot;), &quot;$&quot;))
+
+    output$salesTable &lt;- DT::renderDataTable(
+      datatable(salesData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions))
+
+    output$purchasesTable &lt;- DT::renderDataTable(
+      datatable(purchasesData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions))
+
+    output$begInvVarTable &lt;- DT::renderDataTable(
+      datatable(begInvVarData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions) %&gt;%
+        formatRound(c(&quot;total_var&quot;), digits = 1) %&gt;%
+        formatCurrency(c(&quot;total_ext&quot;, &quot;total_abs_ext&quot;, &quot;p_cost&quot;), &quot;$&quot;))
+
+    output$endInvVarTable &lt;- DT::renderDataTable(
+      datatable(endInvVarData, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = dtOptions) %&gt;%
+        formatRound(c(&quot;total_var&quot;), digits = 1) %&gt;%
+        formatCurrency(c(&quot;total_ext&quot;, &quot;total_abs_ext&quot;, &quot;p_cost&quot;), &quot;$&quot;))
+
+    output$invTrendPlot &lt;- renderPlot({
+      plot(invTotalsData, type = &quot;p&quot;,
+           ylab = &quot;Inventory Total&quot;, xlab = &quot;Inventory Date&quot;,
+           main = &quot;Inventory Trend ($M)&quot;, pch = 20)
+    })
+
+    cos   &lt;- sum(begInvData$ext) - sum(endInvData$ext) +
+             sum(purchasesData$ext, na.rm = TRUE)
+    sales &lt;- sum(salesData$btl_sales_ext) + sum(salesData$gl_sales_ext)
+
+    output$cosOutput &lt;- renderValueBox(valueBox(
+      formatC(cos, format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Cost of Sales&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$costPercentOutput &lt;- renderValueBox(valueBox(
+      round(100 * cos / sales, 2),
+      &quot;Wine Cost Percentage&quot;, icon = icon(&quot;percentage&quot;), color = &quot;green&quot;))
+
+    output$profitOutput &lt;- renderValueBox(valueBox(
+      formatC(sales - cos, format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Profit&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$invChangeOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(endInvData$ext) - sum(begInvData$ext),
+              format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Inventory Change&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$begInvOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(begInvData$ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Beginning Inventory&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$endInvOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(endInvData$ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Ending Inventory&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$begInvVarOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(begInvVarData$total_ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Beginning Inventory Variance&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$endInvVarOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(endInvVarData$total_ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Ending Inventory Variance&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$salesOutput &lt;- renderValueBox(valueBox(
+      formatC(sales, format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Total Inventory Period Sales&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$glSalesOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(salesData$gl_sales_ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Inventory Period Glass Sales&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$btlSalesOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(salesData$btl_sales_ext), format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Inventory Period Bottle Sales&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+
+    output$purchaseOutput &lt;- renderValueBox(valueBox(
+      formatC(sum(purchasesData$ext, na.rm = TRUE),
+              format = &quot;f&quot;, big.mark = &quot;,&quot;, digits = 2),
+      &quot;Inventory Period Purchases&quot;, icon = icon(&quot;dollar-sign&quot;), color = &quot;green&quot;))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+</code></pre>
+</body>
+</html>

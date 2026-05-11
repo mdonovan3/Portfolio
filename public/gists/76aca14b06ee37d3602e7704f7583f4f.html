@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payroll tip-sheet Excel parser — R: reads two different weekly tip-sheet Excel layouts (one per restaurant), reconstructs dynamic column names from numeric date serials via openxlsx::convertToDate, pivots wide to long (employee x date x shift), and inserts to PostgreSQL with a duplicate-date guard via dbWithTransaction. — tip_sheet_import.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/76aca14b06ee37d3602e7704f7583f4f
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Payroll tip-sheet Excel parser — R: reads two different weekly tip-sheet Excel layouts (one per restaurant), reconstructs dynamic column names from numeric date serials via openxlsx::convertToDate, pivots wide to long (employee x date x shift), and inserts to PostgreSQL with a duplicate-date guard via dbWithTransaction.
+  files: tip_sheet_import.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/76aca14b06ee37d3602e7704f7583f4f
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/76aca14b06ee37d3602e7704f7583f4f">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Payroll tip-sheet Excel parser — R: reads two different weekly tip-sheet Excel layouts (one per restaurant), reconstructs dynamic column names from numeric date serials via openxlsx::convertToDate, pivots wide to long (employee x date x shift), and inserts to PostgreSQL with a duplicate-date guard via dbWithTransaction.</h1>
+
+<!-- file: tip_sheet_import.R | language: R -->
+<pre><code>library(DBI)
+library(RPostgres)
+library(readxl)
+library(openxlsx)
+library(tidyverse)
+library(janitor)
+
+# Parses weekly payroll tip-sheet Excel files (two different layouts — one per
+# restaurant) into a normalized long-form dataframe keyed by employee + date +
+# shift, then inserts into PostgreSQL with a duplicate-date guard.
+#
+# Challenge: the Excel files use numeric date serials as column headers (not
+# strings), and the two restaurants use different sheet layouts requiring
+# separate parsers. Both pivot from wide (one column per day/shift) to long.
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS
+
+getDBConnection &lt;- function() {
+  dbConnect(
+    RPostgres::Postgres(),
+    dbname   = &quot;lhrc_data&quot;,
+    host     = Sys.getenv(&quot;DB_HOST&quot;),
+    port     = Sys.getenv(&quot;DB_PORT&quot;),
+    user     = Sys.getenv(&quot;DB_USER&quot;),
+    password = Sys.getenv(&quot;DB_PASS&quot;)
+  )
+}
+
+getShifts &lt;- function(con) {
+  dbGetQuery(con, &quot;select * from shifts where active = true&quot;)
+}
+
+getRestaurants &lt;- function(con) {
+  dbGetQuery(con, &quot;select * from entities where active = true&quot;)
+}
+
+getDataImportSourceID &lt;- function(con) {
+  dbGetQuery(con,
+    &quot;select data_import_source_id from data_import_sources
+     where lower(data_import_source_name) = &#x27;tip sheets&#x27;&quot;
+  )[1, 1]
+}
+
+isInExistingDateRange &lt;- function(dates, entity, con) {
+  datesString &lt;- paste(shQuote(dates, type = &quot;sh&quot;), collapse = &quot;, &quot;)
+  res &lt;- dbGetQuery(con,
+    paste0(&quot;select count(*) from employee_tips &quot;,
+           &quot;where entity_id = &quot;, entity,
+           &quot; and tip_date in (&quot;, datesString, &quot;)&quot;)
+  )[1, 1]
+  as.integer(res) &gt; 0
+}
+
+insertTipSheet &lt;- function(DF, entityNumber, con) {
+  minDate   &lt;- min(DF$tip_date, na.rm = TRUE)
+  maxDate   &lt;- max(DF$tip_date, na.rm = TRUE)
+  dateRange &lt;- DF %&gt;%
+    mutate(tip_date = as.character(tip_date)) %&gt;%
+    select(tip_date) %&gt;%
+    distinct() %&gt;%
+    unlist(use.names = FALSE)
+
+  if (isInExistingDateRange(dateRange, entityNumber, con)) {
+    message(&quot;Tip sheet already imported for this date range — skipping.&quot;)
+    return(FALSE)
+  }
+
+  dataSourceID    &lt;- getDataImportSourceID(con)
+  maxImportIdQuery &lt;- paste0(
+    &quot;select coalesce(max(data_import_id), 0) from data_imports &quot;,
+    &quot;where entity_id = &quot;, entityNumber, &quot; and import_source_id = &quot;, dataSourceID)
+  insertQuery &lt;- paste0(
+    &quot;insert into data_imports &quot;,
+    &quot;(entity_id, import_source_id, is_date_range, import_start_date_range, import_end_date_range) values &quot;,
+    &quot;(&quot;, entityNumber, &quot;, &quot;, dataSourceID, &quot;, TRUE, &#x27;&quot;, minDate, &quot;&#x27;, &#x27;&quot;, maxDate, &quot;&#x27;)&quot;)
+
+  dbWithTransaction(con, {
+    currentImportId &lt;- as.integer(dbGetQuery(con, maxImportIdQuery)[1, 1]) + 1
+    dbExecute(con, insertQuery)
+    DF &lt;- DF %&gt;%
+      mutate(data_import_id = currentImportId, entity_id = entityNumber)
+    dbWriteTable(con, &quot;employee_tips&quot;, DF,
+      row.names = FALSE, overwrite = FALSE, append = TRUE,
+      field.types = NULL, temporary = FALSE, copy = TRUE)
+  })
+
+  TRUE
+}
+
+# --- Parser: Restaurant 1 tip sheet -----------------------------------------
+# Layout: &quot;Summary&quot; sheet. Row 1 = date serials (numeric), row 2 = shift names.
+# Column 3 is a duplicate subtotal — dropped. Dates converted via openxlsx.
+
+getDFFromBRGTipSheet &lt;- function(f, entityId, shifts) {
+  getShiftId &lt;- Vectorize(function(name) {
+    as.integer(shifts %&gt;% filter(tolower(shift_name) == tolower(name)) %&gt;% pull(shift_id))
+  })
+
+  char_date &lt;- function(x) as.character(openxlsx::convertToDate(as.numeric(x)))
+
+  headers &lt;- readxl::read_excel(f, sheet = &quot;Summary&quot;, n_max = 2, col_names = FALSE) %&gt;%
+    select(-`...1`)
+  headers[2, 12] &lt;- &quot;Lunch&quot;   # correct a mislabeled header in this sheet layout
+
+  # Build &quot;YYYY-MM-DD Shift&quot; column names from numeric date serials in row 1
+  date_cols &lt;- as.character(headers[1, seq(2, 14, by = 2)])
+  cnames &lt;- c(&quot;payroll_id&quot;, &quot;employee_name&quot;,
+               unlist(lapply(date_cols, function(d) c(paste(char_date(d), &quot;Lunch&quot;),
+                                                       paste(char_date(d), &quot;Dinner&quot;)))))
+
+  tips &lt;- readxl::read_excel(f, sheet = &quot;Summary&quot;, skip = 2) %&gt;%
+    select(-3) %&gt;%
+    setNames(cnames) %&gt;%
+    filter(!is.na(payroll_id) &amp; !is.na(employee_name)) %&gt;%
+    mutate_at(3:16, as.numeric) %&gt;%
+    mutate_at(3:16, ~ replace_na(., 0)) %&gt;%
+    pivot_longer(cols = 3:16, names_to = &quot;shift&quot;, values_to = &quot;tip_amount&quot;) %&gt;%
+    filter(tip_amount != 0) %&gt;%
+    separate(shift, into = c(&quot;date&quot;, &quot;shift&quot;), sep = &quot; &quot;) %&gt;%
+    mutate(
+      tip_amount                  = round(tip_amount, 2),
+      tip_date                    = as.Date(date, &quot;%Y-%m-%d&quot;),
+      entity_id                   = entityId,
+      shift_id                    = getShiftId(shift),
+      employee_r365_payroll_id    = payroll_id
+    ) %&gt;%
+    select(-c(date, shift, payroll_id)) %&gt;%
+    arrange(tip_date, desc(shift_id), employee_r365_payroll_id)
+
+  tips
+}
+
+# --- Parser: Restaurant 2 tip sheet -----------------------------------------
+# Layout: &quot;Server Detail Page&quot; sheet. Dates are NOT in the file — they are
+# inferred from the week-end date passed in as endDate (supplied externally,
+# e.g. parsed from the filename). Sparse columns removed via janitor.
+
+getDFFromBonesTipSheet &lt;- function(file, entityId, shifts, endDate) {
+  getShiftId &lt;- Vectorize(function(name) {
+    as.integer(shifts %&gt;% filter(tolower(shift_name) == tolower(name)) %&gt;% pull(shift_id))
+  })
+
+  # Reconstruct the 7-day sequence ending on endDate
+  week_seq &lt;- rev(seq(endDate, length = 7, by = &quot;-1 day&quot;))
+
+  cnames &lt;- c(&quot;employee_r365_payroll_id&quot;, &quot;employee_name&quot;,
+               unlist(lapply(week_seq, function(d) c(paste(d, &quot;Lunch&quot;), paste(d, &quot;Dinner&quot;)))))
+  # Note: seq[[6]] has no Lunch column in this layout (Bones closes for lunch Sat/Sun)
+  cnames[length(cnames) - 1] &lt;- paste(week_seq[[6]], &quot;Dinner&quot;)
+
+  tips &lt;- readxl::read_excel(file, sheet = &quot;Server Detail Page&quot;,
+                               skip = 3, .name_repair = &quot;unique_quiet&quot;) %&gt;%
+    select(1:14) %&gt;%
+    setNames(cnames) %&gt;%
+    filter(!is.na(employee_r365_payroll_id)) %&gt;%
+    janitor::remove_empty(&quot;cols&quot;) %&gt;%
+    mutate_at(3:ncol(.), as.numeric) %&gt;%
+    mutate_at(3:ncol(.), ~ replace_na(., 0)) %&gt;%
+    pivot_longer(cols = 3:ncol(.), names_to = &quot;shift&quot;, values_to = &quot;tip_amount&quot;) %&gt;%
+    filter(tip_amount != 0) %&gt;%
+    separate(shift, into = c(&quot;tip_date&quot;, &quot;shift&quot;), sep = &quot; &quot;) %&gt;%
+    mutate(
+      employee_r365_payroll_id = as.integer(employee_r365_payroll_id),
+      tip_date                 = as.Date(tip_date, &quot;%Y-%m-%d&quot;),
+      shift_id                 = as.numeric(getShiftId(shift)),
+      entity_id                = entityId
+    ) %&gt;%
+    select(-shift) %&gt;%
+    arrange(tip_date, desc(shift_id), employee_r365_payroll_id)
+
+  tips
+}
+</code></pre>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wine storage pull report — R Shiny dashboard showing bottles to restock from storage to service locations. Calls get_theoreticals_active_product_instances_only() to get current theoretical on-hand, computes room par minus on-hand, caps against available storage quantity so you never pull more than exists. Filters out fully-stocked locations. Deploys via shinyapps.io. — storage_pull_report.R</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/173386df76ad4a9702d00d08e6a54001
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Wine storage pull report — R Shiny dashboard showing bottles to restock from storage to service locations. Calls get_theoreticals_active_product_instances_only() to get current theoretical on-hand, computes room par minus on-hand, caps against available storage quantity so you never pull more than exists. Filters out fully-stocked locations. Deploys via shinyapps.io.
+  files: storage_pull_report.R
+  languages: R
+  github_url: https://gist.github.com/mdonovan3/173386df76ad4a9702d00d08e6a54001
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/173386df76ad4a9702d00d08e6a54001">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Wine storage pull report — R Shiny dashboard showing bottles to restock from storage to service locations. Calls get_theoreticals_active_product_instances_only() to get current theoretical on-hand, computes room par minus on-hand, caps against available storage quantity so you never pull more than exists. Filters out fully-stocked locations. Deploys via shinyapps.io.</h1>
+
+<!-- file: storage_pull_report.R | language: R -->
+<pre><code>library(shiny)
+library(shinydashboard)
+library(dplyr)
+library(DT)
+library(DBI)
+library(RPostgres)
+
+# Wine Storage Pull Report — daily restock list showing bottles to pull from
+# storage to service locations.
+#
+# Joins product_instance_location_associations with get_theoreticals_active_
+# product_instances_only() to compute room par vs. theoretical on-hand,
+# then caps the pull quantity against available storage_on_hand so you never
+# pull more than exists. Rows with stock &lt;= 0 are filtered (already stocked).
+#
+# Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS, WINE_DB
+
+ui &lt;- dashboardPage(
+  dashboardHeader(title = &quot;Restock Report&quot;),
+  dashboardSidebar(collapsed = TRUE),
+  dashboardBody(
+    fluidPage(
+      column(9, DT::dataTableOutput(&quot;salesTable&quot;))
+    )
+  )
+)
+
+server &lt;- function(input, output) {
+
+  locationQuery &lt;- &quot;
+    select pila.product_instance_location_id,
+           pi.wine_list_bin_number as wl_num,
+           pi.inventory_name as wine,
+           r.room_name,
+           pila.location_column as column,
+           pila.location_row as row,
+           r.room_par,
+           bs.bottle_size
+    from product_instances pi, rooms r, products p,
+         product_instance_location_associations pila, bottle_sizes bs
+    where pila.product_instance_id = pi.product_instance_id
+      and pila.location_room_id = r.room_id
+      and p.product_id = pi.product_id
+      and pi.bottle_size_id = bs.bottle_size_id
+      and pila.active_location = true
+      and pi.active = true
+      and r.room_par is not null
+      and p.major_category_id =
+          (select major_category_id from major_categories
+           where lower(major_category_name) = &#x27;wine&#x27;)
+    order by room_name, location_column, location_row&quot;
+
+  serviceTheoQuery &lt;- &quot;
+    select product_instance_location_id,
+           product_instance_id as pid,
+           theoretical_on_hand as on_hand
+    from get_theoreticals_active_product_instances_only($1)
+    where product_instance_id in (
+      select pila.product_instance_id
+      from product_instance_location_associations pila, rooms r
+      where pila.location_room_id = r.room_id
+        and r.is_storage != true
+        and pila.active_location = true)&quot;
+
+  storageTheoQuery &lt;- &quot;
+    select product_instance_id as pid,
+           sum(coalesce(theoretical_on_hand, 0)) as storage_on_hand
+    from get_theoreticals_active_product_instances_only($1)
+    where product_instance_location_id in (
+      select pila.product_instance_location_id
+      from product_instance_location_associations pila, rooms r
+      where pila.location_room_id = r.room_id
+        and r.is_storage = true
+        and pila.active_location = true)
+    group by product_instance_id&quot;
+
+  storageLocQuery &lt;- &quot;
+    select distinct pila.product_instance_id as pid,
+           max(location_row) as storage_loc
+    from product_instance_location_associations pila, rooms r
+    where pila.location_room_id = r.room_id
+      and r.is_storage = true
+      and pila.active_location = true
+    group by pila.product_instance_id&quot;
+
+  con &lt;- dbConnect(
+    RPostgres::Postgres(),
+    dbname   = Sys.getenv(&quot;WINE_DB&quot;),
+    host     = Sys.getenv(&quot;DB_HOST&quot;),
+    port     = Sys.getenv(&quot;DB_PORT&quot;),
+    user     = Sys.getenv(&quot;DB_USER&quot;),
+    password = Sys.getenv(&quot;DB_PASS&quot;)
+  )
+
+  observe({
+    locationData &lt;- dbGetQuery(con, locationQuery)
+    theoData     &lt;- dbGetQuery(con, serviceTheoQuery, list(Sys.Date()))
+    storageData  &lt;- dbGetQuery(con, storageTheoQuery, list(Sys.Date()))
+    storageLocs  &lt;- dbGetQuery(con, storageLocQuery)
+
+    pullList &lt;- locationData %&gt;%
+      merge(theoData,    by = &quot;product_instance_location_id&quot;) %&gt;%
+      merge(storageData, by = &quot;pid&quot;) %&gt;%
+      merge(storageLocs, by = &quot;pid&quot;) %&gt;%
+      arrange(storage_loc) %&gt;%
+      mutate(
+        room_par = case_when(bottle_size &gt; 750 &amp; room_par == 6 ~ as.integer(3),
+                             TRUE ~ room_par),
+        stock = case_when(
+          room_par - on_hand &lt;= storage_on_hand ~ room_par - on_hand,
+          room_par - on_hand &gt;  storage_on_hand ~ storage_on_hand)
+      ) %&gt;%
+      select(wl_num, wine, room_name, row, room_par,
+             on_hand, storage_on_hand, stock, storage_loc) %&gt;%
+      filter(stock &gt; 0)
+
+    output$salesTable &lt;- DT::renderDataTable(
+      datatable(pullList, rownames = FALSE, extensions = &quot;Buttons&quot;,
+                filter = &quot;top&quot;, options = list(
+                  columnDefs = list(list(width = &quot;40px&quot;, targets = c(0,2,3,4,5,6,7,8))),
+                  pageLength = -1,
+                  lengthMenu = list(c(20, 50, 100, -1), c(&quot;20&quot;, &quot;50&quot;, &quot;100&quot;, &quot;All&quot;)),
+                  lengthChange = TRUE,
+                  dom = &quot;Bfrtip&quot;,
+                  buttons = c(&quot;pageLength&quot;, &quot;copy&quot;, &quot;csv&quot;, &quot;excel&quot;, &quot;pdf&quot;, &quot;print&quot;))))
+  })
+}
+
+shinyApp(ui = ui, server = server)
+</code></pre>
+</body>
+</html>

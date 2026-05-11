@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DDL for wine inventory database — wine_db.sql</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: DDL for wine inventory database
+  files: wine_db.sql
+  languages: SQL
+  github_url: https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/891fdc4210113f328f36cd197a6290ac">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>DDL for wine inventory database</h1>
+
+<!-- file: wine_db.sql | language: SQL -->
+<pre><code>CREATE TABLE public.allocations (
+  product_instance_id integer(32,0) NOT NULL,
+  quarter_id integer(32,0) NOT NULL,
+  amount integer(32,0),
+  allocation_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;allocations_allocation_id_seq&#x27;::regclass),
+  PRIMARY KEY (allocation_id)
+);
+
+CREATE TABLE public.bottle_sizes (
+  bottle_size_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;bottle_sizes_bottle_size_id_seq&#x27;::regclass),
+  bottle_size integer(32,0),
+  bottle_size_unit integer(32,0),
+  PRIMARY KEY (bottle_size_id)
+);
+
+CREATE TABLE public.carbonation_levels (
+  carbonation_level_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;carbonation_levels_id_seq&#x27;::regclass),
+  carbonation_level character varying(75),
+  PRIMARY KEY (carbonation_level_id)
+);
+
+CREATE TABLE public.companies (
+  company_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;companies_company_id_seq&#x27;::regclass),
+  company_name character varying(100) NOT NULL,
+  company_type_id integer(32,0) NOT NULL,
+  country character varying(100),
+  state character varying(100),
+  address character varying(200),
+  phone character varying(20),
+  fax character varying(20),
+  website character varying(100),
+  compeat_vendor_name character varying(50),
+  active boolean,
+  PRIMARY KEY (company_id)
+);
+
+CREATE TABLE public.company_types (
+  company_type_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;company_types_company_type_id_seq&#x27;::regclass),
+  company_type_name character varying(100) NOT NULL,
+  PRIMARY KEY (company_type_id)
+);
+
+CREATE TABLE public.continents (
+  continent_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;continents_continent_id_seq&#x27;::regclass),
+  continent_name character varying(100),
+  PRIMARY KEY (continent_id)
+);
+
+CREATE TABLE public.countries (
+  country_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;countries_country_id_seq&#x27;::regclass),
+  country_name character varying(100),
+  continent_id integer(32,0),
+  PRIMARY KEY (country_id)
+);
+
+CREATE TABLE public.credit_purchase_record_details (
+  credit_purchase_record_detail_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;credit_purchase_record_detail_credit_purchase_record_detail_seq&#x27;::regclass),
+  product_instance_location_id integer(32,0) NOT NULL,
+  quantity numeric(6,2) NOT NULL,
+  price numeric(6,2) NOT NULL,
+  credit_purchase_record_id integer(32,0) NOT NULL,
+  PRIMARY KEY (credit_purchase_record_detail_id)
+);
+
+CREATE TABLE public.credit_purchase_records (
+  credit_purchase_record_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;credit_purchase_records_credit_purchase_record_id_seq&#x27;::regclass),
+  purchase_date date NOT NULL,
+  purchaser_person_id integer(32,0),
+  PRIMARY KEY (credit_purchase_record_id)
+);
+
+CREATE TABLE public.credit_reasons (
+  credit_reason_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;credit_reasons_credit_reason_id_seq&#x27;::regclass),
+  credit_reason character varying(100),
+  PRIMARY KEY (credit_reason_id)
+);
+
+CREATE TABLE public.credits (
+  credit_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;credits_credit_id_seq&#x27;::regclass),
+  expect_reimbursement boolean NOT NULL,
+  dollar_amount numeric(10,2),
+  product_instance_location_id integer(32,0),
+  number_units numeric(10,2),
+  date_initiated date NOT NULL,
+  date_resolved date,
+  credit_reason_id integer(32,0),
+  PRIMARY KEY (credit_id)
+);
+
+CREATE TABLE public.currencies (
+  currency_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;currencies_currency_id_seq&#x27;::regclass),
+  currency_name character varying(100),
+  PRIMARY KEY (currency_id)
+);
+
+CREATE TABLE public.daily_sales (
+  date_of_sale date NOT NULL,
+  product_instance_location_id integer(32,0) NOT NULL,
+  bottle_sales_amount integer(32,0),
+  glass_sales_amount numeric(6,4),
+  PRIMARY KEY (date_of_sale, product_instance_location_id)
+);
+
+CREATE TABLE public.event_person_associations (
+  person_id integer(32,0) NOT NULL,
+  event_id integer(32,0) NOT NULL,
+  PRIMARY KEY (person_id, event_id)
+);
+
+CREATE TABLE public.event_types (
+  event_type_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;event_types_event_type_id_seq&#x27;::regclass),
+  event_type_name character varying(100) NOT NULL,
+  PRIMARY KEY (event_type_id)
+);
+
+CREATE TABLE public.events (
+  event_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;events_event_id_seq&#x27;::regclass),
+  event_name character varying(200),
+  event_type integer(32,0),
+  event_start timestamp with time zone,
+  event_end timestamp with time zone,
+  PRIMARY KEY (event_id)
+);
+
+CREATE TABLE public.inventories (
+  inventory_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;inventories_inventory_id_seq&#x27;::regclass),
+  inventory_date date NOT NULL,
+  counted_by_person_id integer(32,0),
+  entered_by_person_id integer(32,0),
+  inventory_major_category_id integer(32,0),
+  for_cost_period boolean NOT NULL,
+  is_final boolean NOT NULL,
+  PRIMARY KEY (inventory_id)
+);
+
+CREATE TABLE public.inventory_details (
+  inventory_id integer(32,0) NOT NULL,
+  product_instance_id integer(32,0),
+  is_keyed boolean DEFAULT false,
+  product_instance_location_id integer(32,0) NOT NULL,
+  quantity_counted numeric(10,1),
+  theoretical_quantity numeric(10,1),
+  product_cost numeric(10,2),
+  credit_counted_quantity numeric(10,2),
+  PRIMARY KEY (inventory_id, product_instance_location_id)
+);
+
+CREATE TABLE public.invoice_details (
+  invoice_detail_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;invoice_details_invoice_detail_id_seq&#x27;::regclass),
+  invoice_id integer(32,0) NOT NULL,
+  product_instance_id integer(32,0),
+  number_received integer(32,0) NOT NULL,
+  price_per_unit numeric(10,2) NOT NULL,
+  product_instance_location_id integer(32,0),
+  PRIMARY KEY (invoice_detail_id)
+);
+
+CREATE TABLE public.invoices (
+  invoice_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;invoices_invoice_id_seq&#x27;::regclass),
+  vendor_company_id integer(32,0) NOT NULL,
+  vendor_invoice_id character varying(100) NOT NULL,
+  invoice_date date NOT NULL,
+  payment_date date NOT NULL,
+  invoice_note character varying(500),
+  PRIMARY KEY (invoice_id)
+);
+
+CREATE TABLE public.major_categories (
+  major_category_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;major_categories_major_category_id_seq&#x27;::regclass),
+  major_category_name character varying(200) NOT NULL,
+  pos_category_name character varying(200),
+  pos_category_number integer(32,0),
+  PRIMARY KEY (major_category_id)
+);
+
+CREATE TABLE public.major_category_pricing_ranges (
+  major_category_id integer(32,0) NOT NULL,
+  lower_range_bound numeric(10,2) NOT NULL,
+  upper_range_bound numeric(10,2) NOT NULL,
+  range_cost_percent numeric(6,6) NOT NULL,
+  major_category_pricing_tier_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;major_category_pricing_ranges_major_category_pricing_tier_i_seq&#x27;::regclass),
+  PRIMARY KEY (major_category_pricing_tier_id)
+);
+
+CREATE TABLE public.match_major_categories (
+  pos_major_category_number integer(32,0) NOT NULL,
+  pos_major_category_name character varying(50),
+  major_category_id integer(32,0) NOT NULL,
+  active boolean,
+  PRIMARY KEY (pos_major_category_number, major_category_id)
+);
+
+CREATE TABLE public.minor_categories (
+  minor_category_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;minor_categories_minor_category_id_seq&#x27;::regclass),
+  minor_category_name character varying(200) NOT NULL,
+  major_category_id integer(32,0),
+  pos_category_name character varying(200),
+  pos_category_number integer(32,0),
+  PRIMARY KEY (minor_category_id)
+);
+
+CREATE TABLE public.miscellaneous_credits (
+  credit_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;miscellaneous_credits_credit_id_seq&#x27;::regclass),
+  expect_reimbursement boolean NOT NULL,
+  dollar_amount numeric(10,2),
+  product_instance_location_id integer(32,0),
+  number_units numeric(10,2),
+  date_initiated date NOT NULL,
+  date_resolved date,
+  is_resolved boolean NOT NULL DEFAULT false,
+  credit_reason_id integer(32,0),
+  PRIMARY KEY (credit_id)
+);
+
+CREATE TABLE public.people (
+  person_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;people_person_id_seq&#x27;::regclass),
+  person_type_id integer(32,0),
+  company_id integer(32,0),
+  last_name character varying(100),
+  first_name character varying(100),
+  title character varying(40),
+  phone character varying(20),
+  extension character varying(10),
+  cell_phone character varying(20),
+  pager character varying(20),
+  email character varying(60),
+  active boolean,
+  PRIMARY KEY (person_id)
+);
+
+CREATE TABLE public.person_company_associations (
+  person_company_association_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;person_company_associations_person_company_association_id_seq&#x27;::regclass),
+  person_id integer(32,0),
+  company_id integer(32,0),
+  acitve boolean,
+  is_primary_contact boolean,
+  date_started date,
+  date_ended date,
+  PRIMARY KEY (person_company_association_id)
+);
+
+CREATE TABLE public.person_types (
+  person_type_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;person_types_person_type_id_seq&#x27;::regclass),
+  person_type_name character varying(100) NOT NULL,
+  PRIMARY KEY (person_type_id)
+);
+
+CREATE TABLE public.pos_chkitems (
+  chkitems_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;pos_chkitems_chkitems_id_seq&#x27;::regclass),
+  store integer(32,0),
+  date_of_sale date,
+  check_num integer(32,0),
+  seq_main integer(32,0),
+  is_option boolean,
+  item_num integer(32,0),
+  major integer(32,0),
+  minor integer(32,0),
+  sales_cat integer(32,0),
+  disc_num integer(32,0),
+  tax_code integer(32,0),
+  num_sold numeric(8,2),
+  deletion integer(32,0),
+  del_user integer(32,0),
+  del_user_first character varying(25),
+  del_user_last character varying(25),
+  overring boolean,
+  menu_price numeric(8,2),
+  sales_amt numeric(8,2),
+  table_number integer(32,0),
+  cost_center integer(32,0),
+  user_num integer(32,0),
+  time_of_sale integer(32,0),
+  shift integer(32,0),
+  product_instance_id integer(32,0),
+  is_inventory_unit boolean,
+  sales_volume_unit_id integer(32,0),
+  sales_units_sold numeric(10,6),
+  user_name_last character varying(25),
+  user_name_first character varying(25),
+  user_type integer(32,0),
+  magcode integer(32,0),
+  pos_product_name character varying(100),
+  barcode character varying(25),
+  product_instance_location_id integer(32,0),
+  major_category_id integer(32,0),
+  unit_cost_at_time_of_sale numeric(8,2),
+  is_club_list_sale boolean,
+  is_clearance_sale boolean,
+  sale_hour smallint(16,0),
+  sale_minute smallint(16,0),
+  PRIMARY KEY (chkitems_id)
+);
+
+CREATE TABLE public.pos_plu_product_instance_associations (
+  pos_plu integer(32,0) NOT NULL,
+  product_instance_id integer(32,0) NOT NULL,
+  is_inventory_unit boolean,
+  sales_unit_id integer(32,0) NOT NULL,
+  number_sales_units numeric(10,6) NOT NULL,
+  is_wine_list_bin_number boolean DEFAULT false,
+  PRIMARY KEY (pos_plu, product_instance_id, sales_unit_id, number_sales_units)
+);
+
+CREATE TABLE public.pos_products (
+  pos_product_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;pos_products_pos_product_id_seq&#x27;::regclass),
+  pos_plu integer(32,0),
+  pos_product_name character varying(100),
+  pos_product_price numeric(10,2),
+  PRIMARY KEY (pos_product_id)
+);
+
+CREATE TABLE public.pour_sizes (
+  pour_size_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;pour_sizes_pour_size_id_seq&#x27;::regclass),
+  pour_size integer(32,0),
+  pour_size_unit integer(32,0),
+  PRIMARY KEY (pour_size_id)
+);
+
+CREATE TABLE public.producers (
+  producer_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;producers_producer_id_seq&#x27;::regclass),
+  producer_name character varying(250),
+  PRIMARY KEY (producer_id)
+);
+
+CREATE TABLE public.product_information_files (
+  product_information_file_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;product_information_files_product_information_file_id_seq&#x27;::regclass),
+  file_id oid,
+  product_id integer(32,0),
+  product_instance_id integer(32,0),
+  company_id integer(32,0),
+  region_id integer(32,0),
+  person_id integer(32,0),
+  vintage_id integer(32,0),
+  PRIMARY KEY (product_information_file_id)
+);
+
+CREATE TABLE public.product_instance_location_associations (
+  product_instance_location_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;product_instance_location_asso_product_instance_location_id_seq&#x27;::regclass),
+  product_instance_id integer(32,0) NOT NULL,
+  location_room_id integer(32,0) NOT NULL DEFAULT 1,
+  location_room_section_id integer(32,0) NOT NULL DEFAULT 1,
+  location_column integer(32,0) NOT NULL DEFAULT 0,
+  location_row integer(32,0) NOT NULL DEFAULT 0,
+  default_purchase_location boolean,
+  default_sale_location boolean,
+  location_sequence integer(32,0),
+  active_location boolean DEFAULT true,
+  PRIMARY KEY (product_instance_location_id)
+);
+
+CREATE TABLE public.product_instance_location_transfers (
+  transfer_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;product_instance_location_transfers_transfer_id_seq&#x27;::regclass),
+  from_location integer(32,0) NOT NULL,
+  to_location integer(32,0) NOT NULL,
+  quantity numeric(10,2) NOT NULL,
+  transfer_date date NOT NULL,
+  PRIMARY KEY (transfer_id)
+);
+
+CREATE TABLE public.product_instance_multi_wine_list_category_associations (
+  product_instance_id bigint(64,0) NOT NULL,
+  wine_list_category_id bigint(64,0) NOT NULL,
+  PRIMARY KEY (product_instance_id, wine_list_category_id)
+);
+
+CREATE TABLE public.product_instance_ratings (
+  product_instance_id integer(32,0) NOT NULL,
+  ratings_source_id integer(32,0) NOT NULL,
+  rating_value integer(32,0),
+  PRIMARY KEY (product_instance_id, ratings_source_id)
+);
+
+CREATE TABLE public.product_instance_varietal_associations (
+  product_instance_id integer(32,0) NOT NULL,
+  varietal_id integer(32,0) NOT NULL,
+  percentage integer(32,0)
+);
+
+CREATE TABLE public.product_instances (
+  product_instance_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;product_instances_product_instance_id_seq&#x27;::regclass),
+  product_id integer(32,0),
+  inventory_name character varying(250) NOT NULL,
+  par_level numeric(10,2),
+  order_quantity integer(32,0) DEFAULT 12,
+  case_size integer(32,0),
+  purchase_deal character varying(150),
+  vintage_id integer(32,0),
+  winemaker_person_id integer(32,0),
+  unit_price numeric(10,2),
+  currency_id integer(32,0),
+  active boolean,
+  bottle_size_id integer(32,0) NOT NULL DEFAULT 4,
+  wine_list_bin_number integer(32,0),
+  reserve_bin_number integer(32,0),
+  supplier_company_id integer(32,0),
+  reorder_level numeric(10,2),
+  wine_list_name character varying(200),
+  wine_list_description character varying(200),
+  sale_price numeric(10,2),
+  glass_sale_price numeric(10,2),
+  show_on_inventory boolean,
+  comment character varying(250),
+  lot_name character varying(100),
+  lot_description character varying(250),
+  purchaser integer(32,0),
+  purchase_location_id integer(32,0),
+  lot_condition character varying(250),
+  mark_for_purchase boolean,
+  reserve_only boolean DEFAULT false,
+  pos_story character varying(2000),
+  is_club_selection boolean DEFAULT false,
+  wine_list_category_id integer(32,0),
+  wine_list_subcategory_id integer(32,0),
+  anticipated_maturity_begin integer(32,0),
+  anticipated_maturity_end integer(32,0),
+  is_club_list_selection boolean DEFAULT false,
+  is_by_the_glass boolean,
+  label_image_oid oid,
+  label_image_type character varying(5),
+  is_clearance boolean DEFAULT false,
+  original_sale_price numeric(10,2),
+  compeat_id integer(32,0),
+  varietal_id integer(32,0),
+  is_private_dining_selection boolean,
+  is_half_glass_special boolean DEFAULT false,
+  fintech_id character varying,
+  is_private_party_list boolean,
+  created_at timestamp without time zone DEFAULT now(),
+  PRIMARY KEY (product_instance_id)
+);
+
+CREATE TABLE public.products (
+  product_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;products_product_id_seq&#x27;::regclass),
+  product_name character varying(100) NOT NULL,
+  producer_id integer(32,0),
+  major_category_id integer(32,0),
+  minor_category_id integer(32,0),
+  wine_list_name character varying(100),
+  active boolean,
+  appellation_id integer(32,0),
+  vineyard_designation character varying(100),
+  other_designation character varying(100),
+  comment character varying,
+  subcategory_id integer(32,0),
+  carbonation_level_id integer(32,0),
+  sweetness_level_id integer(32,0),
+  wine_color_id integer(32,0),
+  country_id integer(32,0),
+  state_id integer(32,0),
+  region_id integer(32,0),
+  wine_type_id integer(32,0),
+  created_at timestamp without time zone DEFAULT now(),
+  PRIMARY KEY (product_id)
+);
+
+CREATE TABLE public.purchase_deals (
+  purchase_deal_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;purchase_deals_purchase_deal_id_seq&#x27;::regclass),
+  product_instance_id integer(32,0),
+  puchase_quantity integer(32,0),
+  receive_free_quantity integer(32,0),
+  description character varying(300),
+  PRIMARY KEY (purchase_deal_id)
+);
+
+CREATE TABLE public.purchase_locations (
+  purchase_location_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;purchase_locations_purchase_location_id_seq&#x27;::regclass),
+  purchase_location_name character varying(250),
+  address character varying(250),
+  city character varying(100),
+  zip character varying(10),
+  country character varying(100),
+  PRIMARY KEY (purchase_location_id)
+);
+
+CREATE TABLE public.quarters (
+  quarter_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;quarters_quarter_id_seq&#x27;::regclass),
+  quarter_number integer(32,0) NOT NULL,
+  start_date date,
+  end_date date,
+  year integer(32,0) NOT NULL,
+  PRIMARY KEY (quarter_id)
+);
+
+CREATE TABLE public.ratings_sources (
+  ratings_source_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;ratings_sources_ratings_source_id_seq&#x27;::regclass),
+  ratings_source_name character varying(250),
+  PRIMARY KEY (ratings_source_id)
+);
+
+CREATE TABLE public.regions (
+  region_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;regions_region_id_seq&#x27;::regclass),
+  parent_region_id integer(32,0),
+  region_name character varying(50) NOT NULL,
+  region_hierarchy_level integer(32,0),
+  country_id integer(32,0),
+  PRIMARY KEY (region_id)
+);
+
+CREATE TABLE public.restaurant_settings (
+  data jsonb
+);
+
+CREATE TABLE public.room_sections (
+  room_section_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;room_sections_room_section_id_seq&#x27;::regclass),
+  room_id integer(32,0),
+  room_section_name character varying(100),
+  PRIMARY KEY (room_section_id)
+);
+
+CREATE TABLE public.rooms (
+  room_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;rooms_room_id_seq&#x27;::regclass),
+  room_name character varying(100) NOT NULL,
+  compeat_room_name character varying(50),
+  room_par smallint(16,0),
+  is_storage boolean DEFAULT false,
+  is_bar boolean DEFAULT false,
+  PRIMARY KEY (room_id)
+);
+
+CREATE TABLE public.staff_education_credits (
+  credit_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;staff_education_credits_credit_id_seq&#x27;::regclass),
+  date_initiated date,
+  date_resolved date,
+  expect_reimbursement boolean DEFAULT true,
+  supplier_company_id integer(32,0),
+  product_instance_location_id integer(32,0),
+  quantity integer(32,0),
+  bottle_price double precision,
+  PRIMARY KEY (credit_id)
+);
+
+CREATE TABLE public.states (
+  state_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;states_state_id_seq&#x27;::regclass),
+  state_name character varying(100),
+  country_id integer(32,0),
+  PRIMARY KEY (state_id)
+);
+
+CREATE TABLE public.subcategories (
+  subcategory_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;sub_categories_sub_category_id_seq&#x27;::regclass),
+  minor_category_id integer(32,0) NOT NULL,
+  subcategory_name character varying(150) NOT NULL,
+  PRIMARY KEY (subcategory_id)
+);
+
+CREATE TABLE public.sweetness_levels (
+  sweetness_level_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;sweetness_levels_id_seq&#x27;::regclass),
+  sweetness_level character varying(75),
+  PRIMARY KEY (sweetness_level_id)
+);
+
+CREATE TABLE public.tasting_note_wine_aroma_associations (
+  tasting_note_id integer(32,0) NOT NULL,
+  wine_aroma_id integer(32,0) NOT NULL,
+  intensity integer(32,0)
+);
+
+CREATE TABLE public.tasting_notes (
+  tasting_note_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;tasting_notes_tasting_note_id_seq&#x27;::regclass),
+  wine_fault_id integer(32,0),
+  tasting_date date NOT NULL,
+  product_instance_id integer(32,0),
+  color_intensity integer(32,0),
+  clarity integer(32,0),
+  staining integer(32,0),
+  rim_variation integer(32,0),
+  carbonation integer(32,0),
+  sediment integer(32,0),
+  aromatic_intensity integer(32,0),
+  fruit_ripeness integer(32,0),
+  food_affinity integer(32,0),
+  earthiness integer(32,0),
+  minerality integer(32,0),
+  maturity integer(32,0),
+  acidity integer(32,0),
+  tannin integer(32,0),
+  body integer(32,0),
+  finish integer(32,0),
+  balance integer(32,0),
+  oak_influence integer(32,0),
+  complexity integer(32,0),
+  quality integer(32,0),
+  sweetness integer(32,0),
+  description character varying(300),
+  label_image_oid oid,
+  label_image_type character varying(5),
+  wine_name character varying(50),
+  PRIMARY KEY (tasting_note_id)
+);
+
+CREATE TABLE public.users (
+  id integer(32,0) NOT NULL DEFAULT nextval(&#x27;users_id_seq&#x27;::regclass),
+  username character varying(50) NOT NULL,
+  email character varying(75) NOT NULL,
+  password character varying(250) NOT NULL,
+  approved boolean DEFAULT false,
+  is_admin boolean DEFAULT false,
+  created timestamp without time zone,
+  last_login timestamp without time zone,
+  write_access boolean DEFAULT false,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE public.varietals (
+  varietal_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;varietals_varietal_id_seq&#x27;::regclass),
+  varietal_name character varying(100) NOT NULL,
+  alias character varying(200),
+  grape_color_id integer(32,0),
+  PRIMARY KEY (varietal_id)
+);
+
+CREATE TABLE public.vendor_credits_due (
+  vendor_credits_due_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;vendor_credits_due_vendor_credits_due_id_seq&#x27;::regclass),
+  product_instance_location_id integer(32,0) NOT NULL,
+  quantity numeric(6,2) NOT NULL,
+  date_initiated date NOT NULL,
+  date_resolved date NOT NULL,
+  credit_reason_id integer(32,0),
+  is_resolved boolean NOT NULL DEFAULT false,
+  unit_price numeric(6,2) NOT NULL,
+  vendor_company_id integer(32,0),
+  PRIMARY KEY (vendor_credits_due_id)
+);
+
+CREATE TABLE public.vendor_credits_received (
+  vendor_credits_received_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;vendor_credits_received_vendor_credits_received_id_seq&#x27;::regclass),
+  vendor_company_id integer(32,0),
+  date_received date NOT NULL,
+  amount numeric(10,2) NOT NULL,
+  explanation_comment character varying(200),
+  vendor_credit_invoice_id character varying(50),
+  major_category_id integer(32,0) NOT NULL,
+  PRIMARY KEY (vendor_credits_received_id)
+);
+
+CREATE TABLE public.vintages (
+  vintage_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;vintages_vintage_id_seq&#x27;::regclass),
+  vintage_year integer(32,0),
+  PRIMARY KEY (vintage_id)
+);
+
+CREATE TABLE public.volume_units (
+  volume_unit_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;volume_units_volume_unit_id_seq&#x27;::regclass),
+  volume_unit_name character varying(50),
+  equivalent_ml numeric(10,6),
+  PRIMARY KEY (volume_unit_id)
+);
+
+CREATE TABLE public.wine_aromas (
+  wine_aroma_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_aromas_wine_aroma_id_seq&#x27;::regclass),
+  wine_aroma_name character varying(75) NOT NULL,
+  PRIMARY KEY (wine_aroma_id)
+);
+
+CREATE TABLE public.wine_colors (
+  wine_color_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_colors_id_seq&#x27;::regclass),
+  wine_colors character varying,
+  PRIMARY KEY (wine_color_id)
+);
+
+CREATE TABLE public.wine_faults (
+  wine_fault_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_faults_wine_fault_id_seq&#x27;::regclass),
+  wine_fault_name character varying(50) NOT NULL,
+  PRIMARY KEY (wine_fault_id)
+);
+
+CREATE TABLE public.wine_list_categories (
+  wine_list_category_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_list_categories_id_seq&#x27;::regclass),
+  wine_list_category_name character varying(200),
+  wine_list_order integer(32,0),
+  active boolean DEFAULT true,
+  PRIMARY KEY (wine_list_category_id)
+);
+
+CREATE TABLE public.wine_list_subcategories (
+  wine_list_subcategory_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_list_subcategories_wine_list_subcategory_id_seq&#x27;::regclass),
+  wine_list_category_id integer(32,0),
+  wine_list_subcategory_name character varying(150),
+  wine_list_order integer(32,0),
+  PRIMARY KEY (wine_list_subcategory_id, wine_list_subcategory_id)
+);
+
+CREATE TABLE public.wine_types (
+  wine_type_id integer(32,0) NOT NULL DEFAULT nextval(&#x27;wine_types_wine_type_id_seq&#x27;::regclass),
+  wine_type_name character varying(200),
+  PRIMARY KEY (wine_type_id)
+);
+</code></pre>
+</body>
+</html>

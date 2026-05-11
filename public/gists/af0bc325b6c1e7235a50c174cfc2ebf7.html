@@ -1,0 +1,2205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Java / JavaFX — AddEditController.java</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: Java / JavaFX
+  files: AddEditController.java
+  languages: Java
+  github_url: https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>Java / JavaFX</h1>
+
+<!-- file: AddEditController.java | language: Java -->
+<pre><code>/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package winelistmanager;
+
+import com.mchange.v2.c3p0.PooledDataSource;
+import com.sun.javafx.scene.control.skin.ComboBoxListViewSkin;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.Mnemonic;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Text;
+import javafx.util.Duration;
+import javax.imageio.ImageIO;
+import org.controlsfx.control.CheckComboBox;
+import org.controlsfx.control.Notifications;
+import org.controlsfx.control.PopOver;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+import winelistmanager.database_entities.BottleSize;
+import winelistmanager.database_entities.Company;
+import winelistmanager.database_entities.Country;
+import winelistmanager.database_entities.PLU;
+import winelistmanager.database_entities.Product;
+import winelistmanager.database_entities.ProductInstance;
+import winelistmanager.database_entities.ProductInstanceLocation;
+import winelistmanager.database_entities.Rating;
+import winelistmanager.database_entities.RatingsSource;
+import winelistmanager.database_entities.Region;
+import winelistmanager.database_entities.Vintage;
+import winelistmanager.database_entities.WineListCategory;
+import winelistmanager.database_entities.WineType;
+
+/**
+ * FXML Controller class
+ *
+ * @author mdonovan
+ */
+public class ViewEditController implements Initializable {
+
+    @FXML AnchorPane anchorPane;
+    @FXML ComboBox distributorComboBox;
+    @FXML ComboBox bottleSizeComboBox;
+    @FXML ComboBox productComboBox;
+    @FXML ComboBox productInstanceComboBox;
+    @FXML TextField searchField;
+    @FXML CheckBox fullTextCheckBox;
+    @FXML CheckBox activeCheckBox;
+    @FXML TextField productNameTextField;
+    @FXML TextField wineListNameTextField;
+    @FXML TextField wineListBinNumberTextField;
+    @FXML ComboBox wineTypeComboBox;
+    @FXML ComboBox countryComboBox;
+    @FXML ComboBox regionComboBox;
+    //@FXML ComboBox vintageTypeComboBox;
+    @FXML CheckBox activeProductCheckBox;
+    @FXML CheckBox activeProductInstanceCheckBox;
+    @FXML TextField inventoryNameTextField;
+    @FXML ComboBox vintageComboBox;
+    @FXML ComboBox grapeVarietyComboBox;
+    @FXML CheckComboBox multiWLCategoryComboBox;
+    @FXML TextField productIDTextField;
+    @FXML TextField productInstanceIDTextField;
+    @FXML TextField binNumberSearchTextField;
+    @FXML TextField orderParTextField;
+    @FXML Button binNumberSearchButton;
+    @FXML Button lockedButton;
+    @FXML ImageView lockedButtonImageView;
+    @FXML CheckBox showOnListCheckBox;
+    @FXML CheckBox isClubListCheckBox;
+    @FXML CheckBox isByTheGlassCheckBox;
+    @FXML TextField ratingTextField;
+    @FXML ComboBox ratingSourceComboBox;
+    @FXML Button saveButton;
+    @FXML Button addNewPLUButton;
+    @FXML ImageView labelImage;
+    @FXML Hyperlink copyImageLink;
+    @FXML Hyperlink imageSearchLink;
+    @FXML Hyperlink productSalesLink;
+    @FXML Hyperlink productInstanceLink;
+    @FXML Hyperlink editWineListDescriptionHyperlink;
+    @FXML Hyperlink miscNotesHyperlink;
+    @FXML Hyperlink productInstanceOrderHyperlink;
+    @FXML Hyperlink productOrderHyperlink;
+    //@FXML Hyperlink wineSearcherHyperlink;
+    @FXML ScrollPane locationscScrollPane;
+    @FXML ScrollPane PLUScrollPane;
+    @FXML TextField listPriceTextField;
+    @FXML TextField originalPriceTextField;
+    @FXML TextField glassPriceTextField;
+    //@FXML TextField halfGlassFeaturePriceTextField;
+    @FXML TextField pricingValuationTextField;
+    @FXML TextField lastPurchaseCostTextField;
+    @FXML TextField averageUnitCostTextField;
+    @FXML TextField formulaSalesPriceTextField;
+    @FXML TextField formulaCostPercentTextField;
+    @FXML TextField listPriceCostPercentTextField;
+
+    @FXML TextField maturityEndTextField;
+    //@FXML Button refreshProductsButton;
+    @FXML TextField compeatIDTextField;
+    @FXML TextField fintechIDTextField;
+    @FXML TextField onHandTextField;
+    @FXML Button addNewLocationButton;
+    @FXML Button refreshScreenButton;
+    @FXML Button addNewProductButton;
+    @FXML Button addNewProductInstanceButton;
+    @FXML TextField techSheetURLTextField;
+    @FXML Hyperlink clearVintageHyperlink;
+    @FXML Hyperlink clearRatingHyperlink;
+    @FXML Hyperlink missingFieldsHyperlink;
+    @FXML CheckBox isSetUpForListCheckBox;
+
+    PooledDataSource pds;
+    ArrayList&lt;Product&gt; products;
+    ArrayList&lt;ProductInstance&gt; productInstances;
+    Product selectedProduct;
+    ProductInstance selectedProductInstance;
+    ArrayList&lt;WineType&gt; wineTypes;
+    ArrayList&lt;Country&gt; countries;
+    ArrayList&lt;Vintage&gt; vintages;
+    ArrayList&lt;Region&gt; regions;
+    ArrayList&lt;Company&gt; distributors;
+    ArrayList ratingsSources;
+    ArrayList&lt;WineListCategory&gt; wineListCategories;
+    ArrayList&lt;WineListCategory&gt; multiWineListCategories;
+    ArrayList&lt;BottleSize&gt; bottleSizes;
+    Boolean formLocked;
+    ObservableList&lt;ProductInstanceLocation&gt; tableData;
+    KeyCombination saveKC;
+    KeyCombination toggleLockKC;
+    Mnemonic saveMnemonic;
+    Mnemonic toggleLockMnemonic;
+    File labelImageFile;
+    String labelImageFileExtension;
+    Boolean labelImageChanged;
+
+    /**
+     * Initializes the controller class.
+     */
+    @Override
+    public void initialize(URL url, ResourceBundle rb) {
+        //productComboBox.setEditable(true);
+        //TextFields.bindAutoCompletion(productComboBox.getEditor(), productComboBox.getItems());
+        //testMail();
+        //getWineSearcher();
+        labelImageChanged = Boolean.FALSE;
+        labelImageFile = null;
+        labelImageFileExtension = null;
+        labelImage.setPreserveRatio(true);
+        setMnemonics();
+        setListeners();
+        pds = ConnectionPool.getInstance().cpds;
+        products = getProducts();
+
+        //need to get cat for products with inactive cat
+        wineListCategories = WineListCategory.getAllWineListCategories();
+        //wineListCategories = WineListCategory.getAllActiveWineListCategories();
+        multiWLCategoryComboBox.getItems().addAll(wineListCategories);
+        //need to get dist for products with inactive dist
+        distributors = Company.getAllDistributorCompanies();
+        //distributors = Company.getAllActiveDistributorCompanies();
+        distributorComboBox.getItems().addAll(distributors);
+        grapeVarietyComboBox.getItems().addAll(wineListCategories);
+        wineTypes = winelistmanager.database_entities.WineType.getAllWineTypes();
+        wineTypeComboBox.getItems().addAll(wineTypes);
+        ratingsSources = RatingsSource.getAllRatingsSources();
+        ratingSourceComboBox.getItems().addAll(ratingsSources);
+        countries = Country.getAllCountries();
+        countryComboBox.getItems().addAll(countries);
+        regions = Region.getAllRegions();
+        regionComboBox.getItems().addAll(regions);
+        vintages = winelistmanager.database_entities.Vintage.getAllVintagesToCurrent();
+        vintageComboBox.getItems().addAll(vintages);
+        bottleSizes = BottleSize.getAllML();
+        bottleSizeComboBox.getItems().addAll(bottleSizes);
+        ChangeListener listener = new ChangeListener() {
+            @Override
+            public void changed(ObservableValue observable, Object oldValue, Object newValue) {
+                //Product p =  (Product) newValue;
+//                Object o = productComboBox.getSelectionModel().getSelectedItem();
+//                Product p = (Product) o;
+//                System.out.println(p.getClass());
+//                p.getData();
+//                System.out.println(p);
+            }
+
+        };
+
+        productComboBox.getItems().addAll(products);
+//        productComboBox.setConverter(new StringConverter&lt;Product&gt;() {
+//
+//        public String toString(Product object) {
+//            return object.getProductName();
+//        }
+//
+//        @Override
+//        public Product fromString(String string) {
+//            // TODO Auto-generated method stub
+//            for (Product p : products){
+//                if (string.equals(p.getProductName()))
+//                        return p;
+//            }
+//            return null;
+//        }
+//
+//    });
+        //TextFields.bindAutoCompletion(productComboBox.getEditor(), productComboBox.getItems());
+
+        productComboBox.getSelectionModel().selectedItemProperty().addListener(listener);
+        //initializeLocationTable();
+        tableData = FXCollections.observableArrayList();
+        //locationsTableView.setItems(tableData);
+        //testLoc();
+        setFormDisabled(Boolean.TRUE);
+        formLocked = Boolean.TRUE;
+    }
+
+    private void setListeners() {
+        listPriceTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                listPriceChanged();
+            }
+        });
+
+        productNameTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                productNameChanged();
+            }
+        });
+
+        ratingTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                ratingValueChanged();
+            }
+        });
+
+        glassPriceTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                glassPriceChanged();
+            }
+        });
+
+        inventoryNameTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                inventoryNameChanged();
+            }
+        });
+        wineListNameTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                wineListNameChanged();
+            }
+        });
+
+
+
+        maturityEndTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                maturityEndChanged();
+            }
+        });
+
+        compeatIDTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                compeatIDChanged();
+            }
+        });
+        fintechIDTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                fintechIDChanged();
+            }
+        });
+        originalPriceTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                originalPriceChanged();
+            }
+        });
+
+        orderParTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                orderParChanged();
+            }
+        });
+        pricingValuationTextField.focusedProperty().addListener((ov, oldV, newV) -&gt; {
+            if (!newV) { // focus lost
+                pricingValuationChanged();
+            }
+        });
+//        multiWLCategoryComboBox.getCheckModel().getCheckedItems().addListener(new ListChangeListener&lt;String&gt;() {
+//            public void onChanged(ListChangeListener.Change&lt;? extends String&gt; c) {
+//            //System.out.println(multiWLCategoryComboBox.getCheckModel().getCheckedItems());
+//            //selectedProductInstance.setMultiWineListCategories((ArrayList&lt;WineListCategory&gt;) multiWLCategoryComboBox.getCheckModel().getCheckedItems());
+//            //System.out.println(&quot;mwlc on change&quot;);
+//            selectedProductInstance.setMultiWineListCategories( new ArrayList&lt;WineListCategory&gt;(multiWLCategoryComboBox.getCheckModel().getCheckedItems()));
+//            //selectedProductInstance.setIsChanged(Boolean.TRUE);
+//            }
+//        });
+
+    }
+
+    private void setMnemonics() {
+        saveKC = new KeyCodeCombination(KeyCode.S, KeyCombination.ALT_DOWN);
+        toggleLockKC = new KeyCodeCombination(KeyCode.L, KeyCombination.ALT_DOWN);
+        Mnemonic saveMnemonic = new Mnemonic(saveButton, saveKC);
+        Mnemonic toggleLockMnemonic = new Mnemonic(lockedButton, toggleLockKC);
+        WineListManager.getPrimaryStage().getScene().addMnemonic(toggleLockMnemonic);
+        WineListManager.getPrimaryStage().getScene().addMnemonic(saveMnemonic);
+    }
+
+    private Boolean allowEdits() {
+        return !formLocked &amp;&amp; SessionManager.getIsAuthenticated() &amp;&amp; !SessionManager.getActiveRestaurant().getReadOnly();
+    }
+
+    private void fillProductData() {
+        if (selectedProduct.getActive() == null) {
+            activeProductCheckBox.setIndeterminate(Boolean.TRUE);
+        } else {
+            activeProductCheckBox.setSelected(selectedProduct.getActive());
+        }
+        productNameTextField.setText(selectedProduct.getProductName());
+        //activeProductCheckBox.setSelected(selectedProduct.getActive());
+        countryComboBox.getSelectionModel().select(selectedProduct.getCountry());
+        regionComboBox.getSelectionModel().select(selectedProduct.getRegion());
+        System.out.println(&quot;reg&quot; + selectedProduct.getRegion());
+        wineTypeComboBox.getSelectionModel().select(selectedProduct.getWineType());
+        productIDTextField.setText(selectedProduct.getProductID().toString());
+    }
+
+    private void fillProductInstanceData() {
+        String fpc;
+        String lppc;
+        Integer l = selectedProductInstance.getPosStory() == null ? 0 : selectedProductInstance.getPosStory().length();
+        editWineListDescriptionHyperlink.setText(&quot;Wine List Description (&quot; + l + &quot;)&quot;);
+        l = selectedProductInstance.getWineListDescription() == null ? 0 : selectedProductInstance.getWineListDescription().length();
+        miscNotesHyperlink.setText(&quot;Misc. Notes (&quot; + l + &quot;)&quot;);
+        lastPurchaseCostTextField.setText(ProductInstance.getLastPurchaseValue(selectedProductInstance.getProductInstanceID()).toString());
+        activeProductInstanceCheckBox.setSelected(selectedProductInstance.getActive());
+        //activeProductInstanceCheckBox.setSelected(Boolean.TRUE);
+        vintageComboBox.getSelectionModel().select(selectedProductInstance.getVintage());
+        distributorComboBox.getSelectionModel().select(selectedProductInstance.getDistributor());
+        bottleSizeComboBox.getSelectionModel().select(selectedProductInstance.getBottleSize());
+
+        //scroll to product instance&#x27;s vintage
+        ListView lv = ((ComboBoxListViewSkin) this.vintageComboBox.getSkin()).getListView();
+        lv.scrollTo(lv.getSelectionModel().getSelectedIndex());
+
+        grapeVarietyComboBox.getSelectionModel().select(selectedProductInstance.getWineListCategory());
+        multiWLCategoryComboBox.getCheckModel().clearChecks();
+        for (WineListCategory wlc : selectedProductInstance.getMultiWineListCategories()) {
+            multiWLCategoryComboBox.getCheckModel().check(wlc);
+        }
+
+        wineListNameTextField.setText(selectedProductInstance.getWineListName());
+        inventoryNameTextField.setText(selectedProductInstance.getInventoryName());
+        productInstanceIDTextField.setText(selectedProductInstance.getProductInstanceID().toString());
+        isByTheGlassCheckBox.setSelected(selectedProductInstance.getIsByTheGlass());
+        isClubListCheckBox.setSelected(selectedProductInstance.getIsClubListSelection());
+        compeatIDTextField.setText(selectedProductInstance.getCompeatID() == null ? &quot;&quot;
+                : selectedProductInstance.getCompeatID().toString());
+        fintechIDTextField.setText(selectedProductInstance.getFintechID() == null ? &quot;&quot;
+                : selectedProductInstance.getFintechID());
+        //TODO
+        listPriceTextField.setText(selectedProductInstance.getSalePrice() == null ? &quot;&quot;
+                : String.format(&quot;%.2f&quot;, selectedProductInstance.getSalePrice()));
+        glassPriceTextField.setText(selectedProductInstance.getGlassSalePrice() == null ? &quot;&quot;
+                : String.format(&quot;%.2f&quot;, selectedProductInstance.getGlassSalePrice()));
+        originalPriceTextField.setText(selectedProductInstance.getOriginalSalePrice() == null ? &quot;&quot;
+                : String.format(&quot;%.2f&quot;, selectedProductInstance.getOriginalSalePrice()));
+        //halfGlassFeaturePriceTextField.setText(&quot;&quot;);
+        pricingValuationTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getUnitPrice()));
+        orderParTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getReorderLevel()));
+        averageUnitCostTextField.setText(&quot;&quot;);
+        formulaSalesPriceTextField.setText(selectedProductInstance.getFormulaPrice() == null ? &quot;&quot;
+                : String.format(&quot;%.2f&quot;, selectedProductInstance.getFormulaPrice()));
+        wineListBinNumberTextField.setText(selectedProductInstance.getWineListBinNumber() == null ? &quot;&quot;
+                : selectedProductInstance.getWineListBinNumber().toString());
+        try {
+            fpc = String.format(&quot;%.2f&quot;, 100 * selectedProductInstance.getUnitPrice() / selectedProductInstance.getFormulaPrice());
+        } catch (NumberFormatException e) {
+            fpc = &quot;&quot;;
+        } catch (NullPointerException e) {
+            fpc = &quot;&quot;;
+        }
+        formulaCostPercentTextField.setText(fpc + &quot;%&quot;);
+        try {
+            lppc = String.format(&quot;%.2f&quot;, 100 * selectedProductInstance.getUnitPrice() / selectedProductInstance.getSalePrice());
+        } catch (NumberFormatException e) {
+            lppc = &quot;&quot;;
+        } catch (NullPointerException e) {
+            lppc = &quot;&quot;;
+        }
+        listPriceCostPercentTextField.setText(lppc + &quot;%&quot;);
+
+        maturityEndTextField.setText(selectedProductInstance.getAnticipatedMaturityEnd() == null ? &quot;&quot;
+                : selectedProductInstance.getAnticipatedMaturityEnd().toString());
+        //fillLocationsTable();
+        labelImage.setImage(null);
+        Runnable r = new Runnable() {
+            public void run() {
+                if (selectedProductInstance.getImage() != null) {
+                    labelImage.setImage(selectedProductInstance.getImage());
+                } else {
+                BufferedImage i;
+                    try {
+                        i = ImageIO.read(getClass().getClassLoader().getResource(&quot;res/bottle.jpg&quot;));
+                        labelImage.setImage(SwingFXUtils.toFXImage(i,null));
+                    } catch (IOException ex) {
+                        Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        };
+        new Thread(r).start();
+        //loadImage();
+        fillProductInstanceLocations();
+        fillPLUs();
+        onHandTextField.setText(ProductInstance.getTheoreticalOnHandForProductInstanceId(selectedProductInstance.getProductInstanceID()).toString());
+        if (selectedProductInstance.getRating() == null) {
+            ratingTextField.setText(&quot;&quot;);
+            ratingSourceComboBox.getSelectionModel().select(null);
+        } else {
+            ratingTextField.setText(selectedProductInstance.getRating().getRatingScore() == null ? &quot;&quot;
+                    : selectedProductInstance.getRating().getRatingScore().toString());
+            ratingSourceComboBox.getSelectionModel().select(selectedProductInstance.getRating().getRatingSource());
+        }
+        //showOnListCheckBox.setSelected(selectedProductInstance.getShowOnList());
+    }
+
+    public void loadImage() {
+        labelImage.setImage(null);
+        Runnable r = new Runnable() {
+            public void run() {
+                labelImage.setImage(selectedProductInstance.getImage());
+            }
+        };
+        new Thread(r).start();
+    }
+
+    private void setFormDisabled(Boolean b) {
+        productNameTextField.setDisable(b);
+        activeProductCheckBox.setDisable(b);
+        wineTypeComboBox.setDisable(b);
+        countryComboBox.setDisable(b);
+        regionComboBox.setDisable(b);
+        inventoryNameTextField.setDisable(b);
+        wineListNameTextField.setDisable(b);
+        vintageComboBox.setDisable(b);
+        grapeVarietyComboBox.setDisable(b);
+        listPriceTextField.setDisable(b);
+        originalPriceTextField.setDisable(b);
+        glassPriceTextField.setDisable(b);
+        //halfGlassFeaturePriceTextField.setDisable(b);
+        listPriceTextField.setDisable(b);
+        originalPriceTextField.setDisable(b);
+        glassPriceTextField.setDisable(b);
+        pricingValuationTextField.setDisable(b);
+        maturityEndTextField.setDisable(b);
+        showOnListCheckBox.setDisable(b);
+        isByTheGlassCheckBox.setDisable(b);
+        isClubListCheckBox.setDisable(b);
+        activeProductInstanceCheckBox.setDisable(b);
+        compeatIDTextField.setDisable(b);
+        fintechIDTextField.setDisable(b);
+        distributorComboBox.setDisable(b);
+        bottleSizeComboBox.setDisable(b);
+        locationscScrollPane.setDisable(b);
+        saveButton.setDisable(b);
+        addNewLocationButton.setDisable(b);
+        addNewPLUButton.setDisable(b);
+        PLUScrollPane.setDisable(b);
+        labelImage.setDisable(b);
+        multiWLCategoryComboBox.setDisable(b);
+        orderParTextField.setDisable(b);
+        copyImageLink.setDisable(b);
+        imageSearchLink.setDisable(b);
+        addNewProductInstanceButton.setDisable(b);
+        addNewProductButton.setDisable(b);
+        ratingSourceComboBox.setDisable(b);
+        ratingTextField.setDisable(b);
+        clearRatingHyperlink.setDisable(b);
+        clearVintageHyperlink.setDisable(b);
+        missingFieldsHyperlink.setDisable(b);
+    }
+
+    @FXML
+    public void editLabelImageClicked(ActionEvent event) {
+        if (selectedProductInstance.getImage() != null) {
+            TabPane parentTabPane = WineListManager.getMainTabPane(event);
+            //Node node = (Node) event.getSource();
+            //TabPane parentTabPane = getTabPane(node);
+            // replace with ID
+            if (parentTabPane != null) {
+                //get text from controller
+                Tab tab;
+                AnchorPane ap = null;
+                EditImageController controller = null;
+                try {
+
+                    //ap = (AnchorPane )FXMLLoader.load(this.getClass().getResource(&quot;imageSearch.fxml&quot;));
+                    //FXMLLoader loader = new FXMLLoader(getClass().getResource(&quot;imageSearch.fxml&quot;));
+                    FXMLLoader loader = new FXMLLoader();
+                    loader.setLocation(MainAppSceneController.class.getResource(&quot;editImage.fxml&quot;));
+                    ap = (AnchorPane) loader.load();
+                    controller = loader.getController();
+                    controller.setImage(selectedProductInstance.getImage());
+                    controller.setViewEditController(this);
+                    tab = new Tab(controller.getTabText());
+                    tab.setContent(ap);
+                    parentTabPane.getTabs().add(tab);
+                    parentTabPane.getSelectionModel().select(tab);
+                    //THIS WORKS - REFLECTION NOT NEEDED
+//                Object controller = loader.getController();
+//                for (Method method : controller.getClass().getDeclaredMethods()) {
+//                    System.out.println(method.getName());
+//                }
+//   
+//                if(selectedProduct != null &amp;&amp; controller.getClass().getDeclaredMethod(&quot;setProductID&quot;, Integer.class) != null){
+//                    Method m = controller.getClass().getMethod(&quot;setProductID&quot;, Integer.class);
+//                    m.invoke(controller, selectedProduct.getProductID());
+//                }              
+
+                } catch (IOException ex) {
+                    Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+        }
+    }
+
+    @FXML
+    public void addNewProductButtonPressed(ActionEvent event) {
+        Product p = Product.createAndInsertProduct();
+        //p.getData();
+        System.out.println(p);
+        products.add(p);
+        productComboBox.getItems().add(p);
+        productComboBox.getSelectionModel().select(p);
+        selectedProduct = p;
+        fillProductData();
+        ProductInstance pi = ProductInstance.createAndInsertProductInstance(p.getProductID());
+        ProductInstanceLocation pil = ProductInstanceLocation.insertAndCreateProductInstanceLocation(pi.getProductInstanceID());
+        pi.addLocation(pil);
+        System.out.println(pi.getInventoryName());
+        selectedProductInstance = pi;
+        if (productInstances == null) {
+            productInstances = new ArrayList&lt;&gt;();
+        }
+        productInstances.add(pi);
+        productInstanceComboBox.getItems().add(pi);
+        productInstanceComboBox.getSelectionModel().select(pi);
+        fillProductInstanceData();
+        //fillProductInstanceLocations();
+        //fillPLUs();
+    }
+
+    @FXML
+    public void addNewProductInstanceButtonPressed(ActionEvent event) {
+        if (selectedProduct == null) {
+            Notifications.create().hideAfter(Duration.seconds(3)).title(&quot;No Product Selected&quot;).
+                    text(&quot;Please Select a Product to Create a New Instance of&quot;).position(Pos.CENTER).showInformation();
+        } else {
+            ProductInstance pi = ProductInstance.createAndInsertProductInstance(selectedProduct.getProductID());
+            ProductInstanceLocation pil = ProductInstanceLocation.insertAndCreateProductInstanceLocation(pi.getProductInstanceID());
+            pi.addLocation(pil);
+            if (selectedProductInstance != null) {
+                fillNewProductInstanceFields(selectedProductInstance, pi);
+            }
+            System.out.println(pi.getInventoryName());
+            selectedProductInstance = pi;
+            //productInstances.add(pi);
+            productInstanceComboBox.getItems().add(pi);
+            productInstanceComboBox.getSelectionModel().select(pi);
+            fillProductInstanceData();
+        }
+    }
+
+    private void fillNewProductInstanceFields(ProductInstance pi1, ProductInstance pi2) {
+        pi2.setInventoryName(pi1.getInventoryName() + &quot; &quot; + pi2.getProductInstanceID());
+        pi2.setLabelImageOID(pi1.getLabelImageOID());
+        pi2.setWineListName(pi1.getWineListName());
+        pi2.setPosStory(pi1.getPosStory());
+        pi2.setDistributor(pi1.getDistributor());
+        pi2.saveProductInstanceData();
+    }
+
+    @FXML
+    public void productSelected(ActionEvent event) {
+        Object o = productComboBox.getSelectionModel().getSelectedItem();
+        //Product p = (Product) o;
+        //Product p = (Product) productComboBox.getValue();
+        //System.out.println(o.getClass());
+        //searchField.clear();
+        //p.getData();
+        //System.out.println(p);
+
+        // if user selects product, not from filtering
+        if (productComboBox.isFocused()) {
+            searchField.clear();
+            //promptSaveChanges();
+            selectedProduct = (Product) productComboBox.getSelectionModel().getSelectedItem();
+            if (selectedProduct != null) {
+                selectedProduct.getData();
+                fillProductData();
+                clearProductInstanceData();
+            }
+            productInstanceComboBox.getItems().clear();
+            productInstanceComboBox.getItems().addAll(getProductInstances());
+            if (productInstanceComboBox.getItems().size() == 1) {
+                productInstanceComboBox.getSelectionModel().select(0);
+                selectedProductInstance = (ProductInstance) productInstanceComboBox.getSelectionModel().getSelectedItem();
+                selectedProductInstance.getData();
+                fillProductInstanceData();
+                checkIsSetUpForList();
+                //productInstanceSelected();
+            // Added else to select first instance to avoid ambiguos screen in case of multiple instances
+            }else{
+                productInstanceComboBox.getSelectionModel().select(0);
+                selectedProductInstance = (ProductInstance) productInstanceComboBox.getSelectionModel().getSelectedItem();
+                if(selectedProductInstance != null){
+                    selectedProductInstance.getData();
+                    fillProductInstanceData();
+                    checkIsSetUpForList();
+                }
+            }
+            
+                productInstanceComboBox.getSelectionModel().select(0);
+            }
+        }
+
+    public void clearProductData() {
+        activeProductCheckBox.setSelected(Boolean.FALSE);
+        countryComboBox.getSelectionModel().select(null);
+        regionComboBox.getSelectionModel().select(null);
+        wineTypeComboBox.getSelectionModel().select(null);
+    }
+
+    //TOD - Fill all
+    public void clearProductInstanceData() {
+        activeProductInstanceCheckBox.setSelected(Boolean.FALSE);
+        inventoryNameTextField.clear();
+        wineListNameTextField.clear();
+        maturityEndTextField.clear();
+        fintechIDTextField.clear();
+        compeatIDTextField.clear();
+        ratingTextField.clear();
+        distributorComboBox.getSelectionModel().select(null);
+        ratingSourceComboBox.getSelectionModel().select(null);
+        bottleSizeComboBox.getSelectionModel().select(null);
+        vintageComboBox.getSelectionModel().select(null);
+        grapeVarietyComboBox.getSelectionModel().select(null);
+        multiWLCategoryComboBox.getCheckModel().clearChecks();
+        //multiWLCategoryComboBox.getItems().clear();
+        //multiWLCategoryComboBox.getItems().addAll(WineListCategory.getAllWineListCategories());
+    }
+
+    @FXML
+    public void productInstanceSelected() {
+        if (productInstanceComboBox.isFocused() &amp;&amp; productInstanceComboBox.getSelectionModel().getSelectedItem() != null) {
+            //System.out.println(&quot;selected pi&quot;);
+            //promptSaveChanges();
+            selectedProductInstance = (ProductInstance) productInstanceComboBox.getSelectionModel().getSelectedItem();
+            selectedProductInstance.getData();
+            fillProductInstanceData();
+            checkIsSetUpForList();
+            labelImageChanged = Boolean.FALSE;
+            labelImageFile = null;
+            labelImageFileExtension = null;
+            //System.out.println(selectedProductInstance.getInventoryName());
+
+        }
+    }
+
+    private void promptSaveChanges() {
+        if ((selectedProduct != null &amp;&amp; selectedProduct.getIsChanged())
+                || (selectedProductInstance != null &amp;&amp; selectedProductInstance.getIsChanged())) {
+            System.out.println(&quot;p &quot; + selectedProduct.getIsChanged() + &quot;pi &quot; + selectedProductInstance.getIsChanged());
+            Alert alert = new Alert(AlertType.CONFIRMATION, &quot;Save Changes?&quot;, ButtonType.YES, ButtonType.NO);
+            alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES) {
+                if (selectedProduct != null) {
+                    selectedProduct.saveProductData();
+                    selectedProduct.setIsChanged(Boolean.FALSE);
+                }
+                if (selectedProductInstance != null) { //HANDLE IMAGE SAVE?
+                    selectedProductInstance.saveProductInstanceData();
+                    selectedProductInstance.setIsChanged(Boolean.FALSE);
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void refreshScreenButtonClicked() {
+        if (selectedProduct != null &amp;&amp; selectedProductInstance != null) {
+            selectedProduct.getData();
+            selectedProductInstance.getData();
+            fillProductData();
+            fillProductInstanceData();
+        }
+    }
+
+    @FXML
+    public void imageDragDropped(DragEvent event) {
+        System.out.println(&quot;drag dropped&quot;);
+        if (!formLocked) {
+            //        System.out.println(event.getDragboard().getContentTypes() );
+            //        System.out.println(event.getDragboard().getUrl());
+            //        System.out.println(event.getDragboard().getHtml());
+            //        URL url = null;
+            //        try {
+            //            url = new URL(event.getDragboard().getUrl());
+            //        } catch (MalformedURLException ex) {
+            //            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            //        }
+            //        try {
+            //            //labelImage.setImage(event.getDragboard().getImage());
+            //            BufferedImage bi = ImageIO.read(url);
+            //            labelImage.setImage(SwingFXUtils.toFXImage(bi, null));
+            //        } catch (IOException ex) {
+            //            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            //        }
+            List&lt;File&gt; files = event.getDragboard().getFiles();
+            Image img = null;
+            try {
+                //FIX
+                labelImageFileExtension = &quot;jpg&quot;;
+                labelImageFile = files.get(0);
+                img = new Image(new FileInputStream(files.get(0)));
+//                Notifications.create().hideAfter(Duration.seconds(3))
+//                        .title(&quot;Image Information&quot;).text(&quot;&quot; + img.getWidth() + &quot; by &quot;
+//                        + img.getHeight()).position(Pos.CENTER).showInformation();
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            labelImage.setImage(img);
+            labelImageChanged = Boolean.TRUE;
+        }
+    }
+
+    @FXML
+    public void imageDragOver(DragEvent event) {
+        //if(event.getDragboard().hasFiles()){
+        event.acceptTransferModes(TransferMode.ANY);
+        //System.out.println(&quot;drag over&quot;);
+        // }
+    }
+
+    @FXML
+    public void saveButtonPressed() {
+        if (SessionManager.getIsAuthenticated() &amp;&amp; !SessionManager.getActiveRestaurant().getReadOnly() &amp;&amp; !this.formLocked) {
+
+            //TODO -  VALIDATION (country - region check)
+            if (selectedProduct.getIsChanged()) {
+                selectedProduct.saveProductData();
+                Notifications.create().hideAfter(Duration.seconds(1.5)).title(&quot;Saved&quot;).text(&quot;Product Information Saved&quot;).position(Pos.CENTER).showInformation();
+            }
+// NULL CHECK FOR NEW PRODCT INSERT
+            selectedProductInstance.setMultiWineListCategories(new ArrayList&lt;WineListCategory&gt;(multiWLCategoryComboBox.getCheckModel().getCheckedItems()));
+            if (selectedProductInstance.getIsChanged()) {
+                selectedProductInstance.saveProductInstanceData();
+                if (labelImageChanged &amp;&amp; labelImageFile != null &amp;&amp; labelImageFileExtension != null) {
+//                    if(selectedProductInstance.saveImageFile(this.labelImageFile, this.labelImageFileExtension)){
+//                        labelImageChanged = Boolean.FALSE;
+//                        labelImageFile = null;
+//                        labelImageFileExtension = null;
+//                    }
+                    Runnable r = new Runnable() {
+                        public void run() {
+
+                            selectedProductInstance.saveImageFile(labelImageFile, labelImageFileExtension);
+                            labelImageChanged = Boolean.FALSE;
+                            labelImageFile = null;
+                            labelImageFileExtension = null;
+                            //Notifications.create().hideAfter(Duration.seconds(1.0)).title(&quot;Image Saved&quot;).text(&quot;Image Saved&quot;).position(Pos.CENTER).showInformation();
+                        }
+                    };
+                    new Thread(r).start();
+                }
+                Notifications.create().hideAfter(Duration.seconds(1.5)).title(&quot;Saved&quot;).text(&quot;Product Instance Information Saved&quot;).position(Pos.CENTER).showInformation();
+            }
+        } else {
+            Notifications.create().hideAfter(Duration.seconds(3)).title(&quot;Not Saved&quot;).text(&quot;Unable to Save&quot;).position(Pos.CENTER).showInformation();
+        }
+    }
+
+    public void missingItemsHyperlinkClicked(){
+        
+    }
+    
+    private void checkIsSetUpForList(){
+        missingFieldsHyperlink.setDisable(Boolean.TRUE);
+        StringBuilder msg = new StringBuilder();
+        Boolean setUp = Boolean.TRUE;
+        if(selectedProductInstance != null){
+            if(selectedProductInstance.getWineListName() == null ||
+                     &quot;&quot;.equals(selectedProductInstance.getWineListName())){
+                setUp = Boolean.FALSE;
+                msg.append(&quot;No Wine List Name&quot;);
+            }
+            if(selectedProductInstance.getWineListBinNumber() == null){
+                setUp = Boolean.FALSE;
+                msg.append(&quot;\nNo Wine List Number&quot;);
+            }
+            if(selectedProductInstance.getSalePrice() == null ||
+                    selectedProductInstance.getSalePrice() == 0.0f){
+                setUp = Boolean.FALSE;
+                msg.append(&quot;\nNo Sale Price&quot;);
+            }
+            if(selectedProductInstance.getPosStory() == null || 
+                    &quot;&quot;.equals(selectedProductInstance.getPosStory())){
+                setUp = Boolean.FALSE;
+                msg.append(&quot;\nWarning: No Wine List Description&quot;);
+            }
+            if(selectedProductInstance.getLabelImageOID() == null ){
+                setUp = Boolean.FALSE;
+                msg.append(&quot;\nWarning: No Image&quot;);
+            }
+            if(!setUp){
+                missingFieldsHyperlink.setDisable(Boolean.FALSE);
+                isSetUpForListCheckBox.setSelected(Boolean.FALSE);
+                final String message = msg.toString().trim();
+                missingFieldsHyperlink.setOnAction(new EventHandler&lt;ActionEvent&gt;() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        System.out.println(message);
+                        Notifications.create().hideAfter(Duration.seconds(5)).title(&quot;Missing Fields&quot;).text(message).position(Pos.CENTER).showInformation();
+                    }
+                });
+            }else{
+                missingFieldsHyperlink.setDisable(Boolean.TRUE);
+                isSetUpForListCheckBox.setSelected(Boolean.TRUE);
+            }
+        }
+    }
+    
+    @FXML
+    public void labelImageClicked(MouseEvent mouseEvent) {
+        if (mouseEvent.getButton().equals(MouseButton.PRIMARY)) {
+            if (mouseEvent.getClickCount() == 2) {
+                //TODO
+                //Code to edit label image (crop)
+            }
+        }
+    }
+
+    @FXML
+    public void copyImageLinkClicked() {
+        if (!formLocked &amp;&amp; selectedProductInstance != null) {
+            TextInputDialog tid = new TextInputDialog(&quot;&quot;);
+            tid.setHeaderText(&quot;Enter the Product ID Number to Copy From&quot;);
+            Optional&lt;String&gt; s = tid.showAndWait();
+            //System.out.println( s.get() );
+            try {
+                Integer i = Integer.parseInt(s.get());
+                if (ProductInstance.copyImage(i, selectedProductInstance.getProductInstanceID())) {
+                    Notifications.create().hideAfter(Duration.seconds(3)).title(&quot;Image Copied&quot;).text(&quot;Image Copied&quot;).position(Pos.CENTER).showInformation();
+                    Runnable r = new Runnable() {
+                        @Override
+                        public void run() {
+
+                            selectedProductInstance.getData();
+                            labelImage.setImage(selectedProductInstance.getImage());
+                        }
+                    };
+                    r.run();
+
+                } else {
+                    Notifications.create().hideAfter(Duration.seconds(3)).title(&quot;Not Copied&quot;).text(&quot;Unable to Copy&quot;).position(Pos.CENTER).showInformation();
+                }
+            } catch (NumberFormatException ex) {
+                System.out.println(ex.getMessage());
+                Notifications.create().hideAfter(Duration.seconds(3)).title(&quot;Not Copied&quot;).text(&quot;Unable to Copy&quot;).position(Pos.CENTER).showInformation();
+            }
+
+        }
+    }
+
+    
+        @FXML
+    public void editMiscNotesClicked(ActionEvent event) {
+        if (selectedProductInstance != null) {
+            PopOver po = new PopOver();
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            Node content = null;
+            try {
+                content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;editMiscNote.fxml&quot;));
+                EditMiscNoteController controller = fxmlLoader.getController();
+                //controller.setProductIstanceLocation(pil);
+                controller.setPi(selectedProductInstance);
+                controller.setEditable(!formLocked);
+                controller.setVec(this);
+                controller.fillData();
+                po.setContentNode(content);
+                Node n = (Node) miscNotesHyperlink;
+                po.setTitle(&quot;Misc. Notes for Product Instance&quot;);
+                po.setDetachable(Boolean.TRUE);
+                po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+                po.setCloseButtonEnabled(Boolean.TRUE);
+                po.setAnimated(Boolean.TRUE);
+                po.setFadeInDuration(new Duration(750));
+                po.setFadeOutDuration(new Duration(750));
+                po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+                controller.setPo(po);
+                //po.setAnchorLocation(PopupWindow.AnchorLocation.CONTENT_BOTTOM_RIGHT);
+                po.setDetached(true);
+                po.show(miscNotesHyperlink);
+                po.requestFocus();
+                //fillProductInstanceLocations();
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    @FXML
+    public void editWineListDescriptionClicked(ActionEvent event) {
+        if (selectedProductInstance != null) {
+            PopOver po = new PopOver();
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            Node content = null;
+            try {
+                content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;editStory.fxml&quot;));
+                EditStoryController controller = fxmlLoader.getController();
+                //controller.setProductIstanceLocation(pil);
+                controller.setPi(selectedProductInstance);
+                controller.setEditable(!formLocked);
+                controller.setVec(this);
+                controller.fillData();
+                po.setContentNode(content);
+                Node n = (Node) editWineListDescriptionHyperlink;
+                po.setTitle(&quot;Edit Wine List Description&quot;);
+                po.setDetachable(Boolean.TRUE);
+                po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+                po.setCloseButtonEnabled(Boolean.TRUE);
+                po.setAnimated(Boolean.TRUE);
+                po.setFadeInDuration(new Duration(750));
+                po.setFadeOutDuration(new Duration(750));
+                po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+                controller.setPo(po);
+                //po.setAnchorLocation(PopupWindow.AnchorLocation.CONTENT_BOTTOM_RIGHT);
+                po.setDetached(true);
+                po.show(editWineListDescriptionHyperlink);
+                po.requestFocus();
+                //fillProductInstanceLocations();
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+//    @FXML
+//    public void activeProductChanged() {
+//        //TODO check for active instances and prompt to set all inactive or cancel
+//        selectedProduct.setActive(activeProductCheckBox.isSelected());
+//    }
+
+//    public void activeProductInstanceChanged() {
+//        selectedProductInstance.setActive(activeProductInstanceCheckBox.isSelected());
+//    }
+
+    public void activeProductChanged() {
+        //TODO check for active instances and prompt to set all inactive or cancel
+        int activePi = 0; 
+        float activeOnHand = 0.0f;
+        for (ProductInstance pi : getProductInstances()){
+            pi.getData();
+            if(pi.getActive()){
+                activePi ++;
+                activeOnHand += TheoreticalCountMap.getStaticInstance().
+                        getTheoreticalByProductInstanceID(pi.getProductInstanceID());
+            }
+        }
+        if (!activeProductCheckBox.isSelected() &amp;&amp; activePi &gt; 0 &amp;&amp; activeOnHand &gt; 0) {
+            Notifications.create().hideAfter(Duration.seconds(3))
+                    .title(&quot;Product has &quot; + activePi + &quot; Active Instances&quot;
+                            + &quot; with Inventory(&quot; + activeOnHand + &quot;)&quot;).text(&quot;Product cannot be inactivated &quot;
+                            + &quot;\nwhile it has instances with inventory&quot;).position(Pos.CENTER).showError();
+            activeProductCheckBox.setSelected(true);
+        } else {
+            if (activeProductCheckBox.isSelected() != selectedProduct.getActive()) {
+                selectedProduct.setActive(activeProductCheckBox.isSelected());
+            }
+        }
+    }
+
+    public void activeProductInstanceChanged() {
+        Float onHand = TheoreticalCountMap.getStaticInstance()
+                    .getTheoreticalByProductInstanceID(
+                    selectedProductInstance.getProductInstanceID()
+                );
+        if (onHand == null){
+            onHand = 0.0f;
+        }
+        if (!activeProductInstanceCheckBox.isSelected()
+                &amp;&amp; onHand &gt; 0.0) {
+
+            Notifications.create().hideAfter(Duration.seconds(3))
+                    .title(&quot;Product Instance has Inventory (&quot; + onHand + &quot;)&quot;).text(&quot;Product instance cannot be inactivated &quot;
+                    + &quot;\nwhile it has inventory&quot;).position(Pos.CENTER).showError();
+            activeProductInstanceCheckBox.setSelected(true);
+            return;
+        } else {
+            if (activeProductInstanceCheckBox.isSelected() != selectedProductInstance.getActive()) {
+                selectedProductInstance.setActive(activeProductInstanceCheckBox.isSelected());
+            }
+        }
+    }
+    
+    @FXML
+    public void maturityEndChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setAnticipatedMaturityEnd(Integer.parseInt(maturityEndTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (maturityEndTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setAnticipatedMaturityEnd(null);
+                } else {
+                    maturityEndTextField.setText(selectedProductInstance.getAnticipatedMaturityEnd().toString());
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void isClubListChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            selectedProductInstance.setIsClubListSelection(isClubListCheckBox.isSelected());
+        }
+    }
+
+
+    @FXML
+    public void showOnListChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            selectedProductInstance.setShowOnList(showOnListCheckBox.isSelected());
+        }
+    }
+
+    @FXML
+    public void isByTheGlassChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            selectedProductInstance.setIsByTheGlass(isByTheGlassCheckBox.isSelected());
+        }
+    }
+
+    @FXML
+    public void compeatIDChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setCompeatID(Integer.parseInt(compeatIDTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (compeatIDTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setCompeatID(null);
+                } else {
+                    listPriceTextField.setText(selectedProductInstance.getCompeatID().toString());
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void fintechIDChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            if (fintechIDTextField.getText().trim().length() == 0) {
+                selectedProductInstance.setFintechID(null);
+            } else {
+                selectedProductInstance.setFintechID(fintechIDTextField.getText());
+            }
+        }
+    }
+
+    @FXML
+    public void productNameChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null
+                &amp;&amp; productNameTextField.getText().trim().length() &gt; 0) {
+            selectedProduct.setProductName(productNameTextField.getText().trim());
+        }
+    }
+
+    @FXML
+    public void listPriceChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setSalePrice(Float.parseFloat(listPriceTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (listPriceTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setSalePrice(null);
+                } else {
+                    listPriceTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getSalePrice()));
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void originalPriceChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setOriginalSalePrice(Float.parseFloat(originalPriceTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (originalPriceTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setOriginalSalePrice(null);
+                } else {
+                    originalPriceTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getOriginalSalePrice()));
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void wineListNameChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            //problem with null pointer???
+            selectedProductInstance.setWineListName(wineListNameTextField.getText().trim());
+        }
+    }
+
+    @FXML
+    public void inventoryNameChanged() {
+        selectedProductInstance.setInventoryName(inventoryNameTextField.getText().trim());
+    }
+
+    @FXML
+    public void glassPriceChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setGlassSalePrice(Float.parseFloat(glassPriceTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (glassPriceTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setGlassSalePrice(null);
+                } else {
+                    glassPriceTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getGlassSalePrice()));
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void orderParChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setReorderLevel(Float.parseFloat(orderParTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (orderParTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setReorderLevel(null);
+                } else {
+                    orderParTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getReorderLevel()));
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    @FXML
+    public void ratingValueChanged() {
+        if (ratingTextField.getText() != null &amp;&amp; ratingTextField.getText().length() &gt; 0
+                &amp;&amp; ratingSourceComboBox.getSelectionModel().getSelectedItem() != null) {
+            try {
+                Integer rScore = Integer.parseInt(ratingTextField.getText());
+                RatingsSource rSrc = (RatingsSource) ratingSourceComboBox.getSelectionModel().getSelectedItem();
+                if (rScore &gt;= 0 &amp;&amp; rScore &lt;= 100) {
+                    if (selectedProductInstance.getRating() == null) {
+                        Rating r = new Rating(selectedProductInstance.getProductInstanceID(), rScore, rSrc);
+                        selectedProductInstance.setRating(r);
+                    } else {
+                        selectedProductInstance.getRating().setRatingScore(rScore);
+                        selectedProductInstance.getRating().setRatingSource(rSrc);
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    public void pricingValuationChanged() {
+        if (allowEdits() &amp;&amp; selectedProductInstance != null) {
+            try {
+                selectedProductInstance.setUnitPrice(Float.parseFloat(pricingValuationTextField.getText().trim()));
+            } catch (NumberFormatException ex) {
+                if (pricingValuationTextField.getText().trim().length() == 0) {
+                    selectedProductInstance.setUnitPrice(null);
+                } else {
+                    pricingValuationTextField.setText(String.format(&quot;%.2f&quot;, selectedProductInstance.getUnitPrice()));
+                    invalidEntryMessage();
+                }
+            }
+        }
+    }
+
+    public void invalidEntryMessage() {
+        Notifications.create().hideAfter(Duration.seconds(.75))
+                .title(&quot;Invalid Entry&quot;).text(&quot;Invalid entry for this field&quot;).position(Pos.CENTER).showError();
+    }
+
+    @FXML
+    public void wineSearcherHyperlinkClicked(ActionEvent event) {
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        //Node node = (Node) event.getSource();
+        //TabPane parentTabPane = getTabPane(node);
+        // replace with ID
+        if (parentTabPane != null &amp;&amp; selectedProductInstance != null) {
+            Tab tab = new Tab(&quot;Wine Searcher&quot;);
+            AnchorPane ap = null;
+            WineSearcherController wsController = null;
+            try {
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;wineSearcher.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                wsController = loader.getController();
+                wsController.setPi(selectedProductInstance);
+                wsController.setVec(this);
+
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+                wsController.getData();
+                wsController.showData();
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    @FXML
+    public void imageSearchClicked(ActionEvent event) {
+
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        //Node node = (Node) event.getSource();
+        //TabPane parentTabPane = getTabPane(node);
+        // replace with ID
+        if (parentTabPane != null &amp;&amp; selectedProductInstance != null) {
+            Tab tab = new Tab(&quot;Image Search&quot;);
+            AnchorPane ap = null;
+            ImageSearchController imageSearchController = null;
+            try {
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;imageSearch.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                imageSearchController = loader.getController();
+                imageSearchController.setPi(selectedProductInstance);
+                imageSearchController.setVec(this);
+                imageSearchController.wineNameLabel.setText(selectedProductInstance.getInventoryName());
+                imageSearchController.imageView.setImage(selectedProductInstance.getImage());
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+                imageSearchController.search();
+
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void productOrderClicked(ActionEvent event) {
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        if (parentTabPane != null) {
+            Tab tab;
+            AnchorPane ap = null;
+            ProductOrderReportController controller = null;
+            try {
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;productOrderReport.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                controller = loader.getController();
+                controller.setProduct(selectedProduct);
+                controller.prepareReport();
+                controller.populateReport();
+                tab = new Tab(controller.getTabText());
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void productInstanceOrderClicked(ActionEvent event) {
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        if (parentTabPane != null) {
+            Tab tab;
+            AnchorPane ap = null;
+            ProductInstanceOrderReportController controller = null;
+            try {
+
+                //ap = (AnchorPane )FXMLLoader.load(this.getClass().getResource(&quot;imageSearch.fxml&quot;));
+                //FXMLLoader loader = new FXMLLoader(getClass().getResource(&quot;imageSearch.fxml&quot;));
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;productInstanceOrderReport.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                controller = loader.getController();
+                controller.setProductInstance(selectedProductInstance);
+                controller.prepareReport();
+                controller.populateReport();
+                tab = new Tab(controller.getTabText());
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void productInstanceSalesClicked(ActionEvent event) {
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        if (parentTabPane != null) {
+            Tab tab;
+            AnchorPane ap = null;
+            ProductInstanceSalesReportController controller = null;
+            try {
+
+                //ap = (AnchorPane )FXMLLoader.load(this.getClass().getResource(&quot;imageSearch.fxml&quot;));
+                //FXMLLoader loader = new FXMLLoader(getClass().getResource(&quot;imageSearch.fxml&quot;));
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;productInstanceSalesReport.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                controller = loader.getController();
+                controller.setProductInstance(selectedProductInstance);
+                controller.prepareReport();
+                controller.populateReport();
+                tab = new Tab(controller.getTabText());
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }
+
+    //TODO change to correct fxml and controller
+    public void productSalesPressed(ActionEvent event) {
+        TabPane parentTabPane = WineListManager.getMainTabPane(event);
+        //Node node = (Node) event.getSource();
+        //TabPane parentTabPane = getTabPane(node);
+        // replace with ID
+        if (parentTabPane != null) {
+            //get text from controller
+            Tab tab;
+            AnchorPane ap = null;
+            ProductSalesReportController controller = null;
+            try {
+
+                //ap = (AnchorPane )FXMLLoader.load(this.getClass().getResource(&quot;imageSearch.fxml&quot;));
+                //FXMLLoader loader = new FXMLLoader(getClass().getResource(&quot;imageSearch.fxml&quot;));
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;productSalesReport.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                controller = loader.getController();
+                controller.setProduct(selectedProduct);
+                controller.populateReport();
+                tab = new Tab(controller.getTabText());
+                tab.setContent(ap);
+                parentTabPane.getTabs().add(tab);
+                parentTabPane.getSelectionModel().select(tab);
+                //THIS WORKS - REFLECTION NOT NEEDED
+//                Object controller = loader.getController();
+//                for (Method method : controller.getClass().getDeclaredMethods()) {
+//                    System.out.println(method.getName());
+//                }
+//   
+//                if(selectedProduct != null &amp;&amp; controller.getClass().getDeclaredMethod(&quot;setProductID&quot;, Integer.class) != null){
+//                    Method m = controller.getClass().getMethod(&quot;setProductID&quot;, Integer.class);
+//                    m.invoke(controller, selectedProduct.getProductID());
+//                }              
+
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+    }
+
+    //TODO
+    public void binNumberSearchButtonPressed() {
+        Integer bn = null;
+        Product p = null;
+        ProductInstance pi = null;
+        try {
+            bn = Integer.parseInt(binNumberSearchTextField.getText().trim());
+            p = Product.getProductByBinNumber(bn);
+            pi = ProductInstance.getProductInstanceByBinNMumber(bn);
+            if (p != null &amp;&amp; pi != null) {
+                selectedProduct = p;
+                selectedProductInstance = pi;
+                fillProductData();
+                fillProductInstanceData();
+                resetSearchFields();
+            } else {
+                Notifications.create().hideAfter(Duration.seconds(3))
+                        .title(&quot;Bin Number Not Found&quot;).text(&quot;Bin Number Not Found&quot;).position(Pos.CENTER).showError();
+            }
+        } catch (NumberFormatException ex) {
+            Notifications.create().hideAfter(Duration.seconds(3))
+                    .title(&quot;No Bin Number&quot;).text(&quot;No Bin Number entered&quot;).position(Pos.CENTER).showError();
+        }
+    }
+
+    @FXML
+    public void lockedButtonPressed() {
+        formLocked = !formLocked;
+        String l = formLocked ? &quot;Locked&quot; : &quot;Unlocked&quot;;
+        String msg = &quot;Form is &quot; + l;
+        Notifications.create().hideAfter(Duration.seconds(.75)).title(&quot;Lock Button Pressed&quot;).text(msg).position(Pos.CENTER).showInformation();
+        String imageLocation = formLocked ? &quot;/res/lock.png&quot; : &quot;/res/unlock.png&quot;;
+        BufferedImage read = null;
+        try {
+            // TODO
+            //Image img = new Image(&quot;file:classes/res/unlock.png&quot;);
+            read = ImageIO.read(this.getClass().getResource(imageLocation));
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        lockedButtonImageView.setImage(SwingFXUtils.toFXImage(read, null));
+        //lockedButtonImageView.setImage(i);
+
+        setFormDisabled(formLocked);
+    }
+
+    //STUB
+    private void resetSearchFields() {
+
+    }
+
+    @FXML
+    public void RatingsSourceSelected() {
+
+    }
+
+    //TODO validate country - region
+    @FXML
+    public void countrySelected() {
+        Country c = (Country) countryComboBox.getSelectionModel().getSelectedItem();
+
+        //third condition necessary?
+        if (c != null &amp;&amp; selectedProduct != null &amp;&amp; selectedProduct.getIsChanged()) {
+//         if (c != null &amp;&amp; selectedProduct != null) {
+            selectedProduct.setCountry(c);
+            Notifications.create().hideAfter(Duration.seconds(1.5))
+                    .title(&quot;Country Changed&quot;).text(&quot;Select New Region&quot;).position(Pos.CENTER).showError();
+            selectedProduct.setRegion(null);
+            regions = Region.getRegionsForCountry(c.getCountryID());
+            regionComboBox.getItems().clear();
+            regionComboBox.getItems().addAll(regions);
+            regionComboBox.getSelectionModel().select(null);
+            regionComboBox.requestFocus();
+        }
+    }
+
+    @FXML
+    public void wineTypeSelected(ActionEvent event) {
+        WineType wt = (WineType) wineTypeComboBox.getSelectionModel().getSelectedItem();
+        if (wt != null &amp;&amp; selectedProduct != null) {
+            selectedProduct.setWineType(wt);
+        }
+    }
+
+    //TODO validate country - region
+    @FXML
+    public void regionSelected() {
+        Region r = (Region) regionComboBox.getSelectionModel().getSelectedItem();
+        if (r != null) {
+            selectedProduct.setRegion(r);
+        }
+    }
+
+    @FXML
+    public void disributorSelected() {
+        Company d = (Company) distributorComboBox.getSelectionModel().getSelectedItem();
+        if (d != null) {
+            selectedProductInstance.setDistributor(d);
+        }
+    }
+
+    @FXML
+    public void vintageSelected() {
+        Vintage v = (Vintage) vintageComboBox.getSelectionModel().getSelectedItem();
+        if (v != null) {
+            selectedProductInstance.setVintage(v);
+        }
+    }
+
+    @FXML
+    public void grapeVarietySelected() {
+        WineListCategory v = (WineListCategory) grapeVarietyComboBox.getSelectionModel().getSelectedItem();
+        if (v != null) {
+            selectedProductInstance.setWineListCategory(v);
+        }
+    }
+
+    @FXML
+    public void bottleSizeSelected() {
+        BottleSize bs = (BottleSize) bottleSizeComboBox.getSelectionModel().getSelectedItem();
+        if (bs != null) {
+            selectedProductInstance.setBottleSize(bs);
+        }
+    }
+
+    @FXML
+    public void fullTextCheckBoxClicked() {
+        productComboBox.getSelectionModel().clearSelection();
+        productInstanceComboBox.getSelectionModel().clearSelection();
+        searchKeyReleased();
+    }
+
+    @FXML
+    public void activeCheckBoxClicked() {
+        productComboBox.getItems().clear();
+        productInstanceComboBox.getItems().clear();
+        products = getProducts();
+        productComboBox.getItems().addAll(products);
+        //searchKeyReleased();
+    }
+
+    @FXML
+    public void productInstanceComboGotFocus() {
+        productInstanceComboBox.getSelectionModel().clearSelection();
+    }
+
+    @FXML
+    public void productComboBoxGotFocus() {
+        productComboBox.getSelectionModel().clearSelection();
+    }
+
+    @FXML
+    public void searchKeyReleased() {
+
+        //TODO - if getText.lenght == 0 - reset?
+        String s = searchField.getText().trim();
+        ArrayList&lt;Product&gt; f = new ArrayList();
+        for (Product p : products) {
+            //System.out.println(p.getProductName());
+            if (fullTextCheckBox.isSelected()) {
+                if (p.getProductName().trim().toLowerCase().contains(s.toLowerCase())) {
+                    f.add(p);
+                }
+            } else {
+                if (p.getProductName().trim().toLowerCase().startsWith(s.toLowerCase())) {
+                    f.add(p);
+                }
+            }
+        }
+        productComboBox.getItems().clear();
+        productComboBox.getItems().addAll(f);
+        productComboBox.getSelectionModel().select(0);
+    }
+
+    //Replace with static method call to ProductInstance
+    ArrayList&lt;ProductInstance&gt; getProductInstances() {
+
+        ArrayList&lt;ProductInstance&gt; pi = selectedProduct == null ? new ArrayList()
+                : ProductInstance.getProductInstancesByProductID(selectedProduct.getProductID(), activeCheckBox.isSelected());
+        return pi;
+    }
+
+    ArrayList&lt;Product&gt; getProducts() {
+        ArrayList&lt;Product&gt; p = new ArrayList();
+        String activeClause = activeCheckBox.isSelected() ? &quot; and p.active = true and p.product_id in &quot;
+                + &quot;(select product_id from product_instances where active = true) &quot; : &quot;&quot;;
+        String sql = &quot;select p.product_id, p.product_name from  products p, &quot;
+                + &quot;major_categories mc  where p.major_category_id = mc.major_category_id &quot;
+                + activeClause
+                + &quot;and lower(mc.major_category_name) = &#x27;wine&#x27; order by lower(product_name)&quot;;
+        try {
+            Connection c = pds.getConnection();
+            Statement s = c.createStatement();
+            //s.execute(&quot;&quot;);
+            ResultSet rs = s.executeQuery(sql);
+            while (rs.next()) {
+                Integer pID = rs.getInt(&quot;product_id&quot;);
+                String pName = rs.getString(&quot;product_name&quot;);
+                p.add(new Product(pID, pName));
+            }
+            s.close();
+            c.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return p;
+    }
+
+    public void fillProductInstanceLocations() {
+        boolean b = true;
+        TheoreticalCountMap tcm = new TheoreticalCountMap();
+        VBox vBox = new VBox();
+        for (ProductInstanceLocation pil : selectedProductInstance.getProductInstanceLocations()) {
+            //System.out.println(&quot;inv vbox detail&quot;);
+
+            AnchorPane ap;
+            ProductInstanceLocationDetailController pildController;
+            try {
+                String bg = b ? &quot;lightgray&quot; : &quot;snow&quot;;
+                b = !b;
+                //newPane = FXMLLoader.load(getClass().getResource(&quot;enterInvoiceDetail.fxml&quot;));
+                FXMLLoader loader = new FXMLLoader();
+                loader.setLocation(MainAppSceneController.class.getResource(&quot;productInstanceLocationDetail.fxml&quot;));
+                ap = (AnchorPane) loader.load();
+                pildController = (ProductInstanceLocationDetailController) loader.getController();
+                pildController.setParentController(this);
+                ArrayList&lt;ProductInstanceLocation&gt; transferLocations = new ArrayList(selectedProductInstance.getProductInstanceLocations());
+                transferLocations.remove(pil);
+                pildController.setTransferLocations(transferLocations);
+                pildController.setTcm(tcm);
+                pildController.setSelectedProductInstanceLocation(pil);
+                //pildController.setListeners();
+                pildController.setBGColor(bg);
+                //pildController.setEditable(Boolean.FALSE);
+                //this.inventoryExtension += pildController.getCurrentExtendedAmount();
+                //this.detailControllersList.add(pildController);
+                vBox.getChildren().add(ap);
+            } catch (IOException ex) {
+                Logger.getLogger(EnterInventoryDetailController.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println(ex.getMessage());
+            }
+        }
+        //vBox.getChildren().clear();
+        //vbox.getChildren().addAll(hboxes);
+        locationscScrollPane.setContent(vBox);
+    }
+
+    public void addNewLocation() {
+        //dialog to set up new Location
+        PopOver po = new PopOver();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        Node content = null;
+        try {
+            content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;productInstanceLocation.fxml&quot;));
+            ProductInstanceLocationController controller = fxmlLoader.getController();
+            //controller.setProductIstanceLocation(pil);
+            controller.setProductInstanceId(selectedProductInstance.getProductInstanceID());
+            controller.setViewEditController(this);
+            controller.setAction(ProductInstanceLocationController.actionType.INSERT);
+            controller.fillData();
+            po.setContentNode(content);
+            Node n = (Node) addNewLocationButton;
+            po.setTitle(&quot;Add a New Location&quot;);
+            po.setDetachable(Boolean.FALSE);
+            po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+            po.setCloseButtonEnabled(Boolean.TRUE);
+            po.setAnimated(Boolean.TRUE);
+            po.setFadeInDuration(new Duration(750));
+            po.setFadeOutDuration(new Duration(750));
+            po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+            controller.setPo(po);
+            po.show(addNewLocationButton);
+            po.requestFocus();
+            //fillProductInstanceLocations();
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    public void clearVintageClicked() {
+        selectedProductInstance.setVintage(null);
+        selectedProductInstance.saveProductInstanceData();
+        refreshScreenButtonClicked();
+    }
+
+    public void clearRatingClicked() {
+        selectedProductInstance.setRating(null);
+        selectedProductInstance.clearRatings();
+        refreshScreenButtonClicked();
+    }
+
+    public void fillPLUs() {
+        int i = 0;
+        boolean b = true;
+        VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        ArrayList&lt;HBox&gt; hboxes = new ArrayList();
+        if (selectedProductInstance != null) {
+            try {
+                for (PLU plu : PLU.getAllPLUsForProductInstanceId(selectedProductInstance.getProductInstanceID())) {
+                    FXMLLoader loader = new FXMLLoader();
+                    loader.setLocation(MainAppSceneController.class.getResource(&quot;PLUDetail.fxml&quot;));
+                    AnchorPane ap = (AnchorPane) loader.load();
+                    PLUDetailController pludController = (PLUDetailController) loader.getController();
+                    String bg = b ? &quot;lightgray&quot; : &quot;snow&quot;;
+                    b = !b;
+                    pludController.setParentController(this);
+                    pludController.setPlu(plu);
+                    pludController.setBGColor(bg);
+                    vbox.getChildren().add(ap);
+                }
+                PLUScrollPane.setContent(vbox);
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void addNewPLUButtonClicked() {
+        addNewPLU(selectedProductInstance.getProductInstanceID());
+    }
+
+    //associate with pil
+    private void addNewPLU(Integer ProductInstanceId) {
+        PopOver po = new PopOver();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        Node content = null;
+        try {
+            content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;PLU.fxml&quot;));
+            PLUController controller = fxmlLoader.getController();
+            //controller.setProductIstanceLocation(pil);
+            po.setContentNode(content);
+            controller.setAction(PLUController.actionType.INSERT);
+            controller.setProductInstance(selectedProductInstance);
+            controller.setPo(po);
+            controller.setViewEditController(this);
+            Node n = (Node) addNewPLUButton;
+            po.setTitle(&quot;Add a New PLU&quot;);
+            po.setDetachable(Boolean.FALSE);
+            po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+            po.setCloseButtonEnabled(Boolean.TRUE);
+            po.setAnimated(Boolean.TRUE);
+            po.setFadeInDuration(new Duration(750));
+            po.setFadeOutDuration(new Duration(750));
+            po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+
+            po.show(addNewPLUButton);
+            po.requestFocus();
+            //fillProductInstanceLocations();
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void getWineSearcher() {
+        try {
+            Document doc = Jsoup.connect(&quot;https://www.wine-searcher.com/find/m+chapoutier+chante+alouet+hermitage+rhone+france/2012/usa&quot;)
+                    .referrer(&quot;http://www.google.com&quot;)
+                    .userAgent(&quot;Mozilla&quot;).ignoreHttpErrors(true)
+                    .timeout(5000).get();
+//            System.out.println(&quot;doc &quot; + doc);
+            Elements divs = doc.select(&quot;div&quot;);
+            for (Element e : divs) {
+                //System.out.println(e);
+                Elements spans = e.select(&quot;span&quot;);
+                for (Element s : spans) {
+                    Elements bs = s.select(&quot;b&quot;);
+                    for (Element b : bs) {
+                        System.out.println(b);
+                    }
+                }
+//                if(e.text().matches(&quot;Average Price&quot;)){
+//                    System.out.println(&quot;here&quot; + e);
+//                }
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+    //////DEPRECATED - TO BE DELETED //////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////
+    private void testLoc() {
+        VBox vb = new VBox();
+        HBox h1 = new HBox();
+        HBox h2 = new HBox();
+        Button b1 = new Button(&quot;b1&quot;);
+        b1.setId(&quot;b1 id&quot;);
+        b1.setOnAction((ActionEvent event) -&gt; {
+            System.out.println(b1.getId());
+        });
+        Button b2 = new Button(&quot;b2&quot;);
+        Button b3 = new Button(&quot;b3&quot;);
+        Button b4 = new Button(&quot;b4&quot;);
+        h1.getChildren().addAll(b1, b2);
+        h2.getChildren().addAll(b3, b4);
+        vb.getChildren().addAll(h1, h2);
+        locationscScrollPane.setContent(vb);
+    }
+
+    public void fillProductInstanceLocations_orig() {
+        int i = 0;
+        VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        ArrayList&lt;HBox&gt; hboxes = new ArrayList();
+        if (selectedProductInstance != null) {
+            selectedProductInstance.populateProductLocations();
+            for (ProductInstanceLocation pil : selectedProductInstance.getProductInstanceLocations()) {
+                HBox h = new HBox();
+                h.setMinWidth(290);
+                h.setPadding(new Insets(3));
+                h.setSpacing(10);
+                h.setBorder(new Border(new BorderStroke(Color.LIGHTGREY,
+                        BorderStrokeStyle.SOLID, new CornerRadii(5), BorderWidths.DEFAULT)));
+                h.setAlignment(Pos.CENTER);
+                if (i++ % 2 == 0) {
+                    h.setStyle(&quot;-fx-background-color: rgba(255, 255, 255, 0.5);&quot;);
+                }
+                Hyperlink editHyperlink = new Hyperlink(&quot;Edit&quot;);
+                editHyperlink.setId(pil.getProductInstanceLocationId().toString());
+                editHyperlink.setOnAction((ActionEvent event) -&gt; {
+                    System.out.println(&quot;edit &quot; + editHyperlink.getId());
+                    editProductInstanceLocation(pil, editHyperlink);
+                });
+                Hyperlink delHyperlink = new Hyperlink(&quot;Delete&quot;);
+                delHyperlink.setId(pil.getProductInstanceLocationId().toString());
+                delHyperlink.setOnAction((ActionEvent event) -&gt; {
+                    System.out.println(&quot;delete &quot; + delHyperlink.getId());
+                    deleteProductInstanceLocation(pil);
+                });
+                Hyperlink transferHyperlink = new Hyperlink(&quot;Transfer\nFrom&quot;);
+                transferHyperlink.setId(pil.getProductInstanceLocationId().toString());
+                transferHyperlink.setOnAction((ActionEvent event) -&gt; {
+                    System.out.println(&quot;transfer from &quot; + transferHyperlink.getId());
+                    transferFromProductInstanceLocation(pil, transferHyperlink);
+                });
+                Text roomText = new Text(pil.getRoom().toString());
+                roomText.setWrappingWidth(75);
+                Text colText = new Text(&quot;Col &quot; + pil.getCol());
+                Text rowText = new Text(&quot;Row &quot; + pil.getRow());
+                DecimalFormat df = new DecimalFormat();
+                df.setMaximumFractionDigits(2);
+                Text onHand = new Text(&quot; On Hand:&quot;
+                        + df.format(ProductInstanceLocation.getTheoreticalOnHandForProductInstanceLocationId(pil.getProductInstanceLocationId())) + &quot;  &quot;);
+                CheckBox sCheckBox = new CheckBox(&quot;Sales\nLocation&quot;);
+                sCheckBox.setSelected(pil.getSaleLocation());
+                sCheckBox.setDisable(Boolean.TRUE);
+                CheckBox pCheckBox = new CheckBox(&quot;Purchase\nLocation&quot;);
+                pCheckBox.setSelected(pil.getPurchaseLocation());
+                pCheckBox.setDisable(Boolean.TRUE);
+                h.getChildren().addAll(transferHyperlink, editHyperlink, delHyperlink, roomText, colText, rowText, onHand, pCheckBox, sCheckBox);
+                hboxes.add(h);
+            }
+            vbox.getChildren().clear();
+            vbox.getChildren().addAll(hboxes);
+            locationscScrollPane.setContent(vbox);
+        }
+    }
+
+    public void transferFromProductInstanceLocation(ProductInstanceLocation pil, Node n) {
+
+        if (pil != null &amp;&amp; selectedProductInstance.getProductInstanceLocations().size() &gt; 1) {
+            PopOver po = new PopOver();
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            Node content = null;
+            ProductInstanceLocation toRemove = null;
+            LocationTransferController controller = null;
+            try {
+                content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;LocationTransfer.fxml&quot;));
+                controller = fxmlLoader.getController();
+                po.setTitle(&quot;Select a location and \nquantity for the transfer&quot;);
+                ObservableList&lt;ProductInstanceLocation&gt; pils = ProductInstanceLocation.
+                        getAllForProductInstanceId(selectedProductInstance.getProductInstanceID());
+                for (ProductInstanceLocation p : pils) {
+                    if (p.equals(pil)) {
+                        toRemove = p;
+                    }
+                }
+                pils.remove(toRemove);
+                controller.setPils(pils);
+                controller.setPilFrom(pil);
+                controller.setViewEditController(this);
+                po.setContentNode(content);
+                po.setDetachable(Boolean.FALSE);
+                po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+                po.setCloseButtonEnabled(Boolean.TRUE);
+                po.setAnimated(Boolean.TRUE);
+                po.setFadeInDuration(new Duration(750));
+                po.setFadeOutDuration(new Duration(750));
+                po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+                controller.setPopOver(po);
+                po.show(n);
+                controller.quantityTextField.requestFocus();
+            } catch (IOException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        } else {
+            Notifications.create().hideAfter(Duration.seconds(1.5))
+                    .title(&quot;Error&quot;).text(&quot;Can not transfer from this location&quot;).position(Pos.CENTER).showError();
+        }
+
+    }
+
+    private void deletePLU(PLU plu, Hyperlink link) {
+        Alert alert = new Alert(AlertType.CONFIRMATION, &quot;Delete PLU? &quot;, ButtonType.YES, ButtonType.NO);
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            String sql1 = &quot;delete from pos_plu_product_instance_associations where pos_plu = ?&quot;;
+            String sql2 = &quot;update product_instances set wine_list_bin_number = null where product_instance_id = ?&quot;;
+            try (Connection c = ConnectionPool.getInstance().cpds.getConnection();
+                    PreparedStatement ps1 = c.prepareStatement(sql1);
+                    PreparedStatement ps2 = c.prepareStatement(sql2)) {
+                ps1.setInt(1, plu.getPLUNumber());
+                ps2.setInt(1, selectedProductInstance.getProductInstanceID());
+                ps1.executeUpdate();
+
+                ps1.close();
+                if (plu.getIsWineListBinNumber() || plu.getIsInventoryUnit()) {
+                    ps2.executeUpdate();
+                }
+                c.close();
+                fillPLUs();
+            } catch (SQLException ex) {
+                Logger.getLogger(PLUController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public void fillPLUs_orig() {
+        int i = 0;
+        VBox vbox = new VBox();
+        vbox.setSpacing(5);
+        ArrayList&lt;HBox&gt; hboxes = new ArrayList();
+        if (selectedProductInstance != null) {
+            for (PLU plu : PLU.getAllPLUsForProductInstanceId(selectedProductInstance.getProductInstanceID())) {
+                HBox h = new HBox();
+                h.setMinWidth(290);
+                h.setPadding(new Insets(3));
+                h.setSpacing(10);
+                h.setBorder(new Border(new BorderStroke(Color.LIGHTGREY,
+                        BorderStrokeStyle.SOLID, new CornerRadii(5), BorderWidths.DEFAULT)));
+                h.setAlignment(Pos.CENTER);
+                if (i++ % 2 == 0) {
+                    h.setStyle(&quot;-fx-background-color: rgba(255, 255, 255, 0.5);&quot;);
+                }
+                Hyperlink editHyperlink = new Hyperlink(&quot;Edit&quot;);
+                editHyperlink.setId(plu.getPLUNumber().toString());
+                editHyperlink.setOnAction((ActionEvent event) -&gt; {
+                    System.out.println(&quot;edit &quot; + editHyperlink.getId());
+                    editPLU(plu, editHyperlink);
+                });
+                Hyperlink delHyperlink = new Hyperlink(&quot;Delete&quot;);
+                delHyperlink.setId(plu.getPLUNumber().toString());
+                delHyperlink.setOnAction((ActionEvent event) -&gt; {
+                    System.out.println(&quot;delete &quot; + delHyperlink.getId());
+                    deletePLU(plu, delHyperlink);
+                });
+                //String bn = plu.getIsWineListBinNumber() ? &quot;Bin Number&quot; : &quot;&quot;;
+                String bn = plu.getIsInventoryUnit() ? &quot;Bin Number&quot; : &quot;&quot;;
+                Text PLUText = new Text(&quot;PLU:&quot; + plu.getPLUNumber() + &quot;  &quot; + plu.getNumberSalesUnits() + &quot;  &quot; + plu.getSalesVolumeUnit() + &quot;   &quot; + bn);
+                //Ugly - fix later
+                for (int j = PLUText.getText().length(); j &lt;= 50; j++) {
+                    PLUText.setText(PLUText.getText() + &quot; &quot;);
+                }
+//                Text roomText = new Text(pil.getRoom().toString());
+//                roomText.setWrappingWidth(75);
+//                Text colText = new Text(&quot;Col &quot; + pil.getCol());
+//                Text rowText = new Text(&quot;Row &quot; + pil.getRow());
+//                DecimalFormat df = new DecimalFormat();
+//                df.setMaximumFractionDigits(2);
+//     
+//                CheckBox sCheckBox = new CheckBox(&quot;Sales\nLocation&quot;);
+//                sCheckBox.setSelected(pil.getSaleLocation());
+//                sCheckBox.setDisable(Boolean.TRUE);
+//                CheckBox pCheckBox = new CheckBox(&quot;Purchase\nLocation&quot;);
+//                pCheckBox.setSelected(pil.getPurchaseLocation());
+//                pCheckBox.setDisable(Boolean.TRUE);
+
+                h.getChildren().addAll(editHyperlink, delHyperlink, PLUText);
+                hboxes.add(h);
+            }
+            vbox.getChildren().clear();
+            vbox.getChildren().addAll(hboxes);
+            PLUScrollPane.setContent(vbox);
+        }
+    }
+
+    //check pil
+    private void editPLU(PLU plu, Node n) {
+        PopOver po = new PopOver();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        Node content = null;
+        try {
+            content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;PLU.fxml&quot;));
+            PLUController controller = fxmlLoader.getController();
+            controller.setProductInstance(selectedProductInstance);
+            controller.setPlu(plu);
+            controller.setViewEditController(this);
+            controller.setAction(PLUController.actionType.EDIT);
+            controller.fillData();
+
+            po.setContentNode(content);
+            //Node n = (Node) addNewLocationButton;
+            po.setTitle(&quot;Edit a PLU&quot;);
+            po.setDetachable(Boolean.FALSE);
+            po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+            po.setCloseButtonEnabled(Boolean.TRUE);
+            po.setAnimated(Boolean.TRUE);
+            po.setFadeInDuration(new Duration(750));
+            po.setFadeOutDuration(new Duration(750));
+            po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+            controller.setPo(po);
+            po.show(n);
+            po.requestFocus();
+            //fillProductInstanceLocations();
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void editProductInstanceLocation(ProductInstanceLocation pil, Node n) {
+        PopOver po = new PopOver();
+        FXMLLoader fxmlLoader = new FXMLLoader();
+        Node content = null;
+        try {
+            content = (Parent) fxmlLoader.load(getClass().getResourceAsStream(&quot;productInstanceLocation.fxml&quot;));
+            ProductInstanceLocationController controller = fxmlLoader.getController();
+            controller.setProductIstanceLocation(pil);
+            controller.setViewEditController(this);
+            controller.setAction(ProductInstanceLocationController.actionType.EDIT);
+            controller.fillData();
+
+            po.setContentNode(content);
+            //Node n = (Node) addNewLocationButton;
+            po.setTitle(&quot;Edit a Location&quot;);
+            po.setDetachable(Boolean.FALSE);
+            po.closeButtonEnabledProperty().setValue(Boolean.TRUE);
+            po.setCloseButtonEnabled(Boolean.TRUE);
+            po.setAnimated(Boolean.TRUE);
+            po.setFadeInDuration(new Duration(750));
+            po.setFadeOutDuration(new Duration(750));
+            po.headerAlwaysVisibleProperty().setValue(Boolean.TRUE);
+            controller.setPo(po);
+            po.show(n);
+            po.requestFocus();
+            //fillProductInstanceLocations();
+        } catch (IOException ex) {
+            Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void deleteProductInstanceLocation(ProductInstanceLocation pil) {
+        Alert alert = new Alert(AlertType.CONFIRMATION, &quot;Delete Location? &quot;, ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+        alert.showAndWait();
+        if (alert.getResult() == ButtonType.YES) {
+            String sql = &quot;delete from product_instance_location_associations &quot;
+                    + &quot;where product_instance_location_id = ?&quot;;
+            try (Connection c = ConnectionPool.getInstance().cpds.getConnection();
+                    PreparedStatement ps = c.prepareStatement(sql)) {
+                ps.setInt(1, pil.getProductInstanceLocationId());
+                if (ps.executeUpdate() == 0) {
+                    Notifications.create().hideAfter(Duration.seconds(2))
+                            .title(&quot;Error Deleting Location&quot;).text(&quot;This location cannot be\ndeleted due to related records&quot;).position(Pos.CENTER).showError();
+                } else {
+                    Notifications.create().hideAfter(Duration.seconds(2))
+                            .title(&quot;Location Deleted&quot;).text(&quot;The location has been deleted&quot;).position(Pos.CENTER).showInformation();
+                    fillProductInstanceLocations();
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(ViewEditController.class.getName()).log(Level.SEVERE, null, ex);
+                Notifications.create().hideAfter(Duration.seconds(2))
+                        .title(&quot;Error Deleting Location&quot;).text(&quot;This location cannot be\ndeleted due to related records&quot;).position(Pos.CENTER).showError();
+            }
+        }
+    }
+
+//    private void testMail(){
+//    String USER_NAME = &quot;martindonovan.brg@gmail.com&quot;;  // GMail user name (just the part before &quot;@gmail.com&quot;)
+//    String PASSWORD = &quot;1261_Brg&quot;; // GMail password
+//    String RECIPIENT = &quot;martindonovan3@gmail.com&quot;;
+//
+//
+//        String from = USER_NAME;
+//        String pass = PASSWORD;
+//        String[] to = { RECIPIENT }; // list of recipient email addresses
+//        String subject = &quot;Java send mail example&quot;;
+//        String body = &quot;Welcome to JavaMail!&quot;;
+//
+//        sendFromGMail(from, pass, to, subject, body);
+//}
+//    private static void sendFromGMail(String from, String pass, String[] to, String subject, String body) {
+//        Properties props = System.getProperties();
+//        String host = &quot;smtp.gmail.com&quot;;
+//        props.put(&quot;mail.smtp.starttls.enable&quot;, &quot;true&quot;);
+//        props.put(&quot;mail.smtp.host&quot;, host);
+//        props.put(&quot;mail.smtp.user&quot;, from);
+//        props.put(&quot;mail.smtp.password&quot;, pass);
+//        props.put(&quot;mail.smtp.port&quot;, &quot;587&quot;);
+//        props.put(&quot;mail.smtp.auth&quot;, &quot;true&quot;);
+//
+//        javax.mail.Session session = javax.mail.Session.getDefaultInstance(props);
+//        MimeMessage message = new MimeMessage(session);
+//
+//        try {
+//            message.setFrom(new InternetAddress(from));
+//            InternetAddress[] toAddress = new InternetAddress[to.length];
+//
+//            // To get the array of addresses
+//            for( int i = 0; i &lt; to.length; i++ ) {
+//                toAddress[i] = new InternetAddress(to[i]);
+//            }
+//
+//            for( int i = 0; i &lt; toAddress.length; i++) {
+//                message.addRecipient(Message.RecipientType.TO, toAddress[i]);
+//            }
+//
+//            message.setSubject(subject);
+//            message.setText(body);
+//            Transport transport = session.getTransport(&quot;smtp&quot;);
+//            transport.connect(host, from, pass);
+//            transport.sendMessage(message, message.getAllRecipients());
+//            transport.close();
+//        }
+//        catch (AddressException ae) {
+//            ae.printStackTrace();
+//        }
+//        catch (MessagingException me) {
+//            me.printStackTrace();
+//        }
+//    }
+}</code></pre>
+</body>
+</html>

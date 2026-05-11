@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>269c60934b98df42e195a66d45831354 — invoices.ejs, newproduct.ejs</title>
+</head>
+<body>
+<!--
+  static mirror of https://gist.github.com/mdonovan3/269c60934b98df42e195a66d45831354
+  author: Martin Donovan (martindonovan3@gmail.com)
+  description: 269c60934b98df42e195a66d45831354
+  files: invoices.ejs, newproduct.ejs
+  languages: EJS
+  github_url: https://gist.github.com/mdonovan3/269c60934b98df42e195a66d45831354
+  canonical_profile: https://portfolio.martindonovan.net/profile.json
+-->
+<p>Author: Martin Donovan | <a href="https://gist.github.com/mdonovan3/269c60934b98df42e195a66d45831354">GitHub gist</a> | <a href="https://portfolio.martindonovan.net/profile.json">profile.json</a></p>
+<h1>269c60934b98df42e195a66d45831354</h1>
+
+<!-- file: invoices.ejs | language: EJS -->
+<pre><code>&lt;script src=&quot;https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js&quot;
+  async&gt;&lt;/script&gt;
+  &lt;!-- &lt;script
+  src=&quot;https://cdn.jsdelivr.net/npm/bootswatch@4.5.2/dist/slate/bootstrap.min.css&quot;
+  async 
+&gt;&lt;/script&gt; --&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css&quot;&gt; 
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.datatables.net/1.10.25/css/jquery.dataTables.min.css&quot;&gt;
+
+&lt;!--&lt;link rel=&quot;stylesheet&quot; href=&quot;/resources/demos/style.css&quot;&gt;--&gt;
+&lt;!-- &lt;script src=&quot;https://code.jquery.com/jquery-1.12.4.js&quot;&gt;&lt;/script&gt; --&gt;
+&lt;script src=&quot;https://code.jquery.com/ui/1.12.1/jquery-ui.js&quot;&gt;&lt;/script&gt; 
+&lt;script src=&quot;https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.min.js&quot; integrity=&quot;sha512-OZ6CXzl5JrSc9OM1lxp1OC+zt5gCTVAqy7nWwbdSUE98akAvGl/20WaIqsRUnSpBG+QBkcMkiJVfFvybZ6PtKQ==&quot; crossorigin=&quot;anonymous&quot; referrerpolicy=&quot;no-referrer&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;/scripts/invoices-client.js&quot;&gt;&lt;/script&gt;
+
+&lt;%- include (&#x27;partials/topnav&#x27;, {user: user, restaurant: restaurant}) %&gt;
+&lt;div class=&quot;container&quot;&gt;
+    &lt;div class=&quot;container pt-3 pb-5 shadow-lg bg-white rounded&quot; style=&quot;margin: 10px;&quot;&gt;
+        &lt;form id=&quot;setupinvoice&quot;&gt;
+            &lt;div class=&quot;form-row&quot;&gt;
+                Edit an Invoice:&lt;br&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;form-row&quot;&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;startdatepicker&quot;&gt;Start Date&lt;/label&gt;
+                    &lt;input type=&quot;text&quot; id=&quot;startdatepicker&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;enddatepicker&quot;&gt;End Date&lt;/label&gt;
+                    &lt;input type=&quot;text&quot; id=&quot;enddatepicker&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-3&quot;&gt;
+                    &lt;label for=&quot;editinvoicevendorselect&quot;&gt;Vendor&lt;/label&gt;
+                    &lt;select name=&quot;vendor&quot; id=&quot;editinvoicevendorselect&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/select&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-5&quot;&gt;
+                    &lt;label for=&quot;invoiceselect&quot;&gt;Invoice&lt;/label&gt;
+                    &lt;select name=&quot;invoice&quot; id=&quot;invoiceselect&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/select&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+            &lt;hr class=&quot;border border-primary&quot;&gt;
+            &lt;div class=&quot;form-row&quot;&gt;
+                Enter a New Invoice:&lt;br&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;form-row&quot;&gt;
+                &lt;div class=&quot;col=1&quot;&gt;
+                    &lt;label for=&quot;startinvoicebutton&quot;&gt;Start&lt;/label&gt;
+                    &lt;button id=&quot;startinvoicebutton&quot; type=&quot;button&quot; class=&quot;form-control form-control-sm&quot;&gt;Start&lt;/button&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-3&quot;&gt;
+                    &lt;label for=&quot;vendorselect&quot;&gt;Vendor&lt;/label&gt;
+                    &lt;select name=&quot;vendor&quot; id=&quot;vendorselect&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/select&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-3&quot;&gt;
+                    &lt;label for=&quot;vendorinvoiceid&quot;&gt;Vendor Invoice ID&lt;/label&gt;
+                    &lt;input type=&quot;text&quot; name=&quot;vendorinvoiceid&quot; id=&quot;vendorinvoiceid&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;invoicedatepicker&quot;&gt;Invoice Date&lt;/label&gt;
+                    &lt;input type=&quot;text&quot; id=&quot;invoicedatepicker&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;paymentdatepicker&quot;&gt;Payment Date&lt;/label&gt;
+                    &lt;input type=&quot;text&quot; id=&quot;paymentdatepicker&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col=1&quot;&gt;
+                    &lt;label for=&quot;enterinvbutton&quot;&gt;Enter Invoice&lt;/label&gt;
+                    &lt;button id=&quot;enterinvbutton&quot; type=&quot;button&quot; class=&quot;form-control form-control-sm&quot;&gt;Enter&lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+    &lt;!-- &lt;hr class=&quot;border border-primary&quot;&gt; --&gt;
+    &lt;div class=&quot;container pb-4 shadow-lg bg-white rounded&quot; style=&quot;margin: 10px;&quot;&gt;
+        &lt;form id=&quot;enterinvoicedetails&quot;&gt;
+            &lt;div class=&quot;row&quot;&gt;
+                &lt;div class=&quot;col-1&quot;&gt;
+                    &lt;label for=&quot;addnewproductbutton&quot;&gt;&lt;/label&gt;
+                    &lt;button type=&quot;button&quot; class=&quot;btn form-control form-control-sm&quot;  id=&quot;addnewproductbutton&quot; data-toggle=&quot;modal&quot; data-target=&quot;#newproductmodal&quot; data-placement=&quot;top&quot; title=&quot;Add New Product&quot;&gt;
+                      &lt;i class=&quot;fas fa-plus&quot;&gt;&lt;/i&gt;
+                    &lt;/button&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-1&quot;&gt;
+                    &lt;label for=&quot;searchcurrentdistonly&quot;&gt;Distributor&lt;/label&gt;
+                    &lt;input class=&quot;form-control form-control-sm checkbox-inline&quot; type=&quot;checkbox&quot;
+                        id=&quot;searchcurrentdistonly&quot; data-toggle=&quot;tooltip&quot; data-placement=&quot;top&quot; title=&quot;Current Distributor&#x27;s Products Only&quot; checked&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-5&quot;&gt;
+                    &lt;label for=&quot;select-product&quot;&gt;Product Instance:&lt;/label&gt;
+                    &lt;!-- class demo-default--&gt;
+                    &lt;select id=&quot;select-product&quot; class=&quot;form-control form-control-sm&quot; placeholder=&quot;Select a product instance...&quot;&gt;
+                        &lt;option value=&quot;&quot;&gt;Select a product instance...&lt;/option&gt;
+                    &lt;/select&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;numberreceived&quot;&gt;Number Received&lt;/label&gt;
+                    &lt;input id=&quot;numberreceived&quot; type=&quot;text&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/input&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col-2&quot;&gt;
+                    &lt;label for=&quot;extendednet&quot;&gt;Extended Net&lt;/label&gt;
+                    &lt;input id=&quot;extendednet&quot; type=&quot;text&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/input&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;col=1&quot;&gt;
+                    &lt;label for=&quot;enterlinebutton&quot;&gt;Enter Line&lt;/label&gt;
+                    &lt;button id=&quot;enterlinebutton&quot; type=&quot;button&quot; class=&quot;form-control form-control-sm&quot;&gt;Enter&lt;/button&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/form&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;container shadow-lg bg-white rounded&quot;  style=&quot;margin: 10px;&quot;&gt;
+        &lt;table id=&quot;invoicedetails&quot; class=&quot;table table-striped table-sm&quot; width=&quot;100%&quot; cellspacing=&quot;0&quot;&gt;
+            &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;Del.&lt;/th&gt;
+                    &lt;th&gt;Name&lt;/th&gt;
+                    &lt;th&gt;Num. Rec.&lt;/th&gt;
+                    &lt;th&gt;Extended&lt;/th&gt;
+                    &lt;th&gt;Bottle Net&lt;/th&gt;
+                    &lt;th&gt;Previous Cost&lt;/th&gt;
+                    &lt;th&gt;Last Purch. Date&lt;/th&gt;
+                    &lt;th&gt;Inv. Num.&lt;/th&gt;
+                    &lt;th&gt;Diff.&lt;/th&gt;
+                    &lt;th&gt;% Diff.&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/thead&gt;
+
+            &lt;tfoot&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;Del.&lt;/th&gt;
+                    &lt;th&gt;Name&lt;/th&gt;
+                    &lt;th&gt;Num. Rec.&lt;/th&gt;
+                    &lt;th&gt;Extended&lt;/th&gt;
+                    &lt;th&gt;Bottle Net&lt;/th&gt;
+                    &lt;th&gt;Previous Cost&lt;/th&gt;
+                    &lt;th&gt;Last Purch. Date&lt;/th&gt;
+                    &lt;th&gt;Inv. Num.&lt;/th&gt;
+                    &lt;th&gt;Diff.&lt;/th&gt;
+                    &lt;th&gt;% Diff.&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/tfoot&gt;
+        &lt;/table&gt;
+    &lt;/div&gt;
+
+    &lt;div id=&quot;invoiceinsertedtoast&quot; class=&quot;toast&quot; role=&quot;alert&quot; aria-live=&quot;assertive&quot; aria-atomic=&quot;true&quot; &gt;
+        &lt;!-- style=&quot;position: absolute; top: 0; right: 0;&quot; --&gt;
+        &lt;div class=&quot;toast-header&quot;&gt;
+          &lt;img src=&quot;...&quot; class=&quot;rounded mr-2&quot; alt=&quot;...&quot;&gt;
+          &lt;strong class=&quot;mr-auto&quot;&gt;Invoice Inserted&lt;/strong&gt;
+          &lt;small class=&quot;text-muted&quot;&gt;&lt;/small&gt;
+          &lt;button type=&quot;button&quot; class=&quot;ml-2 mb-1 close&quot; data-dismiss=&quot;toast&quot; aria-label=&quot;Close&quot;&gt;
+            &lt;span aria-hidden=&quot;true&quot;&gt;&amp;times;&lt;/span&gt;
+          &lt;/button&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;toast-body&quot;&gt;
+          The invoice has been inserted into the database.
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+      &lt;%- include (&#x27;partials/newproduct.ejs&#x27;) %&gt;</code></pre><!-- file: newproduct.ejs | language: EJS -->
+<pre><code>&lt;div class=&quot;modal fade&quot; id=&quot;newproductmodal&quot;&gt;
+    &lt;div class=&quot;modal-dialog modal-lg&quot;&gt;
+        &lt;div class=&quot;modal-content&quot;&gt;
+
+            &lt;!-- Modal Header --&gt;
+            &lt;div class=&quot;modal-header&quot;&gt;
+                &lt;h4 class=&quot;modal-title&quot;&gt;New Product: Click &quot;New Product&quot; or Select a Product and Instance to Copy&lt;/h4&gt;
+                
+                &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot;&gt;&amp;times;&lt;/button&gt;
+            &lt;/div&gt;
+
+            &lt;!-- Modal body --&gt;
+            &lt;div class=&quot;modal-body&quot;&gt;
+                &lt;form&gt;
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;createnewproductbutton&quot;&gt;New Product&lt;/label&gt;
+                            &lt;button id=&quot;createnewproductbutton&quot; class=&quot;form-control form-control-sm&quot; type=&quot;button&quot;&gt;New Product&lt;/button&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;producttocopy&quot; class=&quot;control-label&quot;&gt;Product to copy:&lt;/label&gt;
+                            &lt;!-- class demo-default--&gt;
+                            &lt;select id=&quot;producttocopy&quot; class=&quot;form-control form-control-sm&quot;
+                                placeholder=&quot;Select a product...&quot;&gt;
+                                &lt;option value=&quot;&quot;&gt;Product to copy&lt;/option&gt;
+                            &lt;/select&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;productinstancetopcopy&quot; class=&quot;control-label&quot;&gt;Product instance to copy:&lt;/label&gt;
+                            &lt;!-- class demo-default--&gt;
+                            &lt;select id=&quot;productinstancetocopy&quot; class=&quot;form-control form-control-sm&quot;
+                                placeholder=&quot;Select a product&quot;&gt;
+                                &lt;option value=&quot;&quot;&gt;Product instance to copy&lt;/option&gt;
+                            &lt;/select&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npProductName&quot;&gt;Product Name&lt;/label&gt;
+                            &lt;input class=&quot;form-control form-control-sm&quot; type=&quot;text&quot; id=&quot;npProductName&quot;&gt;
+                        &lt;/div&gt;
+ 
+                    &lt;/div&gt;
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npInventoryName&quot;&gt;Product Instance Name&lt;/label&gt;
+                            &lt;input class=&quot;form-control form-control-sm&quot; type=&quot;text&quot; id=&quot;npInventoryName&quot;&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npWineType&quot;&gt;&lt;/label&gt;
+                            &lt;select class=&quot;form-control form-control-sm&quot; name=&quot;npWineType&quot; id=&quot;npWineType&quot; placeholder=&quot;Wine Type&quot; &gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npCountry&quot;&gt;&lt;/label&gt;
+                            &lt;select placeholder=&quot;Country&quot; class=&quot;form-control form-control-sm&quot; name=&quot;npCountry&quot; id=&quot;npCountry&quot;&gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npRegion&quot;&gt;&lt;/label&gt;
+                            &lt;select placeholder=&quot;Region&quot; class=&quot;form-control form-control-sm&quot; name=&quot;npRegion&quot; id=&quot;npRegion&quot;&gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npVintage&quot;&gt;&lt;/label&gt;
+                            &lt;select placeholder=&quot;Vintage&quot; class=&quot;form-control form-control-sm&quot; name=&quot;npBottleSize&quot; id=&quot;npVintage&quot;&gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npBottleSize&quot;&gt;&lt;/label&gt;
+                            &lt;select placeholder=&quot;Bottle Size&quot; class=&quot;form-control form-control-sm&quot; name=&quot;npBottleSize&quot; id=&quot;npBottleSize&quot;&gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+                    &lt;div class=&quot;row&quot;&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npRoom&quot;&gt;Room&lt;/label&gt;
+                            &lt;select id=&quot;npRoom&quot; name=&quot;npRoom&quot; class=&quot;form-control form-control-sm&quot;&gt;&lt;/select&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npCol&quot;&gt;Column&lt;/label&gt;
+                            &lt;input value=&quot;0&quot; type=&quot;number&quot; id=&quot;npCol&quot; name=&quot;npCol&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                        &lt;/div&gt;
+                        &lt;div class=&quot;col&quot;&gt;
+                            &lt;label for=&quot;npRow&quot;&gt;Row&lt;/label&gt;
+                            &lt;input value=&quot;0&quot; type=&quot;number&quot; id=&quot;npRow&quot; name=&quot;npRow&quot; class=&quot;form-control form-control-sm&quot;&gt;
+                        &lt;/div&gt;
+                    &lt;/div&gt;
+
+                &lt;/form&gt;
+            &lt;/div&gt;
+
+            &lt;!-- Modal footer --&gt;
+            &lt;div class=&quot;modal-footer&quot;&gt;
+                &lt;button type=&quot;button&quot; id=&quot;savenewproductbutton&quot; class=&quot;btn btn-danger&quot; data-dismiss=&quot;modal&quot;&gt;Save&lt;/button&gt;
+                &lt;button type=&quot;button&quot; id=&quot;closebutton&quot; class=&quot;btn btn-danger&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
+            &lt;/div&gt;
+
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</body>
+</html>
