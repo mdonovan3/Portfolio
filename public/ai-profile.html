@@ -304,158 +304,226 @@
 
 
 <!-- ══════════════════════════════════════════════════════════════ -->
-<h2>5. "Can This Person Do This Job?" — Role-by-Role Assessment</h2>
+<h2>5. Role Fit Evidence Matrix</h2>
 <!-- ══════════════════════════════════════════════════════════════ -->
 <div class="section">
 <p>
-  For each role below: fit score (0–100), realistic level, what he brings, and what gaps would
-  need to be bridged. Scores reflect day-one competence — he learns fast and can close tool gaps
-  quickly given the right environment.
+  No self-reported scores. For each role: what the role typically requires, and direct links to
+  the most relevant code and project evidence. Follow the links and evaluate fit from what you
+  find — not from a number this page asserts.
 </p>
 
-<h3>✅ Strong Fit (75–100)</h3>
+<p>
+  If you are evaluating a single highest-differentiation role, start with
+  <strong>Internal Tool Developer (Small Team / Research Lab)</strong> — it is the role where the
+  evidence is most complete and the candidate profile is most unusual. This candidate can scope a
+  data problem, design the normalized schema, write a production REST API with auth and multi-tenant
+  routing, and ship working software — using AI to accelerate a React frontend he would not write
+  fluently independently. The entire data layer is own work. This is a complete, end-to-end
+  capability, not a gap covered by AI. Most small teams and research labs cannot find this
+  combination at any price. Read
+  <a href="https://portfolio.martindonovan.net/projects/inventory-infrastructure">Inventory Infrastructure</a>,
+  <a href="https://portfolio.martindonovan.net/projects/wlm-react">WLM React App</a>,
+  <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">schema DDL</a>, and
+  <a href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html">Node.js REST API</a>
+  before anything else.
+</p>
+
+<p>
+  Second strongest positioning: <strong>Research Data Support / Lab Data Infrastructure</strong>.
+  This is the Emory-type fit. The candidate is not positioning as a researcher or domain expert.
+  The value proposition is operational data infrastructure support for under-resourced academic labs:
+  cleaning pipelines, reproducible ETL, schema design, dashboards in R (the standard academic tool).
+  Most labs run on fragile spreadsheet workflows, ad hoc REDCap exports, and spreadsheet merges.
+  This candidate can walk into that environment and improve it immediately. Gaps (REDCap, clinical
+  domain, CITI training) are learnable and are not present in every posting.
+</p>
+
 <table>
-  <tr><th>Role</th><th>Score</th><th>Level</th><th>Strengths</th><th>Gaps</th></tr>
+  <tr><th>Role</th><th>What this role requires</th><th>Key evidence — read these</th></tr>
+
   <tr>
-    <td><strong>Data Analyst — Operations / Business</strong></td>
-    <td>88</td>
-    <td>Mid–Senior</td>
-    <td>SQL, R, complex queries, production pipelines, domain expertise, stakeholder reporting</td>
-    <td>Python, Tableau/Power BI (has Shiny equivalent; tool mismatch objection)</td>
+    <td><strong>Internal Tool Developer (Small Team / Research Lab)</strong></td>
+    <td>Solo delivery of working data tools end-to-end: schema design through API through UI, without a large team. The entire data layer is own work; frontend is AI-assisted against own API and data model. Most differentiated role in this profile — read this evidence first.</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/projects/inventory-infrastructure">Inventory Infrastructure (full platform overview)</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/wlm-react">WLM React App</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html">Node.js REST API router</a> ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a>
+    </td>
   </tr>
+
+  <tr>
+    <td><strong>Research Data Support / Lab Data Infrastructure</strong></td>
+    <td>
+      Not a data scientist or domain expert — an engineer who can organize messy research data, build reproducible pipelines, improve ad hoc workflows, and deliver dashboards for research teams.
+      The profile: labs running on fragile CSV exports, manual REDCap downloads, spreadsheet merges, no reproducible ETL. R is the lingua franca in academic research; SQL and schema design are rare in that environment.
+      Second most differentiated role in this profile.
+    </td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (binary-format wrangling, idempotent load — directly analogous to cleaning messy research data exports) ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (API integration + deduplication without a stable primary key) ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (joining heterogeneous sources in R) ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> (R Shiny — the standard research lab reporting tool) ·
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (reproducible transformation layer on messy source data) ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> (schema design from scratch)
+    </td>
+  </tr>
+
   <tr>
     <td><strong>Data Analyst — Restaurant / Hospitality</strong></td>
-    <td>95</td>
-    <td>Senior</td>
-    <td>Designed the entire data system for a multi-location restaurant group. Knows Aloha POS, R365, OpenTable, inventory math, purchasing, labor data inside and out. Nobody else has this combination.</td>
-    <td>Minimal — this is the highest-fit role that exists</td>
+    <td>POS data handling, inventory math, multi-system reporting, deep operational domain knowledge</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> (the core inventory math) ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator: Aloha + OpenTable + R365</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> ·
+      <a href="https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/">Restaurant Analytics dashboard</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture overview</a>
+    </td>
   </tr>
+
+  <tr>
+    <td><strong>Hospitality Tech — Data / Platform</strong></td>
+    <td>Deep operator domain knowledge, data platform design, POS/ERP integration, full-stack data tooling. Target companies: NCR/Voyix, Toast, R365, SevenRooms, Lightspeed, Olo, Revel.</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/projects/inventory-infrastructure">Inventory Infrastructure (full platform)</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html">Node.js REST API router</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a>
+    </td>
+  </tr>
+
+  <tr>
+    <td><strong>Data Analyst — Operations / Business</strong></td>
+    <td>SQL, multi-source reporting, operational KPIs, stakeholder dashboards, data wrangling from varied sources</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source restaurant aggregator</a> ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> ·
+      <a href="https://martindonovan.shinyapps.io/PurchaseDetailsReport/">Purchase Details Report</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a>
+    </td>
+  </tr>
+
   <tr>
     <td><strong>Reporting Analyst / SQL Analyst</strong></td>
-    <td>87</td>
-    <td>Mid–Senior</td>
-    <td>Strong SQL, CTEs, stored functions, reporting in R/Shiny, multi-table joins, date-range analysis</td>
-    <td>No Tableau/PBI; BI tool preference may be a filter at some orgs</td>
+    <td>Complex SQL, CTEs, window functions, stored procedures, period-over-period analysis, structured reporting</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> (CTE chain, window functions, multi-table joins) ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (SQL-heavy R joins) ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> ·
+      <a href="https://martindonovan.shinyapps.io/PurchaseDetailsReport/">Purchase Details Report</a>
+    </td>
   </tr>
-  <tr>
-    <td><strong>Hospitality Tech — Data / Platform Roles</strong></td>
-    <td>92</td>
-    <td>Mid–Senior</td>
-    <td>Domain moat: built the full data platform for a real restaurant group. Understands operator pain points. Full stack (schema → API → dashboard). Target companies: NCR/Voyix, Toast, R365, SevenRooms, Lightspeed, Olo, Revel.</td>
-    <td>Python; would need ramp-up on company's specific tech stack</td>
-  </tr>
+
   <tr>
     <td><strong>Research Data Analyst (Academic / Medical)</strong></td>
-    <td>80</td>
-    <td>Mid</td>
-    <td>Strong SQL, R (standard in academic biostatistics), ETL from messy sources, dashboard development. R is the lingua franca in academic research settings — this is an underappreciated advantage.</td>
-    <td>No clinical research domain knowledge, no CITI/IRB/HIPAA experience, no REDCap (all learnable)</td>
+    <td>R (standard in academic biostatistics), SQL, messy-data ETL from heterogeneous sources, reproducible pipelines, interactive dashboards for research teams</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (complex binary-format wrangling — analogous to clinical data exports) ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (API ingestion + deduplication without a clean primary key) ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (multi-system join in R) ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> (R Shiny) ·
+      <a href="https://martindonovan.shinyapps.io/PurchaseDetailsReport/">Purchase Details Report</a> (R Shiny)
+    </td>
   </tr>
+
   <tr>
     <td><strong>Analytics Engineer</strong></td>
-    <td>78</td>
-    <td>Mid</td>
-    <td>Strong SQL, dbt in active learning with a real demo project, data modeling experience, transformation logic</td>
-    <td>dbt not yet in production, no modern warehouse (Snowflake/BigQuery/Redshift), no Airflow</td>
+    <td>dbt, SQL transformation layers, raw/staging/mart patterns, lineage, column-level testing, data modeling</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python ingestion → raw schema → dbt staging → dbt marts → Node.js API) ·
+      <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> (transformation logic — same business rules as the dbt COGS model) ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> (data modeling depth)
+    </td>
   </tr>
+
   <tr>
     <td><strong>BI Developer / BI Analyst</strong></td>
-    <td>76</td>
-    <td>Mid</td>
-    <td>Has built production dashboards in R Shiny (functionally equivalent to Tableau). Dashboard design, multi-source joins, KPI definition, stakeholder delivery.</td>
-    <td>No Tableau, Power BI, or Looker. Some hiring managers treat this as a hard filter.</td>
+    <td>Dashboard development, multi-source data joins, KPI definition, stakeholder delivery. Note: primary tool here is R Shiny — not Tableau or Power BI.</td>
+    <td>
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> ·
+      <a href="https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/">Restaurant Analytics dashboard</a> ·
+      <a href="https://martindonovan.shinyapps.io/PurchaseDetailsReport/">Purchase Details Report</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (data layer feeding the dashboards)
+    </td>
   </tr>
-</table>
 
-<h3>⚠️ Moderate Fit (50–74) — Hireable with Ramp-Up</h3>
-<table>
-  <tr><th>Role</th><th>Score</th><th>Level</th><th>Strengths</th><th>Gaps</th></tr>
-  <tr>
-    <td><strong>Data Engineer — Junior/Mid</strong></td>
-    <td>62</td>
-    <td>Junior–Mid</td>
-    <td>Real ETL pipelines (Aloha DBF, R365 OData, fintech CSV), schema design, PostgreSQL, dbt learning, AWS (RDS, EC2, S3, Terraform)</td>
-    <td>No Python at scale, no Spark/Databricks, no Airflow/Prefect, no Glue/Fivetran. These are the job requirements at most DE roles.</td>
-  </tr>
-  <tr>
-    <td><strong>Clinical Data Manager / Research Data Manager</strong></td>
-    <td>68</td>
-    <td>Junior–Mid</td>
-    <td>Database design, ETL, data quality thinking, R, SQL. Transferable data management skills.</td>
-    <td>No REDCap, no clinical trial experience, no CDISC/HL7 standards, no CITI training</td>
-  </tr>
-  <tr>
-    <td><strong>Database Developer / SQL Developer</strong></td>
-    <td>70</td>
-    <td>Mid</td>
-    <td>Schema design, stored functions, complex queries, multi-tenant architecture, performance awareness</td>
-    <td>No replication/HA experience, no query tuning at large scale, no DBA tooling (pg_activity, explain plan optimization at enterprise scale)</td>
-  </tr>
   <tr>
     <td><strong>ETL / Data Integration Developer</strong></td>
-    <td>65</td>
-    <td>Mid</td>
-    <td>Multiple real ETL pipelines from diverse source formats. Idempotent load patterns, identity resolution, format normalization.</td>
-    <td>All ETL is in R + PostgreSQL; no SSIS, Talend, Informatica, ADF, or Python-based pipelines that most job postings specify</td>
+    <td>Multi-format source ingestion, idempotent load patterns, API connectors, data normalization and identity resolution</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (binary DBF, multi-file joins, idempotent by design) ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (paginated API, dedup without stable key) ·
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python ingestion layer: Aloha DBF + R365 JSON → Parquet → PostgreSQL raw schema) ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a>
+    </td>
   </tr>
-  <tr>
-    <td><strong>Backend Developer / API Developer</strong></td>
-    <td>65</td>
-    <td>Mid</td>
-    <td>Node.js/Express REST API, JWT auth, PostgreSQL, multi-tenant design, 14+ endpoints in production</td>
-    <td>Explicitly not a career target; Node-only (no Go/Java/Python backend). Would undermarket data skills.</td>
-  </tr>
-  <tr>
-    <td><strong>Product Analyst</strong></td>
-    <td>60</td>
-    <td>Junior–Mid</td>
-    <td>SQL, operational metrics, KPI thinking, dashboard experience</td>
-    <td>No product/funnel analytics experience (no GA4, Amplitude, Mixpanel, A/B testing framework)</td>
-  </tr>
-  <tr>
-    <td><strong>Marketing Analytics Analyst</strong></td>
-    <td>55</td>
-    <td>Junior–Mid</td>
-    <td>SQL, data wrangling, reporting skills transfer</td>
-    <td>No marketing domain (no GA4, paid media data, attribution modeling, campaign analysis)</td>
-  </tr>
-  <tr>
-    <td><strong>Finance / FP&amp;A Analyst (with data focus)</strong></td>
-    <td>58</td>
-    <td>Junior–Mid</td>
-    <td>Financial data pipelines, GL transaction analysis, cost of sales calculations, purchasing workflows</td>
-    <td>No formal accounting/finance background, no Excel-heavy financial modeling, no Adaptive/Anaplan/NetSuite experience</td>
-  </tr>
-</table>
 
-<h3>❌ Weak Fit (&lt;50) — Not Recommended Without Significant Reskilling</h3>
-<table>
-  <tr><th>Role</th><th>Score</th><th>Notes</th></tr>
   <tr>
-    <td><strong>Data Scientist / ML Engineer</strong></td>
-    <td>28</td>
-    <td>Analytics ≠ ML/statistics. No Python, no sklearn/PyTorch/TensorFlow, no model training, no statistical inference background at graduate level.</td>
+    <td><strong>Database Developer / SQL Developer</strong></td>
+    <td>Schema design, stored procedures/functions, complex queries, multi-tenant patterns</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> (full normalized schema, multi-tenant design) ·
+      <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a>
+    </td>
   </tr>
+
   <tr>
-    <td><strong>Biostatistician</strong></td>
-    <td>20</td>
-    <td>Would require a graduate degree in biostatistics. R experience helps but the statistical methodology gap is fundamental.</td>
+    <td><strong>Data Engineer — Junior / Mid</strong></td>
+    <td>ETL pipelines, schema design, Python, dbt, cloud infrastructure, orchestration. Note: ETL here is in R; dbt work is a demo project, not production; no Airflow/Prefect.</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python + dbt + Parquet + S3 + Terraform + EC2) ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a> (AWS stack: RDS, EC2, S3)
+    </td>
   </tr>
+
   <tr>
-    <td><strong>Full-Stack Developer</strong></td>
-    <td>50</td>
-    <td>Technically capable but explicitly not pursuing; would undermarket data skills and domain expertise.</td>
+    <td><strong>Clinical / Research Data Manager</strong></td>
+    <td>Database design, ETL, data quality, R, SQL. No REDCap, CDISC/HL7, or clinical trial experience — evaluate whether those are hard requirements for the specific role.</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (data quality, idempotent load) ·
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (API dedup, normalization) ·
+      <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> (R Shiny)
+    </td>
   </tr>
+
   <tr>
-    <td><strong>DBA / Database Administrator</strong></td>
-    <td>45</td>
-    <td>Designs schemas and writes stored functions but no experience with replication, failover, backup management, performance tuning at enterprise scale, or DBA tooling.</td>
+    <td><strong>Finance / Operational Analyst (data-focused)</strong></td>
+    <td>GL transaction analysis, COGS calculations, purchasing workflows, period-over-period financial reporting, multi-source financial data joins</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (GL transaction header-to-detail join, parent account derivation, cost of sales data) ·
+      <a href="https://martindonovan.shinyapps.io/PurchaseDetailsReport/">Purchase Details Report</a> (vendor invoice tracking, period cost totals) ·
+      <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (R365 GL + POS sales joins) ·
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (wine COGS formula: AP invoices − credit memos + inventory adjustment / wine sales, verified against R365 reports)
+    </td>
   </tr>
+
   <tr>
-    <td><strong>Data Platform Engineer / Staff DE</strong></td>
-    <td>35</td>
-    <td>Senior DE roles require Python + multiple cloud pipeline tools + experience running pipelines at scale. Not there yet without significant upskilling.</td>
+    <td><strong>Data Infrastructure Engineer (Small Org)</strong></td>
+    <td>Own the full data layer of a small-to-mid org: schema design, ETL pipelines, cloud infrastructure, REST API, deployed and maintained in production without a large team</td>
+    <td>
+      <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a> (AWS RDS + EC2 + S3, multi-tenant, production) ·
+      <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Terraform, EC2 deployment, S3 data lake) ·
+      <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
+      <a href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html">Node.js REST API router</a> ·
+      <a href="https://portfolio.martindonovan.net/projects/inventory-infrastructure">Inventory Infrastructure</a>
+    </td>
   </tr>
+
 </table>
 </div>
 
@@ -921,16 +989,149 @@
     }
   ],
 
-  "role_fit": [
-    { "role": "Data Analyst — Restaurant / Hospitality",  "score": 0.95, "level": "senior" },
-    { "role": "Hospitality Tech — Data / Platform",       "score": 0.92, "level": "mid_senior" },
-    { "role": "Data Analyst — Operations / Business",     "score": 0.88, "level": "mid_senior" },
-    { "role": "Reporting Analyst / SQL Analyst",          "score": 0.87, "level": "mid_senior" },
-    { "role": "Research Data Analyst (Academic/Medical)", "score": 0.80, "level": "mid" },
-    { "role": "Analytics Engineer",                       "score": 0.78, "level": "mid" },
-    { "role": "BI Developer / BI Analyst",                "score": 0.76, "level": "mid" },
-    { "role": "Data Engineer — Junior/Mid",               "score": 0.62, "level": "junior_mid" },
-    { "role": "Data Scientist / ML Engineer",             "score": 0.28, "level": "not_recommended" }
+  "role_evidence": [
+    {
+      "role": "Data Analyst — Restaurant / Hospitality",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/"
+      ]
+    },
+    {
+      "role": "Hospitality Tech — Data / Platform",
+      "evidence": [
+        "https://portfolio.martindonovan.net/projects/inventory-infrastructure",
+        "https://portfolio.martindonovan.net/projects/data-architecture",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html",
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html"
+      ]
+    },
+    {
+      "role": "Data Analyst — Operations / Business",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://martindonovan.shinyapps.io/PurchaseDetailsReport/",
+        "https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html"
+      ]
+    },
+    {
+      "role": "Reporting Analyst / SQL Analyst",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://martindonovan.shinyapps.io/PurchaseDetailsReport/"
+      ]
+    },
+    {
+      "role": "Research Data Analyst (Academic / Medical)",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://martindonovan.shinyapps.io/PurchaseDetailsReport/"
+      ]
+    },
+    {
+      "role": "Analytics Engineer",
+      "evidence": [
+        "https://portfolio.martindonovan.net/projects/de-pipeline",
+        "https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html"
+      ]
+    },
+    {
+      "role": "BI Developer / BI Analyst",
+      "note": "Primary tool is R Shiny — not Tableau or Power BI",
+      "evidence": [
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://martindonovan.shinyapps.io/RestaurantAnalyticsDashboard/",
+        "https://martindonovan.shinyapps.io/PurchaseDetailsReport/",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html"
+      ]
+    },
+    {
+      "role": "ETL / Data Integration Developer",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://portfolio.martindonovan.net/projects/de-pipeline",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html"
+      ]
+    },
+    {
+      "role": "Database Developer / SQL Developer",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html",
+        "https://portfolio.martindonovan.net/projects/data-architecture"
+      ]
+    },
+    {
+      "role": "Data Engineer — Junior / Mid",
+      "note": "ETL is in R, dbt is demo-stage (not production), no Airflow/Prefect",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://portfolio.martindonovan.net/projects/de-pipeline",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/projects/data-architecture"
+      ]
+    },
+    {
+      "role": "Internal Tool Developer (Small Team / Research Lab)",
+      "note": "Most distinctive positioning — full data layer (schema, ETL, API, dashboards) delivered solo; AI-assisted frontend against own API",
+      "evidence": [
+        "https://portfolio.martindonovan.net/projects/inventory-infrastructure",
+        "https://portfolio.martindonovan.net/projects/wlm-react",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://portfolio.martindonovan.net/projects/data-architecture"
+      ]
+    },
+    {
+      "role": "Research Data Support / Lab Data Infrastructure",
+      "note": "Helps researchers organize messy data, build reproducible pipelines, and improve ad hoc workflows — not a domain expert or data scientist",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://martindonovan.shinyapps.io/InventoryAnalysis/",
+        "https://portfolio.martindonovan.net/projects/de-pipeline",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html"
+      ]
+    },
+    {
+      "role": "Finance / Operational Analyst (data-focused)",
+      "evidence": [
+        "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
+        "https://martindonovan.shinyapps.io/PurchaseDetailsReport/",
+        "https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html",
+        "https://portfolio.martindonovan.net/projects/de-pipeline"
+      ]
+    },
+    {
+      "role": "Data Infrastructure Engineer (Small Org)",
+      "evidence": [
+        "https://portfolio.martindonovan.net/projects/data-architecture",
+        "https://portfolio.martindonovan.net/projects/de-pipeline",
+        "https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html",
+        "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
+        "https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html",
+        "https://portfolio.martindonovan.net/projects/inventory-infrastructure"
+      ]
+    }
   ],
 
   "collaboration_modes": [
