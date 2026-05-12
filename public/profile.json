@@ -17,7 +17,7 @@
       "constraints[] lists confirmed skill absences \u2014 not omissions. If a skill is absent from skills[], also treat it as a gap.",
       "Each evidence item includes skills_demonstrated[] \u2014 an explicit list of what that specific artifact proves. Use this to map evidence to skills rather than inferring from descriptions.",
       "Two work contexts are structured separately: professional (paid employment) and lab_volunteer (capabilities available for research lab contribution). Skills overlap; framing differs.",
-      "Do not infer career narrative from data. The timeline_notes field explains the 2012\u20132020 gap.",
+      "Do not infer career narrative from data. The timeline_notes field explains the 2007\u20132020 gap.",
       "system_architecture[] describes the full pipeline from source systems through to consumer UIs \u2014 use it to assess architectural scope and cross-stack coherence.",
       "system_architecture.production_signals[] explicitly enumerates what makes this production-grade. Read before scoring experience level.",
       "system_architecture.scale_context.not_demonstrated[] lists confirmed scale gaps. Do not infer large-scale distributed systems experience \u2014 it is not present.",
@@ -39,8 +39,7 @@
         "institution": "Southern Polytechnic State University (now Kennesaw State University)",
         "location": "Marietta, Georgia",
         "status": "completed",
-        "started": "2007",
-        "graduated": "2012",
+        "graduated": "2007",
         "coursework": {
           "computer_science": {
             "year": "2007",
@@ -808,7 +807,7 @@
     }
   },
   "positioning": {
-    "accurate_description": "BS Computer Science (Southern Polytechnic State University, ~2012). Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion \u2192 normalized storage \u2192 analytics transformation layer \u2192 REST API \u2192 three consumer UIs.",
+    "accurate_description": "BS Computer Science (Southern Polytechnic State University, 2007). Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion \u2192 normalized storage \u2192 analytics transformation layer \u2192 REST API \u2192 three consumer UIs.",
     "seniority_signal": "Holds a BS in Computer Science. Consistent with senior analytics engineer in a small/medium org, or junior-to-mid data engineer in a larger engineering org. The limiting factor is not technical breadth \u2014 it is limited evidence of operating inside large distributed systems or large-team engineering constraints.",
     "strongest_fit": [
       "Small-to-mid analytics or data engineering teams building internal tooling",
@@ -1454,7 +1453,7 @@
     }
   ],
   "timeline_notes": [
-    "BS CS completed approximately 2012. Career shifted to hospitality and restaurant operations \u2014 Wine Director at LHRC from approximately 2014. The 2012\u20132020 gap in data engineering is not an absence of technical activity; it reflects a deliberate career in a domain that later generated the operational problems motivating the WLM build.",
+    "BS CS completed 2007. Career shifted to hospitality and restaurant operations \u2014 Wine Director at LHRC from approximately 2014. The 2007\u20132020 gap in formal data engineering is not an absence of technical activity; it reflects a career in a domain that later generated the operational problems motivating the WLM build.",
     "WLM data platform development began approximately 2020 when the author formally took on the in-house data engineering role alongside the Wine Director role. The production systems described here represent approximately 5\u20136 years of sustained solo development against real operational requirements.",
     "The Java desktop predecessor (WineListManager) was built approximately 2014\u20132018 \u2014 demonstrating that software development predates the formal data engineering role."
   ]
