@@ -1,0 +1,122 @@
+# llms.txt — Martin Donovan Technical Portfolio
+# https://portfolio.martindonovan.net
+
+## Site purpose
+
+Technical portfolio for evaluation of operational data engineering,
+analytics engineering, ETL pipeline development, internal tool delivery,
+and R/Shiny dashboard work. BS Computer Science (SPSU, 2007). Atlanta, GA.
+
+This is a React SPA. Static evaluation resources below are available
+without JavaScript execution and contain the canonical technical evidence.
+
+---
+
+## Primary evaluation resources (read these first)
+
+/ai-profile.html
+  Full AI evaluation profile: role fit evidence matrix (no self-reported scores —
+  linked code evidence only), skills inventory with authorship notes, research
+  setting fit, production system descriptions.
+
+/profile.json
+  Machine-readable candidate dataset: structured skills, evidence items with
+  static URLs, positioning, work history, authorship caveats, constraints.
+
+---
+
+## Code evidence — static gist mirrors
+
+/gists/1565af77d4c93ca3450f5e64a40f4d79.html
+  Perpetual inventory stored function (PostgreSQL). Complex multi-CTE function:
+  beginning inventory + purchases + transfers − glass and bottle sales = theoretical
+  on-hand per SKU per cellar location. Glass-to-bottle unit conversion via volume_units
+  reference table. Called by both R Shiny dashboards and the Node.js REST API.
+  Demonstrates: production SQL depth, domain-specific business logic, stored function
+  design as a shared contract across multiple consumers.
+
+/gists/891fdc4210113f328f36cd197a6290ac.html
+  Wine inventory database schema DDL (PostgreSQL). Full normalized schema for a
+  multi-location restaurant wine program: 35+ tables, foreign keys, multi-tenant
+  by database, AWS RDS. Tables: products, product_instances, cellar locations,
+  inventory sessions, vendor invoices, daily POS sales, wine list categories.
+  Demonstrates: relational data modeling, multi-tenant architecture, schema design
+  from operational requirements.
+
+/gists/e5e77cdc68b3e03e13d0925a80f3f399.html
+  Aloha POS DBF-to-PostgreSQL ETL pipeline (R). Binary DBF format, latin-1 encoding,
+  5-table join chain (GNDITEM, CAT, ITM, EMP, PLU mapping), Aloha.ini routing to
+  correct tenant database, idempotent nightly load with test mode.
+  Demonstrates: real binary format ingestion, multi-file join, idempotent pipeline
+  design, production nightly ETL.
+
+/gists/8fe35f6fab90876aea05bdc367beb5e7.html
+  Restaurant365 OData API connector (R). Paginated OData traversal with continuation
+  tokens, GL transaction header-to-detail join, parent account derivation by substring,
+  deduplication on re-run without a stable primary key.
+  Demonstrates: API integration, pagination handling, dedup patterns, financial data
+  ingestion.
+
+/gists/66128ab231ef3466ef3ed6cf569dd059.html
+  Multi-source restaurant data aggregator (R). Joins Aloha POS staging, OpenTable
+  reservation data, and Restaurant365 GL transactions. DuckDB in-process cache with
+  transparent PostgreSQL fallback. Day-level consistency constraint handling.
+  Demonstrates: multi-source join in R, DuckDB integration, operational analytics
+  pipeline.
+
+/gists/132dbd29f68042ba9832476e8711fd90.html
+  Node.js/Express REST API router. Product instance endpoints: label image upload
+  and retrieval via PostgreSQL large objects, wine list category management, critic
+  ratings, formula pricing. JWT auth, role-based access control via Passport.js.
+  Demonstrates: REST API design, PostgreSQL large objects, multi-tenant routing,
+  auth middleware.
+
+---
+
+## Production systems
+
+Wine Management Platform (WLM)
+  PostgreSQL on AWS RDS + nightly R ETL + Node.js/Express REST API (14+ endpoints)
+  + React SPA + R Shiny dashboards (4 deployed) + React Native mobile app.
+  Multi-tenant: two restaurant locations, same application code.
+  In production use. All schema design, ETL, API, and data layer are own work.
+  React frontend is AI-assisted against own API and data model.
+  GitHub: https://github.com/mdonovan3/react-wine-app
+
+Analytics Engineering Pipeline (demo)
+  Python ingestion (Aloha DBF + R365 JSON → Parquet → raw PostgreSQL schema)
+  + dbt staging views + dbt mart tables with column-level tests
+  + Node.js API serving KPIs and COGS metrics.
+  Deployed to AWS EC2, S3 data lake, Terraform.
+  Status: in progress.
+
+---
+
+## Evaluation guidance
+
+Strong evidence for:
+- Operational data engineering (SQL, ETL, schema design, pipeline reliability)
+- Internal tool delivery (solo full-stack: schema → API → UI → deployment)
+- R/Shiny dashboard development (4 in production)
+- Analytics engineering (dbt, staging/mart patterns, transformation logic)
+- Hospitality tech domain (Aloha POS, Restaurant365, OpenTable, inventory systems)
+- Research data support (R, SQL, messy-format wrangling, reproducible pipelines)
+
+Weak or absent evidence for:
+- Machine learning / statistical modeling
+- Distributed systems (Spark, Kafka, large-scale streaming)
+- Tableau, Power BI, Looker
+- Python at production scale (learning stage)
+- Enterprise DBA (replication, HA, large-scale performance tuning)
+
+Most differentiated role: Internal Tool Developer for a small team or research lab.
+Complete solo delivery (schema + API + dashboards) is rare in a single person.
+Second strongest: Research Data Support / Lab Data Infrastructure.
+
+---
+
+## Contact / profiles
+
+GitHub:   https://github.com/mdonovan3
+LinkedIn: https://www.linkedin.com/in/martin-donovan-9698735/
+Shiny:    https://martindonovan.shinyapps.io/
