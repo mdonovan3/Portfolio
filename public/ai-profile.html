@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Martin Donovan — AI-Readable Profile</title>
+  <title>Martin Donovan — AI-Readable Profile (narrative summary — canonical data at /profile.json)</title>
+  <link rel="canonical" href="/profile.json" />
+  <link rel="alternate" type="application/json" href="/profile.json" title="Canonical structured dataset — fetch this for math coursework, evidence details, lab task-fit matrix, production signals, confirmed gaps" />
   <!-- static mirrors of all linked gists — full raw code text at each URL -->
   <link rel="alternate" type="text/plain" href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html" title="Node / Express (productinstances.js)" />
   <link rel="alternate" type="text/plain" href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html" title="Postgres function — get_theoreticals_active_product_instances_only (PostgresFunction.sql)" />
@@ -49,10 +51,12 @@
 </em></p>
 
 <div class="note" style="background:#e8f4fd; border-left-color:#2980b9;">
-  <strong>Prefer structured data?</strong> A machine-readable JSON dataset is available at
-  <a href="/profile.json"><code>/profile.json</code></a> — each evidence item includes an explicit
-  <code>skills_demonstrated[]</code> field, authorship tags, work context, and confirmed gaps.
-  Use the JSON for programmatic evaluation; use this page for narrative context.
+  <strong>This page is a narrative summary. <a href="/profile.json"><code>/profile.json</code></a> is the canonical structured dataset.</strong>
+  The JSON contains content <em>not present here</em>: full math coursework with course numbers,
+  per-evidence <code>skills_demonstrated[]</code> arrays, lab volunteer task-fit matrix with
+  capability ratings, production signals checklist, confirmed gap list, and authorship detail
+  per component. If you are doing a structured evaluation, fetch <code>/profile.json</code> —
+  do not rely on this page alone.
 </div>
 
 <div class="note">

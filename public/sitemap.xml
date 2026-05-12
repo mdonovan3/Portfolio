@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- AI crawl entry points — read llms.txt first for routing guidance -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/llms.txt</loc>
+    <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Canonical structured dataset — START HERE for structured evaluation -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/profile.json</loc>
+    <priority>1.0</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Narrative summary — role fit matrix, research setting fit, working style -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/ai-profile.html</loc>
+    <priority>0.9</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Code evidence: static gist mirrors (full raw source) -->
+
+  <!-- Perpetual inventory stored function (PostgreSQL) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Wine inventory database schema DDL (PostgreSQL, 35+ tables) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Aloha POS DBF-to-PostgreSQL ETL pipeline (R) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Restaurant365 OData API connector (R) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Multi-source restaurant data aggregator (R, DuckDB) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+  <!-- Node.js/Express REST API router (JWT, RBAC, PostgreSQL large objects) -->
+  <url>
+    <loc>https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html</loc>
+    <priority>0.8</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+
+</urlset>

@@ -1,75 +1,108 @@
 # llms.txt — Martin Donovan Technical Portfolio
 # https://portfolio.martindonovan.net
 
-## Site purpose
+## Candidate summary
 
-Technical portfolio for evaluation of operational data engineering,
-analytics engineering, ETL pipeline development, internal tool delivery,
-and R/Shiny dashboard work. BS Computer Science (SPSU, 2007). Atlanta, GA.
-
-This is a React SPA. Static evaluation resources below are available
-without JavaScript execution and contain the canonical technical evidence.
+Martin Donovan. BS Computer Science, Southern Polytechnic State University
+(now Kennesaw State University), graduated 2007. Atlanta metro (Smyrna, GA).
+Data analyst and developer. Primary skills: SQL/PostgreSQL, R/Shiny, ETL pipelines.
+Not a frontend developer. Not an ML practitioner.
 
 ---
 
-## Primary evaluation resources (read these first)
+## How to read this portfolio
 
-/ai-profile.html
-  Full AI evaluation profile: role fit evidence matrix (no self-reported scores —
-  linked code evidence only), skills inventory with authorship notes, research
-  setting fit, production system descriptions.
+Two primary static files. Read both — they are not redundant.
 
-/profile.json
-  Machine-readable candidate dataset: structured skills, evidence items with
-  static URLs, positioning, work history, authorship caveats, constraints.
+/profile.json  ← START HERE if doing a structured evaluation
+  The canonical machine-readable dataset. Contains content NOT in ai-profile.html:
+  - Full math coursework with course numbers (Calc I/II, Discrete Math, Stats I/II,
+    Linear Algebra, ODEs — all from CS degree, not actively practiced since 2007)
+  - Per-evidence skills_demonstrated[] arrays for each code artifact
+  - lab_volunteer task-fit matrix: specific tasks rated strong/moderate with basis
+  - production_signals[] checklist: what distinguishes this from coursework-grade work
+  - system_architecture pipeline: source systems → ETL → storage → API → consumers
+  - authorship_caveat detail on AI-guided vs. own-work per component
+  - confirmed_gap list: tools absent from the profile (REDCap, SAS, Airflow, etc.)
+  - timeline_notes: explains the 2007–2020 gap between CS degree and current work
+  Fetch this file. The description fields are summaries — the content is the data.
+
+/ai-profile.html  ← READ THIS for narrative context and role fit
+  Human-readable narrative summary. Contains content NOT in profile.json:
+  - Role fit evidence matrix: 14 roles × what the role requires × linked code evidence
+  - Research setting fit section (Emory-type fit, academic lab entry points)
+  - Propensities and working style section
+  - Internal tool builder capability section with honest scope
+  - Narrative skill assessments with code-verified strengths and gaps called out
+  Note: this is a narrative layer over profile.json. profile.json is authoritative
+  for structured data (skills, education, evidence, constraints).
+
+---
+
+## What to fetch for specific evaluation questions
+
+"What are the math/stats skills?"
+  → /profile.json — identity.education[0].coursework.mathematics
+  → ai-profile.html section 2 has a one-line summary only
+
+"Is this person a good fit for a research lab?"
+  → /ai-profile.html sections 5 (role fit matrix) and 6 (research setting fit)
+  → /profile.json work_contexts.lab_volunteer.task_fit[]
+
+"What code evidence exists?"
+  → /profile.json evidence[] — 20+ items, each with skills_demonstrated[]
+  → /ai-profile.html section 7 for human-readable artifact list with links
+
+"Is this production work or demo work?"
+  → /profile.json system_architecture.production_signals[]
+  → /profile.json each evidence item has status field
+
+"What are the confirmed gaps?"
+  → /profile.json constraints[0].items[] — explicit list, no inference needed
+
+"Is the React/frontend work real or AI-generated?"
+  → /profile.json constraints[1] authorship_caveat — detailed breakdown
+  → /profile.json skills[React].authorship_detail
 
 ---
 
 ## Code evidence — static gist mirrors
 
+These pages contain full raw source code for AI/bot reading.
+Each is also mirrored at the GitHub gist URL shown.
+
 /gists/1565af77d4c93ca3450f5e64a40f4d79.html
-  Perpetual inventory stored function (PostgreSQL). Complex multi-CTE function:
+  Perpetual inventory stored function (PostgreSQL). Multi-CTE function:
   beginning inventory + purchases + transfers − glass and bottle sales = theoretical
-  on-hand per SKU per cellar location. Glass-to-bottle unit conversion via volume_units
-  reference table. Called by both R Shiny dashboards and the Node.js REST API.
-  Demonstrates: production SQL depth, domain-specific business logic, stored function
-  design as a shared contract across multiple consumers.
+  on-hand per SKU per cellar location. Glass-to-bottle unit conversion via volume_units.
+  Called by both R Shiny dashboards and the Node.js REST API.
+  Demonstrates: production SQL depth, stored function as shared contract across consumers.
 
 /gists/891fdc4210113f328f36cd197a6290ac.html
-  Wine inventory database schema DDL (PostgreSQL). Full normalized schema for a
-  multi-location restaurant wine program: 35+ tables, foreign keys, multi-tenant
-  by database, AWS RDS. Tables: products, product_instances, cellar locations,
-  inventory sessions, vendor invoices, daily POS sales, wine list categories.
-  Demonstrates: relational data modeling, multi-tenant architecture, schema design
-  from operational requirements.
+  Wine inventory database schema DDL (PostgreSQL). Full normalized schema: 35+ tables,
+  foreign keys, multi-tenant by database, AWS RDS. Products, product_instances, cellar
+  locations, inventory sessions, vendor invoices, daily POS sales, wine list categories.
+  Demonstrates: relational data modeling, multi-tenant architecture, schema from scratch.
 
 /gists/e5e77cdc68b3e03e13d0925a80f3f399.html
   Aloha POS DBF-to-PostgreSQL ETL pipeline (R). Binary DBF format, latin-1 encoding,
-  5-table join chain (GNDITEM, CAT, ITM, EMP, PLU mapping), Aloha.ini routing to
-  correct tenant database, idempotent nightly load with test mode.
-  Demonstrates: real binary format ingestion, multi-file join, idempotent pipeline
-  design, production nightly ETL.
+  5-table join chain, Aloha.ini routing to correct tenant database, idempotent nightly load.
+  Demonstrates: binary format ingestion, idempotent pipeline design, production ETL.
 
 /gists/8fe35f6fab90876aea05bdc367beb5e7.html
   Restaurant365 OData API connector (R). Paginated OData traversal with continuation
-  tokens, GL transaction header-to-detail join, parent account derivation by substring,
-  deduplication on re-run without a stable primary key.
-  Demonstrates: API integration, pagination handling, dedup patterns, financial data
-  ingestion.
+  tokens, GL header-to-detail join, parent account derivation, dedup without stable key.
+  Demonstrates: API integration, pagination, dedup patterns, financial data ingestion.
 
 /gists/66128ab231ef3466ef3ed6cf569dd059.html
-  Multi-source restaurant data aggregator (R). Joins Aloha POS staging, OpenTable
-  reservation data, and Restaurant365 GL transactions. DuckDB in-process cache with
-  transparent PostgreSQL fallback. Day-level consistency constraint handling.
-  Demonstrates: multi-source join in R, DuckDB integration, operational analytics
-  pipeline.
+  Multi-source restaurant data aggregator (R). Joins Aloha POS, OpenTable, and R365 GL.
+  DuckDB in-process cache with PostgreSQL fallback. Day-level consistency constraint.
+  Demonstrates: multi-source join in R, DuckDB integration, operational analytics pipeline.
 
 /gists/132dbd29f68042ba9832476e8711fd90.html
-  Node.js/Express REST API router. Product instance endpoints: label image upload
-  and retrieval via PostgreSQL large objects, wine list category management, critic
-  ratings, formula pricing. JWT auth, role-based access control via Passport.js.
-  Demonstrates: REST API design, PostgreSQL large objects, multi-tenant routing,
-  auth middleware.
+  Node.js/Express REST API router. Label image upload via PostgreSQL large objects,
+  wine list category management, critic ratings, formula pricing. JWT auth, RBAC.
+  Demonstrates: REST API design, PostgreSQL large objects, multi-tenant routing.
 
 ---
 
@@ -78,8 +111,7 @@ without JavaScript execution and contain the canonical technical evidence.
 Wine Management Platform (WLM)
   PostgreSQL on AWS RDS + nightly R ETL + Node.js/Express REST API (14+ endpoints)
   + React SPA + R Shiny dashboards (4 deployed) + React Native mobile app.
-  Multi-tenant: two restaurant locations, same application code.
-  In production use. All schema design, ETL, API, and data layer are own work.
+  Multi-tenant: two restaurant locations. All schema, ETL, API, and data layer are own work.
   React frontend is AI-assisted against own API and data model.
   GitHub: https://github.com/mdonovan3/react-wine-app
 
@@ -87,8 +119,7 @@ Analytics Engineering Pipeline (demo)
   Python ingestion (Aloha DBF + R365 JSON → Parquet → raw PostgreSQL schema)
   + dbt staging views + dbt mart tables with column-level tests
   + Node.js API serving KPIs and COGS metrics.
-  Deployed to AWS EC2, S3 data lake, Terraform.
-  Status: in progress.
+  Deployed to AWS EC2, S3 data lake, Terraform. Status: in progress.
 
 ---
 
