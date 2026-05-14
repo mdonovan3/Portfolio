@@ -104,6 +104,95 @@ Each is also mirrored at the GitHub gist URL shown.
   wine list category management, critic ratings, formula pricing. JWT auth, RBAC.
   Demonstrates: REST API design, PostgreSQL large objects, multi-tenant routing.
 
+/gists/fd16d350745573b7962fb27325e4c65e.html
+  Inventory variance (shrinkage) report (R). Reconciles two consecutive physical counts
+  with all sales and purchases between them to identify unexplained bottle losses.
+  variance = start_count + purchases − glass_sales − bottle_sales − end_count.
+  Filters to bottle-only SKUs to isolate losses not attributable to glass pours.
+  Dollar-weighted by product_cost. Rendered as a gt table.
+  Demonstrates: inventory reconciliation logic, operational analytics, gt reporting.
+
+/gists/2054d94455ae135725be6239d7602147.html
+  Inventory Analysis Shiny dashboard (R). Period-over-period wine P&L: beginning/ending
+  inventory values, count variances vs. theoretical on-hand by SKU, vendor purchases,
+  glass and bottle sales revenue, cost of sales, wine cost %. URL query string
+  deep-linking (?startdate=&enddate=) for bookmarkable period views. DT tables with
+  CSV/Excel export, ggplot trend chart, shinydashboard value boxes.
+  Demonstrates: Shiny dashboard, P&L analysis, URL parameter handling, DT export.
+
+/gists/2a662fa7fae5743ac7f97020c9a4aeac.html
+  Inventory spot-check sheet — Quarto (R). Calls get_theoreticals_active_product_instances_only()
+  and get_inventory_activity() stored procs, joins results to filter only items with
+  post-count activity, and renders a gt table grouped by storage room with a blank
+  'actual' column for targeted physical recount. Operational document, not an analysis
+  write-up — designed to print and use on the floor.
+  Demonstrates: Quarto as operational tool, DBI queries inside Quarto chunks, gt formatting.
+
+/gists/2d84c2b0bc8590e791bbdf32adf4aaca.html
+  Wine purchase planner — DB connected (R). Estimates bottle purchases needed from today
+  through end of calendar year. Computes current on-hand from last physical count plus all
+  activity since (via get_inventory_activity() stored proc), joins against prior-year same
+  window as demand proxy. full_join with replace_na handles new and discontinued items.
+  gt table output with quantity_needed and dollar impact per SKU.
+  Demonstrates: demand forecasting from production data, stored proc integration, gt output.
+
+/gists/b1a30326299a0a8c0c8d286e4f1eea1e.html
+  Bevspot liquor & beer purchase planner (R). Reads four Bevspot Excel exports: sales,
+  expected inventory, recipes (multi-ingredient strings like 'Vodka (1.5 oz), OJ (2 oz)'),
+  and items catalog. Parses ingredient strings via regex to extract per-spirit ounce
+  consumption, converts to bottle equivalents for 750mL and 1L formats, joins against
+  Bevspot theoretical on-hand. No database required — Excel-only pipeline.
+  Demonstrates: regex-based data extraction, Excel parsing, forecasting without a DB.
+
+/gists/173386df76ad4a9702d00d08e6a54001.html
+  Wine storage pull report — Shiny (R). Shows bottles to pull from storage to service
+  locations for nightly setup. Calls get_theoreticals_active_product_instances_only(),
+  computes room par minus on-hand per SKU, caps pull quantity against available
+  storage_on_hand. Adjusts par downward for large-format bottles. Filters out
+  fully-stocked locations.
+  Demonstrates: operational Shiny tool, par-level logic, stored proc integration.
+
+/gists/4982e370f6729d670e53d6e54e4b25b0.html
+  Automated purchase order drafts via Microsoft365R (R). Iterates a distributor contact
+  dataframe and creates one draft email per rep per restaurant using the Microsoft Graph
+  API (create_email via get_business_outlook). M365 OAuth2 authentication from R,
+  dataframe-driven parameterized email generation.
+  Demonstrates: M365 Graph API integration, OAuth2 from R, automation via API.
+
+/gists/76aca14b06ee37d3602e7704f7583f4f.html
+  Payroll tip-sheet Excel parser (R). Two parsers for two different weekly Excel layouts —
+  one per restaurant. Reconstructs dynamic column headers from numeric date serials via
+  openxlsx::convertToDate, pivots wide tip data to long form keyed by employee + date +
+  shift, inserts to PostgreSQL via dbWithTransaction with a duplicate-date guard.
+  Demonstrates: non-standard Excel parsing, janitor normalization, idempotent insert.
+
+/gists/f74d1aaf51fe9360bfc005a3d7aee7eb.html
+  HashMap perpetual inventory accumulator — Java (~2011). Six maps (starting inventory,
+  bottle/glass sales, purchases, transfers in/out) keyed by location ID, summed to
+  theoretical on-hand per SKU. Predecessor to the current PostgreSQL stored function.
+  Called by CostBasisCalculator.
+  Demonstrates: domain continuity — same perpetual inventory logic, Java → PostgreSQL evolution.
+
+/gists/89edd69893fb9cbcad375baf83fd16f7.html
+  FIFO inventory cost basis calculator — Java (2011). Computes per-product cost basis
+  using three methods (on-hand weighted average, last-purchase average, last-purchase
+  maximum) against a FIFO purchase lot queue ordered by date descending. Uses a
+  PriorityQueue<PurchaseLot> with custom Comparator, CostMatrix inner class for
+  weighted-average and age tracking. Predecessor to the current PostgreSQL implementation.
+  Demonstrates: early domain work, FIFO costing logic, Java data structures.
+
+/gists/af0bc325b6c1e7235a50c174cfc2ebf7.html
+  Java/JavaFX desktop app controller (AddEditController.java, ~2011). Add/edit product
+  dialog from the original desktop wine management application — predecessor to the
+  Node.js/React web app. Historical context for the platform's evolution.
+  Demonstrates: platform evolution from JavaFX desktop → Node.js/React web.
+
+/gists/269c60934b98df42e195a66d45831354.html
+  Express/EJS view templates (invoices.ejs, newproduct.ejs). Server-rendered HTML views
+  from the Node.js wine management app — invoice display and new product entry form.
+  Historical context: these views predated the React SPA frontend.
+  Demonstrates: Express view layer, EJS templating, form-to-API pattern.
+
 ---
 
 ## Production systems

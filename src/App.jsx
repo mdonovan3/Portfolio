@@ -18,7 +18,6 @@ import WlmReact from "./pages/WlmReact";
 import DataArchitecture from "./pages/DataArchitecture";
 import DEPipeline from "./pages/DEPipeline";
 import AIProfile from "./pages/AIProfile";
-
 function App() {
   return (
     <ThemeProvider theme={theme}>
