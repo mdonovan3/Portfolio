@@ -17,6 +17,7 @@ import WineSalesImport from "./pages/WineSalesImport";
 import WlmReact from "./pages/WlmReact";
 import DataArchitecture from "./pages/DataArchitecture";
 import DEPipeline from "./pages/DEPipeline";
+import EpiPipeline from "./pages/EpiPipeline";
 import AIProfile from "./pages/AIProfile";
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
             <Route path="projects/wlm-react" element={<WlmReact />} />
             <Route path="projects/data-architecture" element={<DataArchitecture />} />
             <Route path="projects/de-pipeline" element={<DEPipeline />} />
+            <Route path="projects/epi-pipeline" element={<EpiPipeline />} />
             <Route path="ai-profile" element={<AIProfile />} />
           </Route>
         </Routes>

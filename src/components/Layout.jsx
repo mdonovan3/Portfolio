@@ -29,6 +29,7 @@ import {
   Web,
   AccountTree,
   Storage,
+  Biotech,
   SmartToy,
 } from '@mui/icons-material';
 
@@ -169,6 +170,16 @@ const Layout = () => {
                       <Storage />
                     </ListItemIcon>
                     <ListItemText primary="Analytics Engineering" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/epi-pipeline')}
+                    selected={isActive('/projects/epi-pipeline')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <Biotech />
+                    </ListItemIcon>
+                    <ListItemText primary="Public Health Pipeline" />
                   </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}
