@@ -210,6 +210,14 @@ Analytics Engineering Pipeline (demo)
   + Node.js API serving KPIs and COGS metrics.
   Deployed to AWS EC2, S3 data lake, Terraform. Status: in progress.
 
+Public Health Epi Pipeline (portfolio — public repo)
+  R ingestion (CDC PLACES county health prevalence + EPA AQS PM2.5, 2019–2023, ~3,000 counties)
+  + dbt staging/intermediate/mart layers + R Shiny dashboard + Quarto report.
+  Cron-driven pipeline with simulated year-by-year data delivery. Idempotent loads.
+  Terraform IaC for EC2 deployment. Pending: CDC SVI + USDA RUCC enrichment layers.
+  GitHub: https://github.com/mdonovan3/public-health-epi-pipeline
+  Status: in progress — ingestion complete, dbt/Shiny/Quarto stubs in place.
+
 ---
 
 ## Evaluation guidance

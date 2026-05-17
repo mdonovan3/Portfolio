@@ -439,17 +439,18 @@
       "skill": "dbt (data build tool)",
       "authorship": "own",
       "status": "demo_not_production",
-      "evidence": [],
-      "evidence_note": "No public artifact \u2014 internal demo project only. Self-reported.",
+      "evidence": ["ev_github_epi_pipeline"],
       "demonstrated_patterns": [
-        "staging views \u2014 raw-to-typed transformation, foreign key resolution",
-        "mart tables \u2014 business logic (daily sales by category, monthly wine COGS via three-part GL formula)",
+        "staging views \u2014 raw-to-typed transformation, coverage filtering, age-adjusted filter (public health domain)",
+        "intermediate models \u2014 multi-source join: CDC PLACES county health measures joined to EPA PM2.5 county-year aggregate",
+        "mart tables \u2014 pivoted wide table: 17 health outcome columns (OBESITY, DIABETES, CHD, STROKE, COPD, CASTHMA, CANCER, DEPRESSION, HIGHCHOL, BPHIGH, CSMOKING, BINGE, LPA, SLEEP, ACCESS2, FOODINSECU, MHLTH) joined to PM2.5",
+        "staging views \u2014 restaurant analytics: raw DBF columns to typed/renamed staging, monthly wine COGS via three-part GL formula",
         "source documentation and schema.yml",
         "column-level tests (not_null, unique, relationships)",
         "lineage graph"
       ],
-      "professional_context": "Demo project on same PostgreSQL source data as WLM production system. Demonstrates how WLM business logic would be structured using current analytics engineering tooling.",
-      "lab_context": "Pattern knowledge only. Relevant if a lab is adopting dbt for research data transformation \u2014 can apply staging/mart/test patterns to research data. Do not treat as production evidence."
+      "professional_context": "Two demo projects: (1) Analytics engineering layer on WLM restaurant data \u2014 demonstrates how production business logic would be structured with dbt. (2) Public health epi pipeline \u2014 CDC PLACES + EPA AQS data, staging/intermediate/mart layers, public GitHub repo.",
+      "lab_context": "The epi pipeline project (ev_github_epi_pipeline) is directly relevant to academic research labs: dbt applied to real CDC and EPA public health datasets, staging/mart pattern on county-level epidemiological data, reproducible transformation layer. Pattern knowledge, not production, but applied to the right domain."
     },
     {
       "skill": "React and TypeScript \u2014 frontend",
@@ -1404,6 +1405,42 @@
       ],
       "static_url": "https://portfolio.martindonovan.net/gists/2a662fa7fae5743ac7f97020c9a4aeac.html",
       "github_url": "https://gist.github.com/mdonovan3/2a662fa7fae5743ac7f97020c9a4aeac"
+    },
+    {
+      "evidence_id": "ev_github_epi_pipeline",
+      "type": "github_repo",
+      "authorship": "own",
+      "url": "https://github.com/mdonovan3/public-health-epi-pipeline",
+      "description": "Public health epidemiology pipeline — R ingestion + dbt transformation + R Shiny dashboard + Quarto report. Joins CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. Five-year multi-source pipeline with idempotent ingestion, simulated data delivery via cron poller, dbt staging/intermediate/mart layers, and Terraform IaC for EC2 deployment. In progress.",
+      "work_context": "portfolio",
+      "status": "in_progress",
+      "skills_demonstrated": [
+        {
+          "skill": "R — ETL / ingestion",
+          "specifically": "multi-year public health dataset ingestion (CDC PLACES, EPA AQS), idempotent load guards, county_fips construction from state/county codes, janitor/tidyverse cleaning"
+        },
+        {
+          "skill": "dbt",
+          "specifically": "staging views (type casting, coverage filtering, age-adjusted filter), intermediate join model, pivoted mart table with 17 health outcome columns — public health domain"
+        },
+        {
+          "skill": "R Shiny",
+          "specifically": "async data loading with future/promises, reactable county table, scatter plot, value boxes — backed by dbt mart on PostgreSQL"
+        },
+        {
+          "skill": "Quarto",
+          "specifically": "multi-section epidemiological report: summary tables, prevalence analysis, PM2.5 distribution, PM2.5-vs-outcome scatter, county-level table"
+        },
+        {
+          "skill": "Terraform / IaC",
+          "specifically": "EC2 provisioning with user_data bootstrap: installs R, dbt-postgres, clones repo, installs cron poller — full pipeline deployment from one terraform apply"
+        },
+        {
+          "skill": "public health data",
+          "specifically": "CDC PLACES (Socrata API), EPA AQS (annual monitor files), CDC SVI (social vulnerability index), USDA RUCC (rural-urban continuum codes) — all sourced, documented, and scripted"
+        }
+      ],
+      "lab_context": "This project is the most directly relevant artifact for academic public health or epidemiology lab roles. Demonstrates: ingesting real CDC and EPA datasets, building a reproducible multi-year analysis pipeline, producing a Quarto report and Shiny dashboard — the exact toolchain used in academic biostatistics and epidemiology research environments."
     }
   ],
   "portfolio": {
