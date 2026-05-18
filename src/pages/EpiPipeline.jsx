@@ -353,24 +353,30 @@ const EpiPipeline = () => {
 
         <FlowArrow />
 
-        {/* Everything below ingestion is in progress */}
+        {/* dbt Staging — complete */}
+        <LayerLabel label="dbt Staging — views" color={t.dbt} status="done" />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+          {stagingNodes.map((n) => <NodeCard key={n.title} {...n} />)}
+        </Box>
+        <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 0.5 }}>
+          Views — typed columns, FIPS normalization, EPA coverage filter (obs_pct ≥ 75).
+        </Typography>
+
+        <FlowArrow />
+
+        {/* dbt Intermediate — complete */}
+        <LayerLabel label="dbt Intermediate — views" color={t.dbt} status="done" />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+          {intermediateNodes.map((n) => <NodeCard key={n.title} {...n} />)}
+        </Box>
+        <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 0.5 }}>
+          Aggregates PM2.5 monitors to county-year mean, then left-joins to PLACES health measures.
+        </Typography>
+
+        <FlowArrow />
+
+        {/* Mart and Serving still in progress */}
         <TodoWrap>
-          {/* dbt Staging */}
-          <LayerLabel label="dbt Staging — views" color={t.dbt} status="todo" />
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
-            {stagingNodes.map((n) => <NodeCard key={n.title} {...n} dimmed />)}
-          </Box>
-
-          <FlowArrow />
-
-          {/* dbt Intermediate */}
-          <LayerLabel label="dbt Intermediate — views" color={t.dbt} status="todo" />
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
-            {intermediateNodes.map((n) => <NodeCard key={n.title} {...n} dimmed />)}
-          </Box>
-
-          <FlowArrow />
-
           {/* dbt Marts */}
           <LayerLabel label="dbt Marts — materialized table" color={t.dbt} status="todo" />
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
