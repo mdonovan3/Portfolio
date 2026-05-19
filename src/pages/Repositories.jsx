@@ -15,6 +15,14 @@ const SLATE = "#34495e";
 
 const soloRepos = [
   {
+    title: "Public Health Epi Pipeline",
+    description:
+      "End-to-end epidemiology data pipeline joining CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. R ingestion with idempotent multi-year loads, dbt staging/intermediate/mart layers, R Shiny dashboard, and Quarto report. Cron-driven pipeline with simulated year-by-year data delivery. Terraform IaC for EC2 deployment. In progress.",
+    url: "https://github.com/mdonovan3/public-health-epi-pipeline",
+    tags: ["R", "dbt", "SQL", "PostgreSQL", "Shiny", "Quarto", "Terraform", "AWS EC2", "CDC PLACES", "EPA AQS"],
+    inProgress: true,
+  },
+  {
     title: "Analytics Engineering Pipeline — dbt Data Platform",
     description:
       "A modern analytics engineering layer built on the same PostgreSQL database and source data as the wine management system. Python ingestion scripts load Aloha POS DBF files and Restaurant365 GL transactions into a typed raw schema. dbt handles all transformations: staging views that clean and resolve foreign keys, and mart tables that compute daily sales by category and monthly wine COGS using a verified three-part GL formula. Deployed to AWS EC2 via Terraform with an S3 data lake. Demonstrates how the same business logic already running in R would be structured using current DE tooling — typed, tested, lineage-tracked. In progress.",
