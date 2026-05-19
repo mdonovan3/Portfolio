@@ -1,16 +1,19 @@
-# React + Vite
+# Martin Donovan — Technical Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[portfolio.martindonovan.net](https://portfolio.martindonovan.net)
 
-Currently, two official plugins are available:
+React SPA portfolio. Built with Vite + MUI.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## AI evaluation
 
-## React Compiler
+| File | Purpose |
+|------|---------|
+| [profile.json](https://portfolio.martindonovan.net/profile.json) | Canonical structured dataset — skills, evidence, work context, constraints |
+| [llms.txt](https://portfolio.martindonovan.net/llms.txt) | AI routing guide — what to read and in what order |
+| [ai-profile.html](https://portfolio.martindonovan.net/ai-profile.html) | Narrative role-fit summary |
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- React 19 + Vite + MUI
+- Static hosting on AWS Amplify
+- Static files (`profile.json`, `llms.txt`, `ai-profile.html`, gist mirrors) served from `public/`
