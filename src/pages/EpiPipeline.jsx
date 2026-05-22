@@ -127,7 +127,7 @@ const stagingNodes = [
   },
   {
     title: "stg_epa_pm25",
-    subtitle: "obs_pct ≥ 75 coverage filter · rename arithmetic_mean → pm25_mean",
+    subtitle: "obs_pct ≥ 75 coverage filter · typed columns · FIPS as text",
     accent: t.dbt,
   },
 ];
@@ -375,21 +375,21 @@ const EpiPipeline = () => {
 
         <FlowArrow />
 
-        {/* Mart and Serving still in progress */}
+        {/* dbt Marts — complete */}
+        <LayerLabel label="dbt Marts — materialized table" color={t.dbt} status="done" />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+          {martNodes.map((n) => <NodeCard key={n.title} {...n} />)}
+        </Box>
+        <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 1 }}>
+          Pivoted health outcomes (OBESITY, DIABETES, CHD, STROKE, COPD, CASTHMA, CANCER, DEPRESSION,
+          HIGHCHOL, BPHIGH, CSMOKING, BINGE, LPA, SLEEP, ACCESS2, FOODINSECU, MHLTH) joined to county-year PM2.5.
+          15,444 rows · county × year grain · verified against live RDS.
+        </Typography>
+
+        <FlowArrow />
+
+        {/* Serving — in progress */}
         <TodoWrap>
-          {/* dbt Marts */}
-          <LayerLabel label="dbt Marts — materialized table" color={t.dbt} status="todo" />
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
-            {martNodes.map((n) => <NodeCard key={n.title} {...n} dimmed />)}
-          </Box>
-          <Typography variant="caption" sx={{ color: "#909caa", display: "block", mb: 1 }}>
-            Pivoted health outcomes (OBESITY, DIABETES, CHD, STROKE, COPD, CASTHMA, CANCER, DEPRESSION,
-            HIGHCHOL, BPHIGH, CSMOKING, BINGE, LPA, SLEEP, ACCESS2, FOODINSECU, MHLTH) joined to county-year PM2.5.
-          </Typography>
-
-          <FlowArrow />
-
-          {/* Serving */}
           <LayerLabel label="Analysis & Serving — R" color={t.r} status="todo" />
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
             {servingNodes.map((n) => <NodeCard key={n.title} {...n} dimmed />)}
