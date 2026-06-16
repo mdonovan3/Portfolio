@@ -58,7 +58,7 @@ const Home = () => {
             <LinkedIn fontSize="large" />
           </IconButton>
           <IconButton
-            href="mailto:martindonovan@gmail.com"
+            href="mailto:martindonovan3@gmail.com"
             sx={{ color: "#2c3e50" }}
           >
             <Email fontSize="large" />

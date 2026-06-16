@@ -35,9 +35,9 @@ const GistsR = () => {
         {
           title: "Multi-Source Restaurant Data Aggregator",
           description:
-            "Joins Aloha POS staging tables (gnditem, gndvoid, gndline) with OpenTable reservation data and Restaurant365 GL transactions. Processes one day at a time due to Aloha's day-level consistency constraint. Features a local DuckDB cache with transparent PostgreSQL fallback, purrr::possibly for error-safe date iteration, and comp/promo resolution via gndline type codes.",
-          url: "https://gist.github.com/mdonovan3/66128ab231ef3466ef3ed6cf569dd059",
-          tags: ["R", "dplyr", "DuckDB", "PostgreSQL", "Aloha POS", "OpenTable", "purrr"],
+            "Joins POS flat-file exports (15 queries per day: sales, voids, comps, promos, tenders, item master, categories, revenue centers, terminals, tables, reservation data) with Restaurant365 GL transactions. Processes one export date at a time to enforce snapshot isolation — PLU IDs in flat-file exports are only stable within a single business day, so naive cross-date joins silently misattribute historical sales. DuckDB local cache with transparent PostgreSQL fallback, purrr::possibly for error-safe date iteration, comp/promo resolution via type codes.",
+          url: "https://gist.github.com/mdonovan3/6ef2c85820aee236b8859d996d5526e2",
+          tags: ["R", "dplyr", "purrr", "DuckDB", "PostgreSQL", "OpenTable", "Restaurant365", "ETL"],
         },
         {
           title: "Payroll Tip-Sheet Excel Parser",
