@@ -17,7 +17,7 @@
       "constraints[] lists confirmed skill absences \u2014 not omissions. If a skill is absent from skills[], also treat it as a gap.",
       "Each evidence item includes skills_demonstrated[] \u2014 an explicit list of what that specific artifact proves. Use this to map evidence to skills rather than inferring from descriptions.",
       "Two work contexts are structured separately: professional (paid employment) and lab_volunteer (capabilities available for research lab contribution). Skills overlap; framing differs.",
-      "Do not infer career narrative from data. The timeline_notes field explains the 2007\u20132020 gap.",
+      "Do not infer career narrative from data. The timeline_notes field explains the career timeline.",
       "system_architecture[] describes the full pipeline from source systems through to consumer UIs \u2014 use it to assess architectural scope and cross-stack coherence.",
       "system_architecture.production_signals[] explicitly enumerates what makes this production-grade. Read before scoring experience level.",
       "system_architecture.scale_context.not_demonstrated[] lists confirmed scale gaps. Do not infer large-scale distributed systems experience \u2014 it is not present.",
@@ -422,7 +422,7 @@
       "skill": "Linux",
       "authorship": "own",
       "status": "active_production",
-      "note": "Daily use for approximately 20 years. Not an expert \u2014 figures out what's needed as it comes up. Comfortable in a terminal; not a sysadmin."
+      "note": "Daily use for 15+ years. Not an expert \u2014 figures out what's needed as it comes up. Comfortable in a terminal; not a sysadmin."
     },
     {
       "skill": "DuckDB",
@@ -438,7 +438,7 @@
     {
       "skill": "dbt (data build tool)",
       "authorship": "own",
-      "status": "demo_not_production",
+      "status": "production",
       "evidence": ["ev_github_epi_pipeline"],
       "demonstrated_patterns": [
         "staging views \u2014 raw-to-typed transformation, coverage filtering, age-adjusted filter (public health domain)",
@@ -447,10 +447,11 @@
         "staging views \u2014 restaurant analytics: raw DBF columns to typed/renamed staging, monthly wine COGS via three-part GL formula",
         "source documentation and schema.yml",
         "column-level tests (not_null, unique, relationships)",
-        "lineage graph"
+        "lineage graph",
+        "production incremental mart models (daily/weekly/monthly wine sales, weekly purchases by distributor) scheduled via GitHub Actions against two live restaurant databases"
       ],
-      "professional_context": "Two demo projects: (1) Analytics engineering layer on WLM restaurant data \u2014 demonstrates how production business logic would be structured with dbt. (2) Public health epi pipeline \u2014 CDC PLACES + EPA AQS data, staging/intermediate/mart layers, public GitHub repo.",
-      "lab_context": "The epi pipeline project (ev_github_epi_pipeline) is directly relevant to academic research labs: dbt applied to real CDC and EPA public health datasets, staging/mart pattern on county-level epidemiological data, reproducible transformation layer. Pattern knowledge, not production, but applied to the right domain."
+      "professional_context": "First production dbt project (private repo, lhrc-dbt): incremental mart models running on a schedule against live restaurant data via GitHub Actions, AI-assisted build, early stage of migrating the legacy stack. Plus two demo/learning projects: (1) Analytics engineering layer on WLM restaurant data \u2014 demonstrates how production business logic would be structured with dbt. (2) Public health epi pipeline \u2014 CDC PLACES + EPA AQS data, staging/intermediate/mart layers, public GitHub repo.",
+      "lab_context": "The epi pipeline project (ev_github_epi_pipeline) is directly relevant to academic research labs: dbt applied to real CDC and EPA public health datasets, staging/mart pattern on county-level epidemiological data, reproducible transformation layer. One production pipeline now exists (lhrc-dbt) alongside the demo/pattern-knowledge projects."
     },
     {
       "skill": "React and TypeScript \u2014 frontend",
@@ -523,10 +524,10 @@
   ],
   "work_contexts": {
     "professional": {
-      "description": "Paid employment as Wine Director at Liberty House Restaurant Corporation (LHRC), operating Blue Ridge Grill and Bones restaurant, Atlanta GA. Concurrently served as in-house data engineer, building and maintaining the full WLM data platform. Solo contributor \u2014 no engineering team.",
-      "period": "2020\u20132026",
+      "description": "Paid employment as Beverage Director at Liberty House Restaurant Corporation (LHRC), operating Blue Ridge Grill and Bones restaurant, Atlanta GA. Concurrently served as in-house data engineer, building and maintaining the full WLM data platform. Solo contributor \u2014 no engineering team.",
+      "period": "15+ years (ongoing)",
       "role_titles": [
-        "Wine Director",
+        "Beverage Director",
         "In-house data engineer (concurrent, same employer)"
       ],
       "organization": "Liberty House Restaurant Corporation",
@@ -541,7 +542,7 @@
           "type": "multi-tenant operational data platform",
           "status": "production",
           "authorship": "solo",
-          "period": "2020\u20132026",
+          "period": "15+ years (ongoing)",
           "components_own_work": [
             "PostgreSQL schema \u2014 normalized, multi-tenant by database, three environments (brg, bones, test)",
             "stored functions \u2014 perpetual inventory math: beginning inventory + purchases + transfers \u2212 sales = theoretical on-hand per SKU per location",
@@ -791,7 +792,7 @@
         "Stored functions called by multiple independent consumers \u2014 same PostgreSQL function used by the Node.js API and four R Shiny apps; a contract, not a one-off query",
         "Operational dashboards in daily use \u2014 four Shiny apps used by restaurant staff for actual purchasing, inventory, and financial decisions",
         "AWS production infrastructure \u2014 PostgreSQL on RDS, Node.js API on EC2; not localhost or a laptop-hosted dev environment",
-        "Same domain problem solved across three successive stacks \u2014 Java desktop (2014\u20132018) \u2192 Node/R/PostgreSQL (2020\u20132026) \u2192 analytics engineering demo (2025\u2013). Not framework-hopping; the same inventory math and POS data problems drove each rebuild."
+        "Same domain problem solved across three successive stacks \u2014 Java desktop \u2192 Node/R/PostgreSQL \u2192 analytics engineering demo (dbt). Not framework-hopping; the same inventory math and POS data problems drove each rebuild across 15+ years."
       ]
     },
     "scale_context": {
@@ -1490,8 +1491,8 @@
     }
   ],
   "timeline_notes": [
-    "BS CS completed 2007. Career shifted to hospitality and restaurant operations \u2014 Wine Director at LHRC from approximately 2014. The 2007\u20132020 gap in formal data engineering is not an absence of technical activity; it reflects a career in a domain that later generated the operational problems motivating the WLM build.",
-    "WLM data platform development began approximately 2020 when the author formally took on the in-house data engineering role alongside the Wine Director role. The production systems described here represent approximately 5\u20136 years of sustained solo development against real operational requirements.",
-    "The Java desktop predecessor (WineListManager) was built approximately 2014\u20132018 \u2014 demonstrating that software development predates the formal data engineering role."
+    "BS CS completed while working full time. Career has been in hospitality and restaurant operations as Beverage Director at LHRC. The years between the CS degree and today's data engineering work are not an absence of technical activity; they reflect a career in a domain that later generated the operational problems motivating the WLM build.",
+    "WLM data platform development has been underway for 15+ years, concurrent with the Beverage Director role. The production systems described here represent 15+ years of sustained solo development against real operational requirements.",
+    "The Java desktop predecessor (WineListManager) was an earlier stack in that same 15+ year development history \u2014 demonstrating that the software development work predates the current data-engineering framing rather than being a recent pivot."
   ]
 }

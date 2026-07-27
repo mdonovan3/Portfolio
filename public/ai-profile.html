@@ -484,7 +484,7 @@
 
   <tr>
     <td><strong>Data Engineer — Junior / Mid</strong></td>
-    <td>ETL pipelines, schema design, Python, dbt, cloud infrastructure, orchestration. Note: ETL here is in R; dbt work is a demo project, not production; no Airflow/Prefect.</td>
+    <td>ETL pipelines, schema design, Python, dbt, cloud infrastructure, orchestration. Note: ETL here is in R; one production dbt pipeline exists (GitHub Actions CI against live restaurant databases) alongside continued demo-project dbt work; no Airflow/Prefect.</td>
     <td>
       <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
       <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> ·
@@ -938,7 +938,7 @@
     "nodejs_express":       { "level": "mid",          "strength": 0.70, "authorship": "own",          "skills": ["REST API design", "JWT authentication", "multi-tenant routing", "connection pooling"], "note": "not a career target" },
     "react_typescript":     { "level": "solid",        "strength": 0.60, "authorship": "AI-guided",    "note": "frontend AI-assisted under own direction; not independent frontend development" },
     "aws":                  { "level": "working",      "strength": 0.60, "authorship": "own",          "services": ["RDS", "EC2", "S3", "Elastic Beanstalk", "Terraform"] },
-    "dbt":                  { "level": "learning",     "strength": 0.50, "authorship": "own",          "note": "demo project only, not production" },
+    "dbt":                  { "level": "production",   "strength": 0.65, "authorship": "own",          "note": "one production pipeline (GitHub Actions CI, live restaurant DBs, AI-assisted); plus demo/learning projects" },
     "duckdb":               { "level": "working",      "strength": 0.50, "authorship": "own",          "note": "narrow production use in Shiny dashboards" },
     "python":               { "level": "minimal",      "strength": 0.20, "authorship": "own",          "note": "basic scripting only — not a Python data stack practitioner" },
     "gaps": ["spark", "airflow", "prefect", "snowflake", "bigquery", "tableau", "power_bi", "python_ml_stack"]
@@ -1087,7 +1087,7 @@
     },
     {
       "role": "Data Engineer — Junior / Mid",
-      "note": "ETL is in R, dbt is demo-stage (not production), no Airflow/Prefect",
+      "note": "ETL is in R; one production dbt pipeline (GitHub Actions CI) plus demo-stage dbt work; no Airflow/Prefect",
       "evidence": [
         "https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html",
         "https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html",
@@ -1177,7 +1177,7 @@
     "honest_caveats": [
       "React frontends are AI-guided — not independent frontend development",
       "Node.js has real SQL injection surfaces in dynamic UPDATE/INSERT routes",
-      "dbt is learning-stage only, not production",
+      "dbt: one production pipeline exists, but it is the only one — most dbt work is still demo/learning-stage",
       "No Python data stack experience",
       "No BI tool experience (Tableau, Power BI, Looker)"
     ],

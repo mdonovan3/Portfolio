@@ -87,7 +87,7 @@ const contEdPrograms = [
 const skillGroups = [
   {
     label: "Languages",
-    items: ["R", "SQL", "Python", "Java", "JavaScript / TypeScript / Node.js"],
+    items: ["R", "SQL", { label: "Python", note: "scripting & automation, not yet production" }, "Java", "JavaScript / TypeScript / Node.js"],
   },
   {
     label: "Databases",
@@ -114,7 +114,7 @@ const skillGroups = [
   },
   {
     label: "Infrastructure",
-    items: ["AWS RDS", "AWS EC2", "AWS S3", "Terraform", "Git"],
+    items: ["AWS RDS", "AWS EC2", "AWS S3", { label: "Terraform", note: "learning, via portfolio project — not production" }, "Git"],
   },
   {
     label: "Domain",
@@ -170,7 +170,7 @@ const Resume = () => {
         <Box sx={{ display: "flex", alignItems: "center", mt: 2 }}>
           <LocationOn sx={{ mr: 1, color: "#7f8c8d" }} />
           <Typography variant="body1" color="text.secondary">
-            Atlanta, GA
+            Smyrna, GA
           </Typography>
         </Box>
       </Paper>
@@ -192,7 +192,7 @@ const Resume = () => {
           Bachelor of Science in Computer Science
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 1.5 }}>
-          Southern Polytechnic State University (now Kennesaw State University) · 2007
+          Southern Polytechnic State University (now Kennesaw State University)
         </Typography>
 
         <SectionToggle
@@ -339,7 +339,7 @@ const Resume = () => {
         </Box>
 
         <Typography variant="h6" gutterBottom>
-          Data Analyst & Wine/Beverage Director
+          Data Analyst & Beverage Director
         </Typography>
         <Typography variant="body1" color="text.secondary" gutterBottom>
           Liberty House Restaurant Corporation — Atlanta, GA
@@ -350,14 +350,14 @@ const Resume = () => {
           development across multiple restaurant locations. Functioned as de facto
           product owner of the data platform throughout — defining requirements,
           managing scope, and driving architecture decisions independently across
-          twenty years and five technology generations.
+          15+ years and five technology generations.
         </Typography>
 
         <Box component="ul" sx={{ pl: 2.5, mt: 0, mb: 2 }}>
           {[
             "Designed and built a complete wine inventory management platform from scratch — normalized PostgreSQL schema on AWS RDS, Java desktop application, 14-endpoint Node.js/Express REST API, and a React SPA consolidating inventory, sales, purchasing, and analytics into one interface. Oversaw rollout of a custom iOS wine list app integrated with the same database, increasing both overall wine sales and category breadth.",
             "Built and maintain multiple R Shiny dashboards for operational reporting: period-over-period inventory analysis with count variance detection, restaurant analytics combining Aloha POS, OpenTable, and R365 financial data, wine purchase reporting, and storage pull recommendations.",
-            "Developed analytics engineering pipeline using Python ingestion scripts (Aloha POS DBF, R365 OData), dbt for typed/tested transformations (staging views, materialized mart tables, lineage), and a Node.js API serving KPIs and COGS metrics. Deployed to AWS EC2 with S3 data lake via Terraform.",
+            "Developing an analytics engineering pipeline (in progress) — Python ingestion scripts (Aloha POS DBF, R365 OData), dbt for typed/tested transformations (staging views, materialized mart tables, lineage), and a Node.js API serving KPIs and COGS metrics; deploying to AWS EC2 with an S3 data lake via Terraform (early-stage IaC, learning project).",
             "Extensive real-world data wrangling across varied source formats — binary DBF files, paginated OData APIs, fintech CSVs, Excel, fixed-width text files, web scraping, and PDF extraction — including identity resolution, encoding normalization, gap handling, and idempotent pipeline design.",
           ].map((item, i) => (
             <Box component="li" key={i} sx={{ mb: 1.5 }}>

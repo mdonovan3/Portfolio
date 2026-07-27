@@ -39,7 +39,7 @@ const Home = () => {
           Martin Donovan
         </Typography>
         <Typography variant="h5" color="text.secondary" gutterBottom>
-          Data Analyst & Wine/Beverage Director
+          Data Analyst & Beverage Director
         </Typography>
 
         <Box sx={{ mt: 3, mb: 3 }}>
@@ -70,7 +70,7 @@ const Home = () => {
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
               <LocationOn sx={{ mr: 1, color: "#7f8c8d" }} />
               <Typography variant="body1">
-                <strong>Residence:</strong> Atlanta, GA
+                <strong>Residence:</strong> Smyrna, GA
               </Typography>
             </Box>
             <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
@@ -91,7 +91,7 @@ const Home = () => {
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ ml: 4 }}>
-              Data Analyst & Wine/Beverage Director
+              Data Analyst & Beverage Director
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
               Liberty House Restaurant Corporation, Atlanta
@@ -106,7 +106,7 @@ const Home = () => {
           What I Build
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          I build data systems for restaurants — schema design to pipelines to dashboards — as a solo developer across a live multi-unit operation. Twenty years of domain depth, CS training, and the whole stack.
+          I build data systems for restaurants — schema design to pipelines to dashboards — as a solo developer across a live multi-unit operation. 15+ years of domain depth, CS training, and the whole stack.
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           {highlights.map((h) => (
@@ -136,7 +136,7 @@ const Home = () => {
         </Typography>
         <Typography variant="body1" paragraph>
           I hold a BS in Computer Science and have spent my career at the intersection
-          of the restaurant industry and software development. Over twenty years at
+          of the restaurant industry and software development. Over 15 years at
           Liberty House Restaurant Corporation, I built and maintain a complete data
           platform for the company's wine program — starting with Excel spreadsheets
           and evolving through Microsoft Access, on-premise PostgreSQL, cloud migration
@@ -161,7 +161,7 @@ const Home = () => {
           I've found that work increasingly compelling in its own right. What started
           as building tools to solve restaurant problems has become a genuine interest
           in data engineering as a discipline. I'm looking to make a deliberate pivot
-          toward that side of the work, bringing twenty years of production systems
+          toward that side of the work, bringing 15+ years of production systems
           experience and deep domain knowledge with me.
         </Typography>
       </Paper>

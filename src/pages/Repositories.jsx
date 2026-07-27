@@ -15,6 +15,13 @@ const SLATE = "#34495e";
 
 const soloRepos = [
   {
+    title: "LHRC dbt Pipeline — Production (GitHub Actions CI)",
+    description:
+      "First production dbt project: incremental mart models (daily/weekly/monthly wine sales, weekly purchases by distributor) running against two live restaurant PostgreSQL databases. Scheduled via GitHub Actions with a DST-aware cron gate and a matrix strategy across both database targets; dbt tests run on every execution. AI-assisted build. Early stage of migrating the legacy R/stored-procedure stack toward a modern, version-controlled analytics workflow. Private repo (real production credentials/business logic) — mart models and the GitHub Actions workflow are shared as public gists on the Gists page.",
+    url: "#",
+    tags: ["dbt", "GitHub Actions", "PostgreSQL", "CI/CD", "SQL"],
+  },
+  {
     title: "Public Health Epi Pipeline",
     description:
       "End-to-end epidemiology data pipeline joining CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. R ingestion with idempotent multi-year loads, dbt staging/intermediate/mart layers, R Shiny dashboard, and Quarto report. Cron-driven pipeline with simulated year-by-year data delivery. Terraform IaC for EC2 deployment. In progress.",

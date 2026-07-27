@@ -24,7 +24,7 @@ Two primary static files. Read both — they are not redundant.
   - system_architecture pipeline: source systems → ETL → storage → API → consumers
   - authorship_caveat detail on AI-guided vs. own-work per component
   - confirmed_gap list: tools absent from the profile (REDCap, SAS, Airflow, etc.)
-  - timeline_notes: explains the 2007–2020 gap between CS degree and current work
+  - timeline_notes: explains the career timeline between CS degree and current work
   Fetch this file. The description fields are summaries — the content is the data.
 
 /ai-profile.html  ← READ THIS for narrative context and role fit
