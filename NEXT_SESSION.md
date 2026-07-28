@@ -2,6 +2,20 @@
 
 ## TODO (priority order)
 
+### 0. Add tipout-ops to portfolio once built out
+
+New repo `mdonovan3/tipout-ops` (private, cloned 2026-07-28 to `~/Projects/tipout-ops`) —
+automates BRG/Bones weekly server tip-out calc from Aloha POS, replacing a manual Excel
+workbook. Currently planning stage (prototype demo only, no production code). Once the
+loader/dbt/portal pieces are real:
+- Add a project page/section here (similar treatment to DEPipeline)
+- Make the GitHub repo public, link it in `Repositories.jsx`
+- Add to resume experience paragraph
+- Logged in career DB `portfolio_items` id 37 (`is_public=false`, `in_progress=true`) —
+  flip `is_public` there too once it's live
+
+---
+
 ### 1. Gist code review fixes — Node.js gist (`132dbd29f68042ba9832476e8711fd90`)
 
 Full review was done. Everything else is clean. These are the only actionable items:
