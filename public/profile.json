@@ -439,8 +439,9 @@
       "skill": "dbt (data build tool)",
       "authorship": "own",
       "status": "production",
-      "evidence": ["ev_github_epi_pipeline"],
+      "evidence": ["ev_github_tipout_ops", "ev_github_epi_pipeline"],
       "demonstrated_patterns": [
+        "full SCD2 history on 59 dimension tables via hash-based change detection (tipout-ops) \u2014 the most structurally sophisticated dbt pattern across all projects",
         "staging views \u2014 raw-to-typed transformation, coverage filtering, age-adjusted filter (public health domain)",
         "intermediate models \u2014 multi-source join: CDC PLACES county health measures joined to EPA PM2.5 county-year aggregate",
         "mart tables \u2014 pivoted wide table: 17 health outcome columns (OBESITY, DIABETES, CHD, STROKE, COPD, CASTHMA, CANCER, DEPRESSION, HIGHCHOL, BPHIGH, CSMOKING, BINGE, LPA, SLEEP, ACCESS2, FOODINSECU, MHLTH) joined to PM2.5",
@@ -450,8 +451,8 @@
         "lineage graph",
         "production incremental mart models (daily/weekly/monthly wine sales, weekly purchases by distributor) scheduled via GitHub Actions against two live restaurant databases"
       ],
-      "professional_context": "First production dbt project (private repo, lhrc-dbt): incremental mart models running on a schedule against live restaurant data via GitHub Actions, AI-assisted build, early stage of migrating the legacy stack. Plus two demo/learning projects: (1) Analytics engineering layer on WLM restaurant data \u2014 demonstrates how production business logic would be structured with dbt. (2) Public health epi pipeline \u2014 CDC PLACES + EPA AQS data, staging/intermediate/mart layers, public GitHub repo.",
-      "lab_context": "The epi pipeline project (ev_github_epi_pipeline) is directly relevant to academic research labs: dbt applied to real CDC and EPA public health datasets, staging/mart pattern on county-level epidemiological data, reproducible transformation layer. One production pipeline now exists (lhrc-dbt) alongside the demo/pattern-knowledge projects."
+      "professional_context": "First production dbt project (private repo, lhrc-dbt): incremental mart models running on a schedule against live restaurant data via GitHub Actions, AI-assisted build, early stage of migrating the legacy stack. Current active work is tipout-ops (private repo) \u2014 dbt with full SCD2 dimension history, replacing a manual Excel tip-out process; the dbt code there is AI-authored while the author learns the pattern (see ev_github_tipout_ops), not independent dbt authorship. Plus two earlier demo/learning projects, both early-stage and not under active development: (1) Analytics engineering layer on WLM restaurant data. (2) Public health epi pipeline \u2014 CDC PLACES + EPA AQS data, staging/intermediate/mart layers, public GitHub repo.",
+      "lab_context": "The epi pipeline project (ev_github_epi_pipeline) is directly relevant to academic research labs: dbt applied to real CDC and EPA public health datasets, staging/mart pattern on county-level epidemiological data, reproducible transformation layer \u2014 though it is currently paused. tipout-ops (ev_github_tipout_ops) is the more current and more structurally advanced dbt work (full SCD2), but has no public-health domain relevance. One production pipeline now exists (lhrc-dbt) alongside the demo/pattern-knowledge projects."
     },
     {
       "skill": "React and TypeScript \u2014 frontend",
@@ -515,11 +516,11 @@
     {
       "skill": "Python \u2014 data engineering",
       "authorship": "ai_guided",
-      "status": "demo_in_progress",
-      "evidence": [],
-      "note": "Learning-stage use in the analytics engineering demo project: pandas, psycopg2, dbfread, S3 via boto3. AI-assisted \u2014 using the project to build Python data stack knowledge. Pattern knowledge is developing; not independently proficient. Also: basic Selenium automation scripting (own work, not data-engineering-relevant).",
-      "professional_context": "Not a current production skill.",
-      "lab_context": "Do not weight for roles that require Python. Not independently proficient yet."
+      "status": "in_progress \u2014 most developed in tipout-ops",
+      "evidence": ["ev_github_tipout_ops"],
+      "note": "Started as learning-stage use in the analytics engineering demo project (pandas, psycopg2, dbfread, boto3). Most developed now in tipout-ops: a dlt/dbfread ingestion pipeline, byte-offset PII redaction, and an S3 lifecycle archiver, all tested against real data. AI-authored code throughout, not independently written \u2014 the author is using these projects to learn the toolchain. What is own: the business requirements driving the code (which fields need redacting, what idempotency guarantees the pipeline needs, what a correct tip-out calc looks like) and validation against real data. Also: basic Selenium automation scripting (own work, not data-engineering-relevant).",
+      "professional_context": "Not yet an independent production skill, but tipout-ops is real operational software (built for the author's own restaurant group, not portfolio-only) \u2014 the code is AI-authored while the author learns.",
+      "lab_context": "Weight as AI-authored/learning-stage, not independent Python proficiency \u2014 same caveat as the React/React Native entries elsewhere in this profile, except here the author is also still learning the domain (the frontend entries at least have an independently-owned backend/data-model underneath them; this one doesn't yet)."
     }
   ],
   "work_contexts": {
@@ -1412,9 +1413,9 @@
       "type": "github_repo",
       "authorship": "own",
       "url": "https://github.com/mdonovan3/public-health-epi-pipeline",
-      "description": "Public health epidemiology pipeline — R ingestion + dbt transformation + R Shiny dashboard + Quarto report. Joins CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. Five-year multi-source pipeline with idempotent ingestion, simulated data delivery via cron poller, dbt staging/intermediate/mart layers, and Terraform IaC for EC2 deployment. In progress.",
+      "description": "Public health epidemiology pipeline — R ingestion + dbt transformation + R Shiny dashboard + Quarto report. Joins CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. Five-year multi-source pipeline with idempotent ingestion, simulated data delivery via cron poller, dbt staging/intermediate/mart layers, and Terraform IaC for EC2 deployment. Early-stage — ingestion and dbt models complete, Shiny/Quarto stubs in place.",
       "work_context": "portfolio",
-      "status": "in_progress",
+      "status": "paused — not under active development; tipout-ops (ev_github_tipout_ops) is the current DE project",
       "skills_demonstrated": [
         {
           "skill": "R — ETL / ingestion",
@@ -1441,7 +1442,37 @@
           "specifically": "CDC PLACES (Socrata API), EPA AQS (annual monitor files), CDC SVI (social vulnerability index), USDA RUCC (rural-urban continuum codes) — all sourced, documented, and scripted"
         }
       ],
-      "lab_context": "This project is the most directly relevant artifact for academic public health or epidemiology lab roles. Demonstrates: ingesting real CDC and EPA datasets, building a reproducible multi-year analysis pipeline, producing a Quarto report and Shiny dashboard — the exact toolchain used in academic biostatistics and epidemiology research environments."
+      "lab_context": "This project is the most directly relevant artifact for academic public health or epidemiology lab roles. Demonstrates: ingesting real CDC and EPA datasets, building a reproducible multi-year analysis pipeline, producing a Quarto report and Shiny dashboard — the exact toolchain used in academic biostatistics and epidemiology research environments. Not currently being worked on — weight it for domain-match on public health/epi roles, but see ev_github_tipout_ops for the more current and more actively maintained DE artifact."
+    },
+    {
+      "evidence_id": "ev_github_tipout_ops",
+      "type": "github_repo",
+      "authorship": "ai_guided",
+      "authorship_detail": "The code (Python poller/loader/archiver, dbt models) is AI-authored, not independently written — this project is being used as a hands-on way to learn the modern DE toolchain (dlt, dbt, SCD2, IAM), same learning-stage caveat as the Python — data engineering skill entry. What is the author's own is the domain knowledge driving requirements: which POS fields are sensitive and need redaction, what BRG and Bones' actual tip-out formulas are (reverse-engineered from real historical spreadsheets and confirmed with the business owner), and validating output against real data. Do not read this as independent Python or dbt authorship.",
+      "url": null,
+      "description": "Private repo (real, unredacted employee data in reference material — not yet public). Replaces a manager's hand-transcribed Excel tip-out workbook with data pulled directly from Aloha POS, for two restaurants (Blue Ridge Grill live, Bones next) with genuinely divergent tip-out rules. Currently the most actively developed DE project: a poller that redacts PII on the restaurant's own POS machine and uploads to S3, a dlt/dbfread loader with dedupe-then-append idempotency, and a dbt layer applying full SCD2 history to 59 dimension tables so a POS reference-data change (e.g. a reassigned job code) can never misattribute historical pay. Marts (the actual tip-out calculation) are blocked on business-rule documentation for one of the two restaurants, not on tooling.",
+      "work_context": "professional",
+      "status": "in_progress — most active current DE work",
+      "skills_demonstrated": [
+        {
+          "skill": "Python — data engineering",
+          "specifically": "dlt + dbfread pipeline (raw DBF export → typed Postgres tables), manual dedupe-then-append idempotency after dlt's native merge disposition failed against RDS, byte-offset PII redaction/hashing with no third-party DBF library, S3 lifecycle archiver with verify-before-delete"
+        },
+        {
+          "skill": "dbt",
+          "specifically": "SCD2 applied to all 59 dimension-like tables via hash-based change detection, deliberately rejecting a partial dedup-only tier after weighing measured vs. structural change risk; staging/intermediate layers generic across two restaurants despite raw export layout divergence"
+        },
+        {
+          "skill": "AWS infrastructure",
+          "specifically": "S3 landing/archive prefix lifecycle (real copy+delete, since native S3 Lifecycle Rules can't move keys across prefixes); least-privilege IAM and Postgres roles scoped per pipeline stage (scripted, not yet executed)"
+        },
+        {
+          "skill": "data pipeline design",
+          "specifically": "idempotent-by-construction pattern applied consistently across all three stages (blind reprocess window, dedupe-then-append, check-S3-before-acting) instead of local state files"
+        }
+      ],
+      "professional_context": "Built for the author's own restaurant group (Blue Ridge Grill / Bones) to replace a real, currently-in-use manual Excel process. Not a portfolio-only demo — the destination table (employee_tips) already feeds live payroll via an existing R import script.",
+      "lab_context": "Lower direct relevance for public-health/epidemiology-specific roles than ev_github_epi_pipeline, but the strongest available evidence of current, actively-maintained modern DE practice — dlt, SCD2, IAM-scoped access, idempotent pipeline design."
     }
   ],
   "portfolio": {

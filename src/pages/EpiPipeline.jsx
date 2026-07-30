@@ -226,11 +226,20 @@ const EpiPipeline = () => {
           </Typography>
           <Chip
             icon={<Construction sx={{ fontSize: "0.85rem !important" }} />}
-            label="In Progress"
+            label="Early-Stage · Not Active"
             size="small"
-            sx={{ bgcolor: "#f59e0b", color: "white", fontWeight: 600 }}
+            sx={{ bgcolor: "#94a3b8", color: "white", fontWeight: 600 }}
           />
         </Box>
+        <Typography variant="body2" sx={{
+          color: "#92400e", bgcolor: "#fef3c7", border: "1px solid rgba(245,158,11,0.4)",
+          borderRadius: 1, px: 2, py: 1.25, mb: 2, fontWeight: 500,
+        }}>
+          Not under active development right now — current DE work is on{" "}
+          <a href="/projects/tipout-ops" style={{ color: "#92400e" }}>tipout-ops</a>, a live
+          restaurant POS automation pipeline. This page is left up as a snapshot of the
+          ingestion → dbt → serving pattern below.
+        </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8, mb: 2 }}>
           An end-to-end epidemiological data pipeline linking CDC chronic disease prevalence
           estimates to EPA air quality measurements at the county level. The pipeline ingests

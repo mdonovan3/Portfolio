@@ -372,7 +372,8 @@
       <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a> (joining heterogeneous sources in R) ·
       <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> (R Shiny — the standard research lab reporting tool) ·
       <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (reproducible transformation layer on messy source data) ·
-      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (CDC PLACES + EPA PM2.5 — R ingestion → dbt → Shiny + Quarto — public health domain, directly relevant) ·
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (current work — dlt ingestion, dbt with SCD2 history, S3 lifecycle, IAM-scoped roles) ·
+      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (CDC PLACES + EPA PM2.5 — R ingestion → dbt → Shiny + Quarto — public health domain, directly relevant; early-stage, not under active development) ·
       <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> (schema design from scratch)
     </td>
   </tr>
@@ -445,6 +446,7 @@
     <td>dbt, SQL transformation layers, raw/staging/mart patterns, lineage, column-level testing, data modeling</td>
     <td>
       <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python ingestion → raw schema → dbt staging → dbt marts → Node.js API) ·
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (dbt with full SCD2 dimension history — 59 dimension tables, hash-based change detection) ·
       <a href="https://portfolio.martindonovan.net/gists/1565af77d4c93ca3450f5e64a40f4d79.html">Perpetual inventory stored function</a> (transformation logic — same business rules as the dbt COGS model) ·
       <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> (data modeling depth)
     </td>
@@ -468,6 +470,7 @@
       <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (binary DBF, multi-file joins, idempotent by design) ·
       <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (paginated API, dedup without stable key) ·
       <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python ingestion layer: Aloha DBF + R365 JSON → Parquet → PostgreSQL raw schema) ·
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (dlt + dbfread ingestion, dedupe-then-append idempotency, tested against real POS export data) ·
       <a href="https://portfolio.martindonovan.net/gists/66128ab231ef3466ef3ed6cf569dd059.html">Multi-source aggregator</a>
     </td>
   </tr>
@@ -484,12 +487,13 @@
 
   <tr>
     <td><strong>Data Engineer — Junior / Mid</strong></td>
-    <td>ETL pipelines, schema design, Python, dbt, cloud infrastructure, orchestration. Note: ETL here is in R; one production dbt pipeline exists (GitHub Actions CI against live restaurant databases) alongside continued demo-project dbt work; no Airflow/Prefect.</td>
+    <td>ETL pipelines, schema design, Python, dbt, cloud infrastructure, orchestration. Note: legacy ETL is in R; current work (tipout-ops) is Python/dlt, AI-assisted — the author directs AI against real business requirements and is learning the toolchain, not independently proficient in Python yet; one production dbt pipeline exists (GitHub Actions CI against live restaurant databases) alongside continued demo-project dbt work; no Airflow/Prefect yet, GitHub Actions used for scheduling instead.</td>
     <td>
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (current, most representative of where the stack is heading — Python/dlt ingestion, dbt with SCD2, S3 lake, IAM-scoped roles; AI-assisted build, see profile.json for authorship detail) ·
       <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
       <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> ·
       <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Python + dbt + Parquet + S3 + Terraform + EC2) ·
-      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (R + dbt + Shiny + Quarto + Terraform/EC2 — public GitHub repo) ·
+      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (R + dbt + Shiny + Quarto + Terraform/EC2 — public GitHub repo; early-stage, not under active development) ·
       <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
       <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a> (AWS stack: RDS, EC2, S3)
     </td>
@@ -503,7 +507,8 @@
       <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> (data quality, idempotent load) ·
       <a href="https://portfolio.martindonovan.net/gists/8fe35f6fab90876aea05bdc367beb5e7.html">R365 OData connector</a> (API dedup, normalization) ·
       <a href="https://martindonovan.shinyapps.io/InventoryAnalysis/">Inventory Analysis dashboard</a> (R Shiny) ·
-      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (CDC + EPA data, R + dbt + Quarto — most directly relevant artifact for this role)
+      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (CDC + EPA data, R + dbt + Quarto — most directly relevant artifact for this role; early-stage, not under active development) ·
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (data quality/idempotency patterns actively maintained today, if recency of DE work matters more than domain match)
     </td>
   </tr>
 
@@ -523,8 +528,9 @@
     <td>Own the full data layer of a small-to-mid org: schema design, ETL pipelines, cloud infrastructure, REST API, deployed and maintained in production without a large team</td>
     <td>
       <a href="https://portfolio.martindonovan.net/projects/data-architecture">Data Architecture</a> (AWS RDS + EC2 + S3, multi-tenant, production) ·
+      <a href="https://portfolio.martindonovan.net/projects/tipout-ops">tipout-ops</a> (current work — S3 landing/archive lake, least-privilege IAM and DB roles scoped per pipeline stage) ·
       <a href="https://portfolio.martindonovan.net/projects/de-pipeline">Analytics Engineering Pipeline</a> (Terraform, EC2 deployment, S3 data lake) ·
-      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (Terraform IaC, EC2 cron deployment, R + dbt) ·
+      <a href="https://portfolio.martindonovan.net/projects/epi-pipeline">Public Health Epi Pipeline</a> (Terraform IaC, EC2 cron deployment, R + dbt; early-stage, not under active development) ·
       <a href="https://portfolio.martindonovan.net/gists/891fdc4210113f328f36cd197a6290ac.html">Database schema DDL</a> ·
       <a href="https://portfolio.martindonovan.net/gists/e5e77cdc68b3e03e13d0925a80f3f399.html">Aloha POS ETL</a> ·
       <a href="https://portfolio.martindonovan.net/gists/132dbd29f68042ba9832476e8711fd90.html">Node.js REST API router</a> ·

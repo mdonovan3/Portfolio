@@ -22,9 +22,17 @@ const soloRepos = [
     tags: ["dbt", "GitHub Actions", "PostgreSQL", "CI/CD", "SQL"],
   },
   {
+    title: "tipout-ops — Aloha POS Tip-Out Automation",
+    description:
+      "Replaces a manager's hand-transcribed Excel tip-out workbook with data pulled directly from Aloha POS for two restaurants with genuinely divergent tip-out rules. Current, actively developed work — the clearest example of moving this restaurant group's stack toward modern DE tooling: dlt for ingestion, an S3 landing/archive lake, full SCD2 dimension history in dbt (so historical pay is never misattributed after a POS reference-data change), least-privilege IAM/DB roles per stage, and nightly GitHub Actions orchestration. AI-assisted build — business rules (redaction scope, tip-out formulas) come from real restaurant operations knowledge; the Python and dbt code itself is AI-authored, used as a hands-on way to learn the modern DE toolchain. Poller and loader working against real data; dbt staging/intermediate built, marts blocked on business-rule documentation; archiver built untested; portal and CI/CD not started. Private repo (real employee data) — see the portfolio page for full architecture and per-stage technical writeups.",
+    url: "#",
+    tags: ["Python", "dlt", "dbt", "SQL", "PostgreSQL", "AWS S3", "AWS IAM", "GitHub Actions", "Aloha POS", "AI-assisted"],
+    inProgress: true,
+  },
+  {
     title: "Public Health Epi Pipeline",
     description:
-      "End-to-end epidemiology data pipeline joining CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. R ingestion with idempotent multi-year loads, dbt staging/intermediate/mart layers, R Shiny dashboard, and Quarto report. Cron-driven pipeline with simulated year-by-year data delivery. Terraform IaC for EC2 deployment. In progress.",
+      "End-to-end epidemiology data pipeline joining CDC PLACES county-level chronic disease prevalence (40+ health measures, 2019–2023) to EPA AQS annual PM2.5 air quality data across ~3,000 US counties. R ingestion with idempotent multi-year loads, dbt staging/intermediate/mart layers, R Shiny dashboard, and Quarto report. Cron-driven pipeline with simulated year-by-year data delivery. Terraform IaC for EC2 deployment. Early-stage — ingestion and dbt models complete, Shiny/Quarto stubs in place; not under active development right now while tipout-ops (above) is the current DE focus.",
     url: "https://github.com/mdonovan3/public-health-epi-pipeline",
     tags: ["R", "dbt", "SQL", "PostgreSQL", "Shiny", "Quarto", "Terraform", "AWS EC2", "CDC PLACES", "EPA AQS"],
     inProgress: true,

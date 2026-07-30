@@ -17,6 +17,11 @@ import WineSalesImport from "./pages/WineSalesImport";
 import WlmReact from "./pages/WlmReact";
 import DataArchitecture from "./pages/DataArchitecture";
 import DEPipeline from "./pages/DEPipeline";
+import TipoutOps from "./pages/TipoutOps";
+import TipoutOpsPoller from "./pages/TipoutOpsPoller";
+import TipoutOpsLoader from "./pages/TipoutOpsLoader";
+import TipoutOpsDbt from "./pages/TipoutOpsDbt";
+import TipoutOpsArchiver from "./pages/TipoutOpsArchiver";
 import EpiPipeline from "./pages/EpiPipeline";
 import AIProfile from "./pages/AIProfile";
 function App() {
@@ -43,6 +48,11 @@ function App() {
             <Route path="projects/wlm-react" element={<WlmReact />} />
             <Route path="projects/data-architecture" element={<DataArchitecture />} />
             <Route path="projects/de-pipeline" element={<DEPipeline />} />
+            <Route path="projects/tipout-ops" element={<TipoutOps />} />
+            <Route path="projects/tipout-ops/poller" element={<TipoutOpsPoller />} />
+            <Route path="projects/tipout-ops/loader" element={<TipoutOpsLoader />} />
+            <Route path="projects/tipout-ops/dbt" element={<TipoutOpsDbt />} />
+            <Route path="projects/tipout-ops/archiver" element={<TipoutOpsArchiver />} />
             <Route path="projects/epi-pipeline" element={<EpiPipeline />} />
             <Route path="ai-profile" element={<AIProfile />} />
           </Route>

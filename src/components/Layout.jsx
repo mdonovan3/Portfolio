@@ -30,6 +30,7 @@ import {
   AccountTree,
   Storage,
   Biotech,
+  Receipt,
   SmartToy,
 } from '@mui/icons-material';
 
@@ -173,13 +174,23 @@ const Layout = () => {
                   </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}
+                    onClick={() => handleNavigation('/projects/tipout-ops')}
+                    selected={isActive('/projects/tipout-ops')}
+                  >
+                    <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+                      <Receipt />
+                    </ListItemIcon>
+                    <ListItemText primary="Tipout Ops Pipeline" />
+                  </ListItemButton>
+                  <ListItemButton
+                    sx={{ pl: 4 }}
                     onClick={() => handleNavigation('/projects/epi-pipeline')}
                     selected={isActive('/projects/epi-pipeline')}
                   >
                     <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
                       <Biotech />
                     </ListItemIcon>
-                    <ListItemText primary="Public Health Pipeline" />
+                    <ListItemText primary="Public Health Pipeline (early-stage)" />
                   </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}
