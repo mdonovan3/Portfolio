@@ -2,17 +2,39 @@
 
 ## TODO (priority order)
 
-### 0. Add tipout-ops to portfolio once built out
+### 0. Consider merging DEPipeline + tipout-ops into one "data platform" project
 
-New repo `mdonovan3/tipout-ops` (private, cloned 2026-07-28 to `~/Projects/tipout-ops`) —
-automates BRG/Bones weekly server tip-out calc from Aloha POS, replacing a manual Excel
-workbook. Currently planning stage (prototype demo only, no production code). Once the
-loader/dbt/portal pieces are real:
-- Add a project page/section here (similar treatment to DEPipeline)
-- Make the GitHub repo public, link it in `Repositories.jsx`
-- Add to resume experience paragraph
-- Logged in career DB `portfolio_items` id 37 (`is_public=false`, `in_progress=true`) —
-  flip `is_public` there too once it's live
+2026-07-30 (Martin's observation): tipout-ops isn't really a separate pipeline from the
+Analytics Engineering Pipeline (DEPipeline.jsx) — it's turning into the same underlying
+ingestion+dbt platform on Aloha/restaurant data, with tip-out as the first vertical
+application on top. Right now the portfolio tells two competing "Python + dbt on Aloha
+data" stories at different maturity levels (DEPipeline's ad hoc ingestion + wine-COGS mart
+vs. tipout-ops' dlt + SCD2 + IAM-scoped platform), which dilutes the signal instead of
+compounding it. Reframing as one platform with tipout-ops as vertical #1 is a stronger
+story (architecture/platform thinking, not a one-off pipeline).
+
+Open questions to resolve next session:
+- Does the wine-COGS mart (DEPipeline's other selling point) become vertical #2 on the
+  same platform, or get cut/archived from the portfolio?
+- Standardize ingestion on dlt (tipout-ops' approach) as the canonical pattern going
+  forward, rather than carrying two ingestion styles?
+
+Longer-term direction (not now — separate systems today): wine/inventory currently runs
+on its own ETL system (R nightly ETL + Node/Express API + ReactWineApp, see WLM platform).
+Martin's read (2026-07-30): eventually the whole thing — including ReactWineApp or
+whatever succeeds it — moves onto this same ELT platform, ingesting *all* raw POS data
+(not just the transformed wine-specific subset it gets today) and building wine as another
+vertical on top, same as tip-out. Not a near-term project; just the direction this is
+heading, worth keeping in mind when making platform-vs-pipeline naming/architecture
+decisions now so we don't paint ourselves into a corner.
+- Practically: merge `DEPipeline.jsx` and `TipoutOps.jsx` (+ its detail subpages) into one
+  page/route, update `Repositories.jsx`, nav, and the AI profile docs (ai-profile.html,
+  content.html, llms.txt, profile.json) to match — there are now two separate entries in
+  each that would need consolidating.
+
+(Prior note, now done: tipout-ops was added to the portfolio 2026-07-30 — overview page +
+per-stage detail pages, nav, Repositories.jsx, and AI profile docs all updated. Repo is
+still private; flip `is_public` in career DB `portfolio_items` id 37 once it's public.)
 
 ---
 
