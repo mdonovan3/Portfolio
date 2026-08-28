@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Multi-Agent Causal Inference over Longitudinal State Data</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fafaf8;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+  h1 { font-size: 1.6em; font-weight: bold; margin-bottom: 6px; }
+  h2 { font-size: 1.15em; font-weight: bold; margin: 36px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 1em; font-weight: bold; margin: 20px 0 6px; }
+  p { margin-bottom: 14px; }
+  ul { margin: 0 0 14px 20px; }
+  li { margin-bottom: 5px; }
+  .meta { color: #666; font-size: 0.88em; margin-bottom: 36px; font-family: monospace; }
+  .gap-box {
+    background: #fff8e1;
+    border-left: 4px solid #f0a500;
+    padding: 14px 18px;
+    margin: 24px 0;
+    font-size: 0.95em;
+  }
+  .gap-box strong { display: block; margin-bottom: 6px; }
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ec;
+    border: 1px solid #ddd;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-size: 0.83em;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 14px 0;
+  }
+  .diagram-wrap {
+    margin: 28px 0;
+    overflow-x: auto;
+  }
+  .questions {
+    background: #f0f4ff;
+    border-left: 4px solid #3a6fcd;
+    padding: 14px 18px;
+    margin: 24px 0;
+  }
+  .questions ol { margin-left: 18px; }
+  .questions li { margin-bottom: 10px; font-size: 0.95em; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 36px 0; }
+
+  /* SVG diagram styles */
+  svg { font-family: Georgia, serif; }
+  .box { rx: 6; ry: 6; }
+  .layer-label { font-size: 11px; fill: #888; font-style: italic; }
+  .box-label { font-size: 12px; fill: #1a1a1a; font-weight: bold; }
+  .box-sub { font-size: 10px; fill: #444; }
+  .arrow { stroke: #666; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+  .arrow-label { font-size: 9.5px; fill: #666; }
+</style>
+</head>
+<body>
+
+<h1>An Epistemic Architecture for Longitudinal Scientific Inference</h1>
+<div class="meta" style="margin-bottom:6px;">
+  Martin Donovan &nbsp;·&nbsp; July 2026 &nbsp;·&nbsp;
+  Status: POC written, not yet run &nbsp;·&nbsp; Early concept — feedback welcome
+</div>
+<div class="meta" style="color:#b07000; margin-bottom:12px;">
+  ⚠ Working title — name TBD
+</div>
+<div style="font-size:1.15em; font-weight:bold; color:#1a1a1a; background:#f5f0e8; border-left:4px solid #8B6914; padding:12px 18px; margin-bottom:16px;">
+  The system is not primarily an AI model. It is a framework for managing conditional scientific belief over time.
+</div>
+<div style="font-size:0.95em; color:#555; font-style:italic; margin-bottom:36px; padding-left:4px;">
+  Central research question: <strong>Can scientific theories become executable, versioned, queryable database objects?</strong>
+  If yes, everything else follows naturally.
+</div>
+
+<h2>The Problem</h2>
+<p>
+  In most longitudinal analysis — tracking language change over centuries, viral genome
+  mutations over weeks, or patient biomarker trajectories over years — we have good tools
+  for describing <em>what</em> changed and <em>when</em>. We have poor tools for
+  systematically attributing <em>why</em>, in a form that is probabilistic, updateable,
+  and computationally queryable.
+</p>
+<p>
+  A researcher working with longitudinal data today has causal reasoning — but it lives
+  in three places that don't talk to each other: the analysis code that produced the
+  result, the paper that interpreted it, and the researcher's own accumulated judgment
+  about what patterns they've seen across their cohort. None of those are queryable,
+  comparable across patients or specimens, or revisable when a follow-up observation
+  changes the picture.
+</p>
+<p>
+  The current state: a tool produces output (a phylogenetic tree, a biomarker trajectory,
+  a clonal evolution diagram). A domain expert reads that output and writes in a
+  discussion section: <em>"consistent with amyloid-driven tau propagation"</em> or
+  <em>"likely represents immune evasion pressure."</em> That causal attribution lives in a
+  PDF. It cannot be updated when new evidence arrives, compared against thousands of
+  similar attributions from a cohort, or queried across instances.
+</p>
+<p>
+  The practical question this framework asks: <strong>what if a researcher's ongoing
+  causal interpretations — about their own data, in their own domain — were persistent
+  first-class database objects that accumulate, revise, and become queryable over
+  time?</strong> Not novel claims about measurement or analysis tools. Just a different
+  data model for the interpretive layer that currently lives in PDFs and memory.
+</p>
+
+<div style="background:#f0f8f0; border-left:4px solid #2a8a4a; padding:16px 20px; margin:24px 0; font-size:1em; line-height:1.8;">
+  <strong>Defining Feature</strong><br>
+  What this framework offers a researcher that nothing in the current stack does:
+  the ability to treat <em>"I think this transition was driven by X with probability P,
+  based on evidence E, under theory T, derived from dataset D"</em> as a database row — one that can be queried
+  across 500 patients, updated when a follow-up visit arrives, compared against a
+  colleague's theory, and examined historically when a prior interpretation turns out to
+  have been wrong.
+</div>
+
+<h2>Architecture Overview</h2>
+
+<div class="diagram-wrap">
+<svg width="860" height="520" viewBox="0 0 860 520">
+  <defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#666"/>
+    </marker>
+    <marker id="arrowhead-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3a6fcd"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2a8a4a"/>
+    </marker>
+  </defs>
+
+  <!-- Layer backgrounds -->
+  <rect x="10" y="30" width="155" height="420" rx="8" fill="#f5f5f0" stroke="#ddd" stroke-width="1"/>
+  <rect x="175" y="30" width="175" height="420" rx="8" fill="#eef2fb" stroke="#c8d4f0" stroke-width="1"/>
+  <rect x="360" y="30" width="170" height="280" rx="8" fill="#fef6e8" stroke="#f0d080" stroke-width="1"/>
+  <rect x="540" y="30" width="160" height="280" rx="8" fill="#eef8f0" stroke="#90cc99" stroke-width="1"/>
+  <rect x="710" y="30" width="140" height="420" rx="8" fill="#f5eef8" stroke="#c8a8e0" stroke-width="1"/>
+
+  <!-- Layer labels -->
+  <text x="87" y="22" text-anchor="middle" class="layer-label">Data Sources</text>
+  <text x="262" y="22" text-anchor="middle" class="layer-label">Specialist Agents</text>
+  <text x="445" y="22" text-anchor="middle" class="layer-label">Causal Grammar</text>
+  <text x="620" y="22" text-anchor="middle" class="layer-label">Inference</text>
+  <text x="780" y="22" text-anchor="middle" class="layer-label">Meta-Agent</text>
+
+  <!-- Data source boxes -->
+  <rect x="20" y="55" width="135" height="40" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+  <text x="87" y="70" text-anchor="middle" class="box-label">Imaging</text>
+  <text x="87" y="85" text-anchor="middle" class="box-sub">PET, MRI, WMH</text>
+
+  <rect x="20" y="110" width="135" height="40" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+  <text x="87" y="125" text-anchor="middle" class="box-label">Biomarkers</text>
+  <text x="87" y="140" text-anchor="middle" class="box-sub">CSF Aβ, tau, NfL</text>
+
+  <rect x="20" y="165" width="135" height="40" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+  <text x="87" y="180" text-anchor="middle" class="box-label">Genetics</text>
+  <text x="87" y="195" text-anchor="middle" class="box-sub">APOE4, PRS, WGS</text>
+
+  <rect x="20" y="220" width="135" height="40" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+  <text x="87" y="235" text-anchor="middle" class="box-label">Cognitive / Clinical</text>
+  <text x="87" y="250" text-anchor="middle" class="box-sub">MMSE, CDR, comorbid</text>
+
+  <rect x="20" y="275" width="135" height="40" rx="5" fill="#fff" stroke="#bbb" stroke-width="1"/>
+  <text x="87" y="290" text-anchor="middle" class="box-label">Network / Spatial</text>
+  <text x="87" y="305" text-anchor="middle" class="box-sub">geography, contact</text>
+
+  <!-- Snapshot box -->
+  <rect x="20" y="355" width="135" height="55" rx="5" fill="#e8f0ff" stroke="#3a6fcd" stroke-width="1.5"/>
+  <text x="87" y="373" text-anchor="middle" class="box-label">Snapshot</text>
+  <text x="87" y="388" text-anchor="middle" class="box-sub">Structured state</text>
+  <text x="87" y="401" text-anchor="middle" class="box-sub">at time t (JSONB)</text>
+
+  <!-- Specialist agent boxes -->
+  <rect x="183" y="55" width="155" height="40" rx="5" fill="#fff" stroke="#7090d0" stroke-width="1"/>
+  <text x="260" y="70" text-anchor="middle" class="box-label">Imaging Agent</text>
+  <text x="260" y="85" text-anchor="middle" class="box-sub">signal_vector + evidence_atoms</text>
+
+  <rect x="183" y="110" width="155" height="40" rx="5" fill="#fff" stroke="#7090d0" stroke-width="1"/>
+  <text x="260" y="125" text-anchor="middle" class="box-label">Biomarker Agent</text>
+  <text x="260" y="140" text-anchor="middle" class="box-sub">JSON only, no prose</text>
+
+  <rect x="183" y="165" width="155" height="40" rx="5" fill="#fff" stroke="#7090d0" stroke-width="1"/>
+  <text x="260" y="180" text-anchor="middle" class="box-label">Genetic Risk Agent</text>
+  <text x="260" y="195" text-anchor="middle" class="box-sub">normalized distribution</text>
+
+  <rect x="183" y="220" width="155" height="40" rx="5" fill="#fff" stroke="#7090d0" stroke-width="1"/>
+  <text x="260" y="235" text-anchor="middle" class="box-label">Clinical Agent</text>
+  <text x="260" y="250" text-anchor="middle" class="box-sub">∑ signal = 1.0 enforced</text>
+
+  <rect x="183" y="275" width="155" height="40" rx="5" fill="#fff" stroke="#7090d0" stroke-width="1"/>
+  <text x="260" y="290" text-anchor="middle" class="box-label">Substrate Agent</text>
+  <text x="260" y="305" text-anchor="middle" class="box-sub">mismatch detection</text>
+
+  <!-- Ensemble box -->
+  <rect x="183" y="355" width="155" height="55" rx="5" fill="#dde8ff" stroke="#3a6fcd" stroke-width="1.5"/>
+  <text x="260" y="373" text-anchor="middle" class="box-label">Ensemble Merge</text>
+  <text x="260" y="388" text-anchor="middle" class="box-sub">mean(outputs)</text>
+  <text x="260" y="401" text-anchor="middle" class="box-sub">variance = uncertainty</text>
+
+  <!-- Grammar boxes -->
+  <rect x="368" y="55" width="154" height="60" rx="5" fill="#fff8e0" stroke="#e0b030" stroke-width="1.5"/>
+  <text x="445" y="73" text-anchor="middle" class="box-label">POGG</text>
+  <text x="445" y="88" text-anchor="middle" class="box-sub">Probabilistic AND/OR</text>
+  <text x="445" y="101" text-anchor="middle" class="box-sub">Graph Grammar</text>
+
+  <rect x="368" y="130" width="154" height="75" rx="5" fill="#fffaea" stroke="#e0b030" stroke-width="1"/>
+  <text x="445" y="148" text-anchor="middle" class="box-label">Production Rules</text>
+  <text x="445" y="163" text-anchor="middle" class="box-sub">AMYLOID_TRANSITION</text>
+  <text x="445" y="177" text-anchor="middle" class="box-sub">└─ AND(Aβ_signal,</text>
+  <text x="445" y="191" text-anchor="middle" class="box-sub">      APOE4_context)</text>
+
+  <rect x="368" y="220" width="154" height="55" rx="5" fill="#fffaea" stroke="#e0b030" stroke-width="1"/>
+  <text x="445" y="238" text-anchor="middle" class="box-label">Parse Validator</text>
+  <text x="445" y="253" text-anchor="middle" class="box-sub">illegal jumps =</text>
+  <text x="445" y="266" text-anchor="middle" class="box-sub">parse failure (not low P)</text>
+
+  <!-- Inference boxes -->
+  <rect x="548" y="55" width="144" height="55" rx="5" fill="#e8f8ec" stroke="#2a8a4a" stroke-width="1.5"/>
+  <text x="620" y="73" text-anchor="middle" class="box-label">Inside Algorithm</text>
+  <text x="620" y="88" text-anchor="middle" class="box-sub">posterior over</text>
+  <text x="620" y="101" text-anchor="middle" class="box-sub">derivations</text>
+
+  <rect x="548" y="125" width="144" height="80" rx="5" fill="#e8f8ec" stroke="#2a8a4a" stroke-width="1.5"/>
+  <text x="620" y="143" text-anchor="middle" class="box-label">cause_distribution</text>
+  <text x="620" y="160" text-anchor="middle" class="box-sub">amyloid:  0.50</text>
+  <text x="620" y="174" text-anchor="middle" class="box-sub">tau:      0.30</text>
+  <text x="620" y="188" text-anchor="middle" class="box-sub">vascular: 0.10</text>
+
+  <rect x="548" y="220" width="144" height="55" rx="5" fill="#e8f8ec" stroke="#2a8a4a" stroke-width="1"/>
+  <text x="620" y="238" text-anchor="middle" class="box-label">Bayesian Update</text>
+  <text x="620" y="253" text-anchor="middle" class="box-sub">reweighted when</text>
+  <text x="620" y="266" text-anchor="middle" class="box-sub">new evidence arrives</text>
+
+  <!-- Meta-agent boxes -->
+  <rect x="718" y="55" width="124" height="55" rx="5" fill="#f0e8f8" stroke="#9060c0" stroke-width="1.5"/>
+  <text x="780" y="73" text-anchor="middle" class="box-label">Meta-Agent</text>
+  <text x="780" y="88" text-anchor="middle" class="box-sub">cross-instance</text>
+  <text x="780" y="101" text-anchor="middle" class="box-sub">orchestrator</text>
+
+  <rect x="718" y="125" width="124" height="60" rx="5" fill="#f5f0ff" stroke="#9060c0" stroke-width="1"/>
+  <text x="780" y="143" text-anchor="middle" class="box-label">Cluster Transitions</text>
+  <text x="780" y="158" text-anchor="middle" class="box-sub">by derivation tree</text>
+  <text x="780" y="173" text-anchor="middle" class="box-sub">(not just cosine sim)</text>
+
+  <rect x="718" y="200" width="124" height="55" rx="5" fill="#f5f0ff" stroke="#9060c0" stroke-width="1"/>
+  <text x="780" y="218" text-anchor="middle" class="box-label">Detect Shared</text>
+  <text x="780" y="233" text-anchor="middle" class="box-sub">External Drivers</text>
+  <text x="780" y="248" text-anchor="middle" class="box-sub">across cohort</text>
+
+  <rect x="718" y="270" width="124" height="55" rx="5" fill="#f5f0ff" stroke="#9060c0" stroke-width="1"/>
+  <text x="780" y="288" text-anchor="middle" class="box-label">Flag Anomalous</text>
+  <text x="780" y="303" text-anchor="middle" class="box-sub">Trajectories</text>
+  <text x="780" y="318" text-anchor="middle" class="box-sub">(no grammar match)</text>
+
+  <!-- Storage row -->
+  <rect x="183" y="435" width="155" height="45" rx="5" fill="#fff0e0" stroke="#c07030" stroke-width="1.5"/>
+  <text x="260" y="453" text-anchor="middle" class="box-label">Redis (ephemeral)</text>
+  <text x="260" y="468" text-anchor="middle" class="box-sub">candidates, work queue</text>
+
+  <rect x="548" y="435" width="144" height="45" rx="5" fill="#e0f0ff" stroke="#3070b0" stroke-width="1.5"/>
+  <text x="620" y="453" text-anchor="middle" class="box-label">Postgres (canonical)</text>
+  <text x="620" y="468" text-anchor="middle" class="box-sub">transitions + revisions</text>
+
+  <!-- Promotion label -->
+  <text x="402" y="453" text-anchor="middle" class="box-sub" fill="#888">promote if</text>
+  <text x="402" y="465" text-anchor="middle" class="box-sub" fill="#888">variance &lt; θ</text>
+
+  <!-- Arrows: data → agents -->
+  <line x1="155" y1="75" x2="183" y2="75" class="arrow" stroke="#aaa" marker-end="url(#arrowhead)"/>
+  <line x1="155" y1="130" x2="183" y2="130" class="arrow" stroke="#aaa" marker-end="url(#arrowhead)"/>
+  <line x1="155" y1="185" x2="183" y2="185" class="arrow" stroke="#aaa" marker-end="url(#arrowhead)"/>
+  <line x1="155" y1="240" x2="183" y2="240" class="arrow" stroke="#aaa" marker-end="url(#arrowhead)"/>
+  <line x1="155" y1="295" x2="183" y2="295" class="arrow" stroke="#aaa" marker-end="url(#arrowhead)"/>
+
+  <!-- Agents → grammar -->
+  <line x1="338" y1="155" x2="368" y2="155" class="arrow" stroke="#7090d0" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- Grammar → inference -->
+  <line x1="522" y1="130" x2="548" y2="130" class="arrow" stroke="#e0b030" marker-end="url(#arrowhead)"/>
+
+  <!-- Inference → meta-agent -->
+  <line x1="692" y1="100" x2="718" y2="100" class="arrow" stroke="#2a8a4a" marker-end="url(#arrowhead-green)"/>
+
+  <!-- Ensemble → candidate pool (Redis) -->
+  <line x1="260" y1="410" x2="260" y2="435" class="arrow" stroke="#c07030" marker-end="url(#arrowhead)"/>
+
+  <!-- Candidate → Postgres (promotion) -->
+  <line x1="338" y1="457" x2="548" y2="457" class="arrow" stroke="#3070b0" marker-end="url(#arrowhead-blue)"/>
+
+  <!-- Postgres → meta-agent (feedback) -->
+  <path d="M 692 457 Q 780 500 780 350" class="arrow" stroke="#9060c0" stroke-dasharray="4,3" marker-end="url(#arrowhead)"/>
+
+  <!-- Meta-agent → work queue feedback -->
+  <path d="M 718 340 Q 650 420 338 420" class="arrow" stroke="#9060c0" stroke-dasharray="4,3" marker-end="url(#arrowhead)"/>
+</svg>
+</div>
+
+<h2>Three First-Class Objects</h2>
+<p style="color:#555; font-size:0.93em; font-style:italic; margin-bottom:6px;">
+  Note: the core primitive the system stores is <strong>Inference</strong> — conditional
+  inference under an explicit theory. Snapshots, transitions, and centroids are supporting
+  objects. The current <code>transition_inferences</code> table name reflects the
+  linguistics POC; the general form should eventually be <code>inferences</code> with
+  transitions as one subtype — a population evaluated under a species concept, or a
+  diagnosis evaluated under a clinical theory, has no transition but is still an inference.
+</p>
+
+<h3>Snapshot</h3>
+<p>
+  The state of a system at a specific point in time. For dementia data: a patient visit —
+  amyloid PET standardized uptake values, CSF phospho-tau, hippocampal volume, white
+  matter hyperintensity burden, cognitive composite score. Stored as structured JSON with
+  typed fields per data domain. This is the ground truth observational layer.
+</p>
+
+<h3>Transition</h3>
+<p>
+  The change between two snapshots, modeled as a hypothesis about causation — not a diff.
+  Each transition carries a <code>cause_distribution</code>: a probability vector over
+  competing causal mechanisms, not a label. Example for a dementia progression event:
+</p>
+<pre>{
+  "cause_distribution": {
+    "amyloid_accumulation": 0.50,
+    "tau_spread":           0.30,
+    "vascular_event":       0.10,
+    "neuroinflammation":    0.10
+  },
+  "confidence": 0.72,
+  "evidence_atoms": [
+    { "type": "csf_ptau_increase",    "value": "+34%",   "weight": 0.41 },
+    { "type": "wm_hyperintensity",    "value": "stable", "weight": 0.18 },
+    { "type": "apoe4_status",         "value": "e4/e4",  "weight": 0.29 }
+  ]
+}</pre>
+<p>
+  This distribution is updateable — a soft probabilistic state that shifts as new evidence
+  arrives. Agent disagreement is preserved as variance: a measure of epistemic uncertainty,
+  not noise to suppress.
+</p>
+
+<h3>Centroid</h3>
+<p>
+  Multi-resolution aggregate of snapshots over a time window — individual visit → annual
+  → decade → disease stage. Categorical features store full probability distributions, not
+  just mode. Continuous features store mean + variance.
+</p>
+<p>
+  Critically, <strong>the spread statistics are a primary analytical signal, not
+  just metadata.</strong> A century-level centroid for Latin in the 1st century CE might
+  show low variance across all features — stable, well-documented, minimal change.
+  The same centroid for the 4th century would show high variance and entropy across
+  phonological and morphological features, reflecting rapid change under pressure from
+  Germanic contact and administrative fragmentation. That contrast is visible at the
+  centroid level before a single raw snapshot is examined — and it tells the meta-agent
+  where to direct attention.
+</p>
+<p>
+  Each centroid therefore stores three layers:
+</p>
+<ul>
+  <li><strong>Central tendency</strong> — mean (continuous), mode + probability vector (categorical)</li>
+  <li><strong>Spread</strong> — standard deviation, IQR (continuous); entropy (categorical); overall instability score across all features</li>
+  <li><strong>Attention signal</strong> — derived from spread: a flag or score indicating whether this window warrants detailed transition-level analysis. High entropy centroid → high attention priority. Adjacent centroids with diverging spread → likely change point boundary.</li>
+</ul>
+<p>
+  This makes the centroid layer a triage mechanism: the meta-agent scans spread
+  statistics across all time windows first, ranks them by instability, and allocates
+  specialist agent attention accordingly. Stable periods are summarized and passed over;
+  high-variance periods are decomposed into their constituent transitions.
+</p>
+
+<h2>The Causal Grammar (the key architectural decision)</h2>
+<p>
+  The architecture has a three-level hierarchy:
+</p>
+<pre>Theory
+  └── assumptions, ontology, predicates, calibration priors
+       └── Grammar  (one executable component of the theory)
+                └── Horn clause production rules (YAML → ProbLog)
+                         └── Inference
+                              └── cause_distribution, confidence, rule_trace</pre>
+<p>
+  A <em>theory</em> is the full scientific framework — the set of assumptions, the
+  ontology of causes, the predicate vocabulary, and the calibration priors. A
+  <em>grammar</em> is one executable, versioned instantiation of that theory as
+  probabilistic Horn clause rules. An <em>inference</em> is the result of evaluating
+  a grammar against a specific evidence set. The grammar doesn't replace the LLM's
+  learned representations — it constrains which inferences are structurally admissible
+  under the current domain theory.
+</p>
+<p>
+  LLM agents propose candidate causal explanations from raw evidence; the framework
+  then constrains and structures those proposals through a <strong>Probabilistic AND/OR
+  Graph Grammar (POGG)</strong> encoding the domain theory. What's stored is not the
+  output of a model run — it is a conditional inference under an explicit, versioned,
+  queryable theory.
+</p>
+<p>
+  An additive weight model says: "tau increase contributes 0.4 to amyloid pathway score."
+  That's blending. A grammar says:
+</p>
+<pre>AMYLOID_DRIVEN_TRANSITION
+  └─ AND(
+       AMYLOID_ACCUMULATION_SIGNAL,
+       APOE4_GENETIC_CONTEXT,
+       NOT(DOMINANT_VASCULAR_BURDEN)
+     )
+
+VASCULAR_TRANSITION
+  └─ AND(
+       WMH_INCREASE,
+       CARDIOVASCULAR_RISK_CONTEXT
+     )</pre>
+<p>
+  The AND/OR structure captures conjunctive causality — evidence combinations that
+  additive weights flatten and misrepresent. The NOT is exclusionary logic that a weight
+  matrix cannot express at all.
+</p>
+<p>
+  The grammar constrains admissible explanations under the current domain theory. Evidence
+  that cannot be derived from active production rules becomes an explicit candidate for
+  rule revision — not silently assigned an unsupported attribution. The grammar is not
+  claimed to be complete; when evidence cannot be derived, that failure is itself a signal
+  that the domain theory may need extension.
+</p>
+<p>
+  The Alzheimer's ATN (Amyloid-Tau-Neurodegeneration) biomarker framework is already a
+  structured causal taxonomy of states. This would extend it to model state
+  <em>transitions</em> with probabilistic causal attribution, rather than static
+  classification.
+</p>
+<p>
+  Grammars are first-class versioned objects, not configuration files. Multiple grammars
+  can coexist within a domain — a conservative grammar grounded in established theory and
+  an extended grammar incorporating newer hypotheses can evaluate the same transition
+  simultaneously, producing separate posteriors. The meta-agent coordinates across
+  competing explanatory frameworks rather than selecting one truth. Grammar versioning
+  means calibration can be tracked across versions: did v3 improve on v2 against known
+  outcomes?
+</p>
+
+<h2>Persistent Domain Expert Agents and the Meta-Agent</h2>
+<p>
+  A key design element distinguishing this from a standard multi-agent pipeline:
+  specialist agents are not stateless function calls. They are <strong>persistent,
+  serializable domain experts</strong> whose accumulated knowledge is stored in the
+  database and carried forward across sessions.
+</p>
+
+<h3>Persistent Domain Expert Agents</h3>
+<p>
+  Each specialist agent is assigned a specific domain scope — a language family, a
+  patient cohort, a viral lineage, a tumor type. Over time, that agent accumulates:
+</p>
+<ul>
+  <li>A library of sound correspondences, mutation signatures, or biomarker patterns it has observed and validated</li>
+  <li>A set of open hypotheses it is actively tracking across new evidence</li>
+  <li>A record of past transition judgments — including cases where it was overruled by the meta-agent or revised when new evidence arrived</li>
+  <li>Calibration history: how well its <code>confidence</code> scores have tracked actual outcomes</li>
+</ul>
+<p>
+  The critical distinction: <strong>the agent's weights (the LLM) provide reasoning
+  ability. The database provides domain knowledge.</strong> A new session doesn't start
+  cold — it resumes where the agent left off, with full access to everything that agent
+  has learned about its scope. This is the difference between asking a generalist model
+  to analyze a new patient and asking a specialist who has followed a cohort for years.
+</p>
+<p>
+  In dementia terms: a "tau pathway agent" assigned to the ADNI cohort would, over time,
+  build a structured record of every tau-related transition it has analyzed, the
+  <code>cause_distribution</code> it assigned, whether the meta-agent agreed, and what
+  subsequent biomarker data said. That accumulated record is its expertise — not stored
+  in model weights, but queryable.
+</p>
+
+<div style="margin:20px 0; overflow-x:auto;">
+<svg width="820" height="200" viewBox="0 0 820 200">
+  <defs>
+    <marker id="arr2" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#666"/>
+    </marker>
+    <marker id="arr2-purple" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#9060c0"/>
+    </marker>
+  </defs>
+
+  <!-- Agent boxes -->
+  <rect x="10" y="20" width="145" height="80" rx="6" fill="#eef2fb" stroke="#7090d0" stroke-width="1.5"/>
+  <text x="82" y="42" text-anchor="middle" style="font-size:12px;font-weight:bold;fill:#1a1a1a;">Tau Pathway Agent</text>
+  <text x="82" y="58" text-anchor="middle" style="font-size:10px;fill:#444;">ADNI cohort scope</text>
+  <text x="82" y="72" text-anchor="middle" style="font-size:10px;fill:#444;">847 transitions analyzed</text>
+  <text x="82" y="86" text-anchor="middle" style="font-size:10px;fill:#666;font-style:italic;">expertise in DB ↓</text>
+
+  <rect x="165" y="20" width="145" height="80" rx="6" fill="#eef2fb" stroke="#7090d0" stroke-width="1.5"/>
+  <text x="237" y="42" text-anchor="middle" style="font-size:12px;font-weight:bold;fill:#1a1a1a;">Vascular Agent</text>
+  <text x="237" y="58" text-anchor="middle" style="font-size:10px;fill:#444;">WMH + CVD scope</text>
+  <text x="237" y="72" text-anchor="middle" style="font-size:10px;fill:#444;">312 transitions analyzed</text>
+  <text x="237" y="86" text-anchor="middle" style="font-size:10px;fill:#666;font-style:italic;">expertise in DB ↓</text>
+
+  <rect x="320" y="20" width="145" height="80" rx="6" fill="#eef2fb" stroke="#7090d0" stroke-width="1.5"/>
+  <text x="392" y="42" text-anchor="middle" style="font-size:12px;font-weight:bold;fill:#1a1a1a;">Genetic Risk Agent</text>
+  <text x="392" y="58" text-anchor="middle" style="font-size:10px;fill:#444;">APOE4 / PRS scope</text>
+  <text x="392" y="72" text-anchor="middle" style="font-size:10px;fill:#444;">1,204 transitions analyzed</text>
+  <text x="392" y="86" text-anchor="middle" style="font-size:10px;fill:#666;font-style:italic;">expertise in DB ↓</text>
+
+  <rect x="475" y="20" width="145" height="80" rx="6" fill="#eef2fb" stroke="#7090d0" stroke-width="1.5"/>
+  <text x="547" y="42" text-anchor="middle" style="font-size:12px;font-weight:bold;fill:#1a1a1a;">Inflammation Agent</text>
+  <text x="547" y="58" text-anchor="middle" style="font-size:10px;fill:#444;">neuroinflammation scope</text>
+  <text x="547" y="72" text-anchor="middle" style="font-size:10px;fill:#444;">189 transitions analyzed</text>
+  <text x="547" y="86" text-anchor="middle" style="font-size:10px;fill:#666;font-style:italic;">expertise in DB ↓</text>
+
+  <!-- DB bar below agents -->
+  <rect x="10" y="118" width="610" height="28" rx="5" fill="#e0f0ff" stroke="#3070b0" stroke-width="1.5"/>
+  <text x="315" y="136" text-anchor="middle" style="font-size:11px;fill:#1a1a1a;font-weight:bold;">Shared Postgres store — agent knowledge state, transition history, calibration record, open hypotheses</text>
+
+  <!-- Arrows agents → DB -->
+  <line x1="82" y1="100" x2="82" y2="118" stroke="#aaa" stroke-width="1.2" marker-end="url(#arr2)"/>
+  <line x1="237" y1="100" x2="237" y2="118" stroke="#aaa" stroke-width="1.2" marker-end="url(#arr2)"/>
+  <line x1="392" y1="100" x2="392" y2="118" stroke="#aaa" stroke-width="1.2" marker-end="url(#arr2)"/>
+  <line x1="547" y1="100" x2="547" y2="118" stroke="#aaa" stroke-width="1.2" marker-end="url(#arr2)"/>
+
+  <!-- Meta-agent box -->
+  <rect x="648" y="20" width="162" height="126" rx="6" fill="#f5eef8" stroke="#9060c0" stroke-width="2"/>
+  <text x="729" y="44" text-anchor="middle" style="font-size:12px;font-weight:bold;fill:#1a1a1a;">Meta-Agent</text>
+  <text x="729" y="62" text-anchor="middle" style="font-size:10px;fill:#444;">• Reads all agent outputs</text>
+  <text x="729" y="76" text-anchor="middle" style="font-size:10px;fill:#444;">• Resolves disagreements</text>
+  <text x="729" y="90" text-anchor="middle" style="font-size:10px;fill:#444;">• Reweights distributions</text>
+  <text x="729" y="104" text-anchor="middle" style="font-size:10px;fill:#444;">• Promotes to canonical</text>
+  <text x="729" y="118" text-anchor="middle" style="font-size:10px;fill:#444;">• Issues new tasks</text>
+  <text x="729" y="134" text-anchor="middle" style="font-size:10px;fill:#444;">• Cross-cohort patterns</text>
+
+  <!-- Arrows from agents to meta-agent -->
+  <line x1="620" y1="60" x2="648" y2="60" stroke="#9060c0" stroke-width="1.5" marker-end="url(#arr2-purple)"/>
+  <!-- DB → meta-agent -->
+  <line x1="620" y1="132" x2="648" y2="120" stroke="#9060c0" stroke-width="1.2" stroke-dasharray="4,3" marker-end="url(#arr2-purple)"/>
+  <!-- Meta-agent feedback → DB -->
+  <path d="M 648 90 Q 630 160 320 146" stroke="#9060c0" stroke-width="1.2" stroke-dasharray="4,3" fill="none" marker-end="url(#arr2-purple)"/>
+</svg>
+</div>
+
+<h3>The Meta-Agent</h3>
+<p>
+  The meta-agent does not analyze individual data points. It operates over the full
+  graph of transitions, centroids, and agent outputs — across the entire cohort or
+  corpus — and performs three functions:
+</p>
+<ul>
+  <li>
+    <strong>Disagreement resolution.</strong> When two domain expert agents assign
+    conflicting <code>cause_distribution</code> vectors to the same transition, the
+    meta-agent does not average them. It reads the evidence atoms each agent cited,
+    checks which have stronger grammar support, and either resolves the disagreement or
+    flags it as genuinely uncertain (preserving both hypotheses rather than collapsing
+    to one).
+  </li>
+  <li>
+    <strong>Cross-instance pattern detection.</strong> The meta-agent asks: which
+    transition types cluster across patients, lineages, or languages? Do patients
+    sharing the same causal derivation path (e.g., tau-dominated transitions with
+    APOE4 context) show different treatment response curves than those whose transitions
+    are vascular-dominated? This is not a query any individual domain agent can answer —
+    it requires the full transition graph.
+  </li>
+  <li>
+    <strong>Task generation and feedback.</strong> When the meta-agent identifies a
+    low-confidence region (a cluster of transitions where agent variance is high and
+    evidence is sparse), it issues new analysis tasks back to the relevant domain expert
+    agents — directing them to re-examine specific time windows, patients, or evidence
+    types. The system is self-directing within its analytical scope.
+  </li>
+</ul>
+<p>
+  The relationship between domain expert agents and the meta-agent is analogous to the
+  relationship between specialist clinicians and a case conference — each specialist
+  brings deep knowledge of their domain; the case conference synthesizes across them,
+  resolves conflicts, and identifies patterns no single specialist would see.
+</p>
+
+<h2>Intellectual Lineage: Truth Maintenance Systems</h2>
+<p>
+  The closest theoretical ancestor to this architecture is not expert systems or machine
+  learning — it is <strong>Truth Maintenance Systems (TMS)</strong> and their
+  assumption-based extension.
+</p>
+<p>
+  Doyle's TMS (1979) and de Kleer's Assumption-based TMS (ATMS, 1986) were built to
+  maintain competing hypotheses with justification structures, revise beliefs as
+  assumptions change, and preserve provenance across a reasoning session. ATMS explicitly
+  supports multiple simultaneous assumption sets — different collections of beliefs that
+  are each internally consistent — and tracks which conclusions are derivable under which
+  assumptions. Later probabilistic ATMS extensions (1996) associated probability
+  distributions with assumptions, allowing posteriors to be computed over derived
+  conclusions. Uncertainty-aware truth maintenance is a mature research direction, not
+  unexplored territory.
+</p>
+<p>
+  This means the following are <strong>not</strong> novel contributions of this
+  architecture: maintaining competing hypotheses, recording justification structures,
+  revising beliefs, or attaching probabilities to assumptions. Those are established.
+</p>
+<p>
+  <strong>What is novel is the operational context:</strong> ATMS was an in-memory,
+  single-session reasoning engine. This architecture embeds probabilistic truth
+  maintenance into a persistent longitudinal data platform — with temporal transitions
+  as first-class database entities, asynchronous multi-agent evidence extraction,
+  grammar versioning across competing scientific theories, and database-native querying
+  of evolving causal beliefs across large datasets. The contribution is not a new truth
+  maintenance system. It is truth maintenance concepts operating at data platform scale,
+  over time.
+</p>
+<p>
+  A second key foundation is <strong>belief databases</strong>. Gatterbauer et al.
+  ("Believe It or Not," VLDB 2009) formalized a relational database model where tuples
+  are annotated with multi-agent epistemic belief statements — explicitly motivated by
+  scientific databases where a community assembles, revises, and curates a shared
+  repository. That work established the epistemic database as a first-class research
+  object. This architecture extends the idea to causal beliefs (not just data tuple
+  beliefs), adds probabilistic logic as the reconciliation layer, and adds temporal
+  structure through transitions and centroids.
+</p>
+<p>
+  Taken together: <em>belief databases established persistent queryable epistemic
+  objects; ATMS established competing-theory management with justification provenance;
+  probabilistic logic programming (ProbLog, MLNs) established grammar-constrained
+  causal inference. This architecture integrates the three into a longitudinal,
+  distributed research platform.</em>
+</p>
+
+<h2>Formal Grounding: The Prolog / Probabilistic Logic Connection</h2>
+<p>
+  The causal grammar production rules are, formally, <strong>Horn clauses</strong> — the
+  same structure that underlies Prolog. The mapping is exact:
+</p>
+<table style="width:100%; border-collapse:collapse; font-size:0.9em; margin:14px 0;">
+  <thead>
+    <tr style="background:#f0f0ec; border-bottom:2px solid #ccc;">
+      <th style="text-align:left; padding:7px 12px;">POGG concept</th>
+      <th style="text-align:left; padding:7px 12px;">Prolog analog</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #ddd;"><td style="padding:7px 12px;">Production rule</td><td style="padding:7px 12px;">Horn clause (<code>head :- body</code>)</td></tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;"><td style="padding:7px 12px;">AND-edge</td><td style="padding:7px 12px;">Conjunction in rule body</td></tr>
+    <tr style="border-bottom:1px solid #ddd;"><td style="padding:7px 12px;">OR-edge</td><td style="padding:7px 12px;">Multiple rules with same head</td></tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;"><td style="padding:7px 12px;">NOT-edge</td><td style="padding:7px 12px;">Negation as failure (<code>\+</code>)</td></tr>
+    <tr style="border-bottom:1px solid #ddd;"><td style="padding:7px 12px;">Evidence atom (terminal)</td><td style="padding:7px 12px;">Ground fact</td></tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;"><td style="padding:7px 12px;">Causal derivation</td><td style="padding:7px 12px;">Proof tree</td></tr>
+    <tr style="border-bottom:1px solid #ddd;"><td style="padding:7px 12px;">Posterior over derivations</td><td style="padding:7px 12px;">ProbLog query probability</td></tr>
+    <tr style="background:#fafaf8;"><td style="padding:7px 12px;">LLM agent as evidence source</td><td style="padding:7px 12px;">Probabilistic fact / neural predicate</td></tr>
+  </tbody>
+</table>
+<p>
+  Written as actual Prolog, a production rule looks like:
+</p>
+<pre>substrate_transition :- phonology_pressure, lexical_mismatch.
+phonology_pressure   :- inventory_shift.
+phonology_pressure   :- markedness_anomaly.           % OR via multiple rules
+amyloid_transition   :- amyloid_signal, apoe4_context, \+ dominant_vascular.</pre>
+<p>
+  Standard Prolog is deterministic — a query succeeds or fails, no probability.
+  <strong>ProbLog</strong> closes this gap: facts carry probabilities, and queries
+  return <code>P(goal is provable | probabilistic facts)</code> — essentially
+  <code>P(cause | evidence)</code>, which is the core POGG computation.
+  <strong>DeepProbLog</strong> (Manhaeve et al., 2018) adds neural networks as the
+  ground-fact evidence layer — structurally almost identical to this architecture, with
+  LLM agents in place of gradient-trained networks.
+</p>
+
+<h3>Nested Inference — A Precise Description</h3>
+<p>
+  Prolog has a long tradition of <em>meta-interpretation</em> — Prolog programs that
+  interpret other Prolog programs. ProbLog is exactly this: a probabilistic
+  meta-interpreter that runs the causal grammar (object-level Prolog) and tracks
+  probability mass across the proof search instead of returning true/false.
+  The meta-agent adds a third level, reasoning over the outputs of many probabilistic
+  inference runs across instances. The full stack:
+</p>
+<pre>LLM agents             →  produce probabilities for ground evidence facts
+Ground facts           →  evidence_atoms with probability weights
+Causal grammar         →  Horn clauses (the domain theory)
+Probabilistic          →  ProbLog / inside algorithm: Prolog reasoning ABOUT
+meta-interpreter          Prolog proofs, tracking probability across derivations
+Meta-agent             →  synthesis over many inference runs, cross-instance</pre>
+<p>
+  Layers 3 and 4 form a nested inference structure: a probabilistic meta-interpreter
+  reasons about the proofs produced by the causal grammar, tracking probability across
+  derivations. The meta-agent adds a third level — synthesis over many inference runs.
+  This is not just an analogy — it maps to a mature field
+  (<strong>Probabilistic Logic Programming</strong>) with working implementations.
+</p>
+<p style="background:#f0f4ff; border-left:4px solid #3a6fcd; padding:12px 16px; margin:16px 0; font-size:0.95em;">
+  <strong>Practical implication:</strong> The production rules can be written as actual
+  Prolog clauses and tested with ProbLog today, before any custom inference machinery
+  is built. ProbLog is one possible inference backend — it uses probabilistic semantics
+  over Horn clause derivations. Tomorrow the inference layer could be swapped for
+  Markov Logic Networks, Probabilistic Soft Logic, or weighted Answer Set Programming
+  without changing anything above it. <strong>Markov Logic Networks</strong> in
+  particular offer a learning framework for deriving rule weights from labeled data,
+  directly applicable to the calibration problem.
+</p>
+<p>
+  <strong>A note on provenance.</strong> The pipeline from evidence atoms through rule
+  firing to posterior to revision history is structurally a <strong>provenance graph
+  with epistemic semantics</strong> — closely related to the W3C PROV model and the
+  why-provenance literature (Green et al., PODS 2007). This connection is worth
+  exploring before building a custom justification chain representation: provenance
+  models for scientific workflows are a mature area and may provide data structures and
+  query patterns directly applicable here.
+</p>
+
+<h2>Rule Authoring and Storage</h2>
+<p>
+  Production rules are <strong>first-class data objects stored in the database</strong>,
+  not code in a file. A rules table holds one row per rule, domain-scoped, with the
+  human-authored definition, its compiled Prolog form, an optional probability weight,
+  and a literature citation. The grammar the inference engine runs is compiled at query
+  time by loading the active rules for the requested domain.
+</p>
+<p>
+  This has three practical consequences: rules are runtime-editable (no container restart),
+  auditable (full history of what rules fired for which transitions), and domain-scoped
+  (the linguistics grammar and the virology grammar coexist in the same table, loaded
+  selectively). Adding a production rule does not require touching the inference engine,
+  agent framework, or API.
+</p>
+<p>
+  The authoring format is <strong>YAML</strong> — not a custom DSL and not raw Prolog.
+  YAML is widely adopted across technical disciplines; a clinician, biologist, or
+  linguist has almost certainly encountered it through config files, pipeline tooling, or
+  infrastructure-as-code. No new syntax to learn. Editors, schema validators, and linters
+  already exist. A domain expert can author rules from a template without knowing Prolog:
+</p>
+<pre># Linguistics — substrate influence rule
+- rule: substrate
+  domain: linguistics
+  head: substrate
+  conditions:
+    all_of:
+      - phonology_overhang
+      - lexical_continuity
+    none_of:
+      - contact
+  literature: "Thomason &amp; Kaufman (1988) Language Contact, Creolization, and Genetic Linguistics"
+  weight: 0.75
+
+# Neurodegeneration — amyloid pathway rule
+- rule: amyloid_driven_transition
+  domain: neurodegeneration
+  head: amyloid_pathway
+  conditions:
+    all_of:
+      - amyloid_accumulation_signal
+      - apoe4_context
+    none_of:
+      - dominant_vascular_burden
+  literature: "Jack et al. (2018) NIA-AA Alzheimer's disease framework"
+  weight: 0.80</pre>
+<p>
+  The YAML compiles to Prolog mechanically — <code>all_of</code> items become a
+  conjunction, <code>none_of</code> items become negation-as-failure (<code>\+</code>),
+  multiple rules with the same <code>head</code> produce OR alternatives. A domain expert
+  reads a rule file and sees the causal theory of the domain in plain structured text,
+  with citations attached. The rules function as living documentation alongside being
+  machine-executable.
+</p>
+<h3>The Predicate Registry (the key engineering boundary)</h3>
+<p>
+  A <strong>predicate registry</strong> table records which evidence atom names exist for
+  each domain and which feature extractor produces them. This is the typed API boundary
+  between the measurement layer and the reasoning layer:
+</p>
+<pre>Feature extraction  →  Predicate Registry  →  Rule Engine
+  (LLM agents)          (typed contract)       (probabilistic logic)</pre>
+<p>
+  Without this boundary, an LLM agent can output anything and the rule engine receives
+  arbitrary text. With it, agents produce only named, registered predicates — and a rule
+  that references an unregistered predicate is a validation error before it reaches the
+  inference engine. This is a significant reduction in entropy: it makes domains modular,
+  feature extractors substitutable, and rule authoring verifiable. It is also what allows
+  a domain expert to write production rules without knowing how the underlying measurements
+  are produced — the registry is the interface specification between those two concerns.
+</p>
+
+<h2>What Already Exists</h2>
+
+<h3>Theoretical Foundations This Architecture Builds On</h3>
+<p>
+  <strong>Belief databases</strong> (Gatterbauer et al., VLDB 2009) — formalized a
+  relational database model with multi-agent epistemic belief annotations, motivated
+  by scientific community curation. Establishes that persistent queryable epistemic
+  objects are a viable database-layer concept.
+</p>
+<p>
+  <strong>Truth maintenance and ATMS</strong> (Doyle 1979, de Kleer 1986) — competing
+  hypothesis management with justification provenance. Probabilistic ATMS extensions
+  (Liu &amp; Bundy 1996) attach probability distributions to assumption sets.
+  Establishes the competing-theory and revision foundation.
+</p>
+<p>
+  <strong>Probabilistic logic programming</strong> (ProbLog, Markov Logic Networks,
+  DeepProbLog) — grammar-constrained causal inference with probabilistic Horn clauses.
+  Establishes the reconciliation layer foundation.
+</p>
+
+<h3>Closest Deployed Systems</h3>
+<p>
+  <strong>SemMedDB</strong> (Kilicoglu et al., Bioinformatics 2012) — ~96 million
+  subject-predicate-object triples from PubMed, with causal predicate types (CAUSES,
+  INHIBITS, TREATS), normalized to UMLS concepts, every triple linked to its source
+  PMID. A large-scale persistent queryable scientific causal knowledge base. Gap: no
+  probabilistic weights on beliefs; no competing-theory structure; no Horn clause
+  reconciliation; no temporal transitions; revision not first-class.
+</p>
+<p>
+  <strong>ChronoMedKG</strong> (2025) — adds temporal structure to SemMedDB-style
+  triples, with credibility scores and disease-stage temporal components. Closest
+  existing system to the longitudinal dimension. Gap: same as SemMedDB for competing
+  theories, probabilistic logic, and first-class revision.
+</p>
+
+<h3>Domain Analysis Tools</h3>
+<p>
+  <strong>Model-Based Hypothesis Testing (MBHT)</strong> in virology (Frontiers, 2025)
+  — Bayesian posteriors over competing causal hypotheses for viral evolution. Validates
+  the <code>cause_distribution</code> concept. But MBHT is flat (no AND/OR grammar),
+  post-hoc, and not integrated into a queryable transition database.
+</p>
+<p>
+  <strong>COSMIC mutational signatures</strong> in cancer genomics — flat W-matrix
+  decomposition of mutational causes. No compositional structure, no temporal
+  transitions as first-class objects.
+</p>
+<p>
+  <strong>BEAST X</strong> (Nature Methods, 2025) — gold standard for viral
+  phylogenetic inference. Causal attribution remains post-hoc human interpretation.
+</p>
+
+<div class="gap-box">
+  <strong>⚠ Honest Gaps — What I Don't Know</strong>
+  <ul>
+    <li><strong>Production rules don't exist yet.</strong> For any domain, the causal grammar must be grounded by a domain expert. Without that grounding the rules could be systematically wrong in ways that look correct — the architecture cannot compensate for a bad theory.</li>
+    <li><strong>No calibration strategy defined.</strong> Overconfident causal attribution is a known failure mode in probabilistic systems. How rule weights are learned from or validated against known outcomes is an open problem.</li>
+    <li><strong>POC written, not yet run.</strong> A linguistic proof of concept (Germanic branch validation with ASJP wordlist data) is implemented in Docker Compose but not yet executed. No empirical feedback yet.</li>
+    <li><strong>Adaptive temporal window segmentation unspecified.</strong> How to draw period boundaries from transition density rather than fixed calendar intervals is an open design question.</li>
+    <li><strong>Scale overhead unknown.</strong> The multi-agent ensemble adds infrastructure cost. Whether that cost is justified at the dataset sizes typical of a research team has not been evaluated.</li>
+    <li><strong>The architecture makes reasoning reproducible — it does not fix bad measurements.</strong> If feature extraction produces poor evidence atoms, the downstream probabilistic logic will be precise and wrong. The predicate registry enforces structural validity, not empirical accuracy.</li>
+  </ul>
+</div>
+
+<h2>Theory Perturbation and Structural Sensitivity Analysis</h2>
+<p>
+  Because grammars are first-class versioned objects and every inference is tagged to
+  the grammar that produced it, the system supports a form of analysis that is
+  categorically different from standard sensitivity analysis.
+</p>
+<p>
+  Standard sensitivity analysis asks: <em>"What happens if parameter λ changes?"</em>
+  This system asks: <em>"What happens if Rule 17 doesn't exist?"</em> Those are different
+  questions. The first operates on numerical weights within a fixed model structure. The
+  second — <strong>theory perturbation</strong> — operates on the causal structure itself.
+</p>
+<p>
+  A researcher encodes a set of theoretical assumptions as a grammar and runs it against
+  transitions where the outcome is known. The resulting <code>cause_distribution</code>
+  either converges on the known record or it doesn't. They then remove a rule, add a
+  constraint, or swap a causal pathway — and rerun under the new grammar version. The
+  <code>transition_inferences</code> table holds both results for the same transitions:
+  the comparison is a query, not a second analysis from scratch.
+</p>
+<p>
+  The practical form: a researcher suspects that substrate influence, not drift, was the
+  primary driver of a set of transitions. They encode that hypothesis as a grammar, run
+  it against transitions with known historical outcomes, and measure whether it
+  outperforms the drift-primary grammar. If it does, there is now a quantified,
+  reproducible, queryable argument for revising the theoretical consensus. If it
+  doesn't, the null hypothesis survives — and the full reasoning chain is stored,
+  not discarded.
+</p>
+<p style="background:#f0f4ff; border-left:4px solid #3a6fcd; padding:12px 16px; margin:16px 0; font-size:0.95em;">
+  This capability is inherited from the ATMS lineage: ATMS environments were designed to
+  answer exactly this question in diagnostic reasoning — "what if I assume this component
+  is faulty instead? Does that explanation fit the observation set better?" The
+  architecture extends that to longitudinal scientific inference with probabilistic
+  grammars and a durable queryable store.
+</p>
+
+<h2>Pattern Discovery and the Theory Refinement Loop</h2>
+<p>
+  The system surfaces patterns the current grammar cannot explain. The meta-agent scans
+  for high <code>instability_score</code> centroids and transitions where competing
+  grammars disagree sharply — both are signals that something in the data is not
+  accounted for by the current causal theory. These aren't errors; they're discovery
+  opportunities.
+</p>
+<p>
+  This creates a feedback loop between pattern recognition and grammar refinement:
+</p>
+<ol style="margin: 0 0 16px 20px; line-height:1.7;">
+  <li><strong>Discover</strong> — the meta-agent flags unexplained transitions and high-disagreement regions; the researcher examines what the current grammar is failing to account for</li>
+  <li><strong>Hypothesize</strong> — the researcher proposes a new causal mechanism or structural rule that might explain the anomaly</li>
+  <li><strong>Encode</strong> — author the hypothesis as a new grammar rule in YAML; the system creates a new grammar version linked to the prior via <code>parent_grammar_id</code></li>
+  <li><strong>Test</strong> — rerun the affected transitions under the new grammar; <code>transition_inferences</code> holds the new posteriors alongside the old ones without overwriting them</li>
+  <li><strong>Evaluate</strong> — does the refined grammar converge better on known outcomes? Does disagreement decrease?</li>
+  <li><strong>Promote</strong> — if yes, mark the grammar version active; the improvement is measurable and the full provenance chain is preserved</li>
+  <li><strong>Repeat</strong> — the refined grammar produces new inferences, which may surface new anomalies, restarting the loop</li>
+</ol>
+<p>
+  Each iteration is fully traceable: what changed, which transitions it affected, and
+  whether convergence improved. The loop is the scientific method — observe anomaly,
+  hypothesize, encode, test, revise — formalized as a set of queryable database
+  operations rather than a narrative in a lab notebook.
+</p>
+<p>
+  Automated grammar induction (an LLM proposes candidate rules grounded in literature;
+  a domain expert validates) would tighten the loop further — this is noted as a future
+  capability. The manual loop is fully supported by the current design.
+</p>
+
+<div class="questions">
+  <strong>Open Questions</strong>
+  <ol>
+    <li><strong>Grammar maintainability at scale.</strong> Can a probabilistic logic grammar remain maintainable once a domain exceeds ~500 predicates? Is there a known threshold where rule systems of this type become intractable to author and debug?</li>
+    <li><strong>Horn clause expressiveness limits.</strong> What classes of causal hypothesis cannot be represented as Horn clauses? Are there patterns in longitudinal structured data — temporal ordering constraints, feedback loops, graded causation — that require richer representations?</li>
+    <li><strong>Competing grammars.</strong> When two domain experts encode different but internally consistent causal theories, the system produces separate posteriors per grammar rather than arbitrating. Is grammar versioning and provenance sufficient to make that comparison useful, or does it require a more principled reconciliation mechanism?</li>
+    <li><strong>Rule weight learning.</strong> Should production rule probabilities be learned globally from labeled data, or personalized per specialist agent based on that agent's calibration history? The latter is more expressive but significantly more complex.</li>
+    <li><strong>Grammar induction.</strong> Can rule authoring be partially automated — an LLM proposes a candidate Horn clause grounded in literature, a domain expert validates, and the grammar evolves incrementally? What are the known failure modes of human-in-the-loop probabilistic rule acquisition?</li>
+    <li><strong>Is this useful at research team scale?</strong> The system is designed to be deployed per research team and domain, not as a global infrastructure. Does that deployment model match how research teams actually want to manage interpretive knowledge about their longitudinal data?</li>
+  </ol>
+</div>
+
+<hr>
+
+<h2>General Applicability: A Domain-Agnostic Framework</h2>
+<p>
+  The inference engine — the Redis/Postgres coordination layer, agent protocol, POGG
+  parser, and centroid computation — is domain-agnostic. The grammar is not: ontology,
+  causal rules, evidence mapping, and calibration are each a new project for each new
+  domain. Generalizability means a team can deploy the same stack with a different grammar
+  and feature extractor; it does not mean a new domain is cheap or automatic. Below are
+  the domains where this framing has been analyzed in detail, with notes on how the
+  mapping works and where the closest existing tools fall short.
+</p>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.9em; margin:20px 0;">
+  <thead>
+    <tr style="background:#f0f0ec; border-bottom:2px solid #ccc;">
+      <th style="text-align:left; padding:8px 12px;">Domain</th>
+      <th style="text-align:left; padding:8px 12px;">Snapshot</th>
+      <th style="text-align:left; padding:8px 12px;">Transition causes</th>
+      <th style="text-align:left; padding:8px 12px;">Closest existing tool</th>
+      <th style="text-align:left; padding:8px 12px;">Key gap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #ddd;">
+      <td style="padding:8px 12px;"><strong>Neurodegeneration<br>(dementia)</strong></td>
+      <td style="padding:8px 12px;">Patient visit: amyloid PET, tau CSF, hippocampal volume, cognitive scores</td>
+      <td style="padding:8px 12px;">Amyloid accumulation, tau spread, vascular, neuroinflammation</td>
+      <td style="padding:8px 12px;">ATN biomarker framework, clinical staging</td>
+      <td style="padding:8px 12px;">ATN classifies static states; doesn't model transitions or compute causal posteriors</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;">
+      <td style="padding:8px 12px;"><strong>Viral genomics<br>(e.g. SARS-CoV-2, influenza)</strong></td>
+      <td style="padding:8px 12px;">Genome sequence at a collection date + host metadata</td>
+      <td style="padding:8px 12px;">Immune evasion, transmission advantage, founder effect, random drift</td>
+      <td style="padding:8px 12px;">BEAST X, Nextstrain, MBHT</td>
+      <td style="padding:8px 12px;">MBHT computes causal posteriors but is flat, post-hoc, and not queryable at scale</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd;">
+      <td style="padding:8px 12px;"><strong>Cancer clonal evolution</strong></td>
+      <td style="padding:8px 12px;">Tumor biopsy sequencing at a time point; clonal frequencies</td>
+      <td style="padding:8px 12px;">Selection pressure (treatment), stochastic drift, horizontal gene transfer</td>
+      <td style="padding:8px 12px;">COSMIC signatures, PyClone, PhyloWGS</td>
+      <td style="padding:8px 12px;">COSMIC is flat W-matrix decomposition; no temporal transitions, no cross-patient meta-analysis</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;">
+      <td style="padding:8px 12px;"><strong>Historical linguistics</strong></td>
+      <td style="padding:8px 12px;">Language state at a time period: phonological inventory, vocabulary, syntax</td>
+      <td style="padding:8px 12px;">Contact borrowing, internal drift, prestige shift, substrate influence, grammaticalization</td>
+      <td style="padding:8px 12px;">BEAST phylogenetics, ASJP similarity</td>
+      <td style="padding:8px 12px;">Phylogenetic tools assume tree structure; contact and substrate create network-like causation that trees can't represent</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd;">
+      <td style="padding:8px 12px;"><strong>Ancient DNA / paleogenomics</strong></td>
+      <td style="padding:8px 12px;">Ancient genome samples: allele frequencies, haplogroups, by time and location</td>
+      <td style="padding:8px 12px;">Population migration, admixture, bottleneck, drift</td>
+      <td style="padding:8px 12px;">ADMIXTURE, STRUCTURE, qpAdm</td>
+      <td style="padding:8px 12px;">Tools infer admixture proportions but don't model transitions as causal events or align them across populations</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;">
+      <td style="padding:8px 12px;"><strong>Antibiotic resistance spread</strong></td>
+      <td style="padding:8px 12px;">Resistance gene frequencies across hospitals / regions at a time point</td>
+      <td style="padding:8px 12px;">Geographic diffusion, cross-species transfer, selective pressure, clonal expansion</td>
+      <td style="padding:8px 12px;">Genomic epidemiology pipelines</td>
+      <td style="padding:8px 12px;">Tracking where resistance spread; not why specific pathways dominated in specific contexts</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd;">
+      <td style="padding:8px 12px;"><strong>Paleoclimate</strong></td>
+      <td style="padding:8px 12px;">Proxy records (ice core, tree ring, pollen) at a time slice</td>
+      <td style="padding:8px 12px;">Solar forcing, ocean circulation shift, volcanic event, land use change</td>
+      <td style="padding:8px 12px;">Climate model ensembles, proxy synthesis</td>
+      <td style="padding:8px 12px;">Synchrony of transitions across independent proxy records from different regions is detected manually</td>
+    </tr>
+    <tr style="border-bottom:1px solid #ddd; background:#fafaf8;">
+      <td style="padding:8px 12px;"><strong>Biological taxonomy</strong> <span style="font-size:0.82em; color:#888; font-style:italic;">(stress test domain)</span></td>
+      <td style="padding:8px 12px;">Population or organism feature vectors at a time point — genetic markers, morphological measurements, ecological niche, reproductive compatibility data</td>
+      <td style="padding:8px 12px;">Geographic isolation, ecological divergence, genetic drift, hybridization, polyploidy (mechanisms of divergence; distinguished from evidence atoms that support them)</td>
+      <td style="padding:8px 12px;">Phylogenetic inference tools, species delimitation methods, Bayesian species assignment, STRUCTURE / ADMIXTURE</td>
+      <td style="padding:8px 12px;">Taxonomy is theory-dependent partitioning of observations: the Biological, Phylogenetic, and Ecological Species Concepts are competing causal grammars that produce different classifications over the same data. Existing tools pick a winner; none store competing interpretations, revision history, and provenance as persistent queryable objects. Lumpers vs. splitters disagreement is often structural — different Horn clauses, not just different thresholds — which the grammar abstraction handles directly.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>What Generalizability Means in Practice</h3>
+<p>
+  "Domain-agnostic" is a claim that needs a concrete definition. The intended scale is
+  a <strong>research team deploying one instance for their domain</strong>. Each
+  deployment is scoped to a domain and a team; the generalizability is in the codebase,
+  not in runtime coupling between deployments.
+</p>
+<p>
+  Standing up a new instance for a new team or domain requires three things and no code
+  changes to the stack:
+</p>
+<ol style="margin: 0 0 14px 20px;">
+  <li style="margin-bottom:6px;"><strong>Domain registration</strong> — insert a row naming the domain and its cause axes</li>
+  <li style="margin-bottom:6px;"><strong>YAML production rules</strong> — author the causal grammar for the domain; the system compiles these to Prolog and loads them at inference time</li>
+  <li style="margin-bottom:6px;"><strong>Feature extractor</strong> — implement the domain-specific functions that map raw measurements to the named evidence atom predicates</li>
+</ol>
+<p>
+  The inference engine, coordination layer, API, and centroid computation are unchanged
+  across deployments. The shared infrastructure cost is paid once per instance; each
+  new team or domain pays only for their feature extractor and rule set.
+</p>
+
+<h3>Cross-Domain Analysis: A Secondary Concern</h3>
+<p>
+  Whether the causal grammar structure for "substrate influence" in linguistics is
+  formally analogous to "host immune landscape pressure" in virology is a genuinely
+  interesting empirical question — one this architecture makes askable. But cross-domain
+  comparison is not the primary operational mode. It would be an export and federation
+  concern: standardized transition output formats, separate meta-analysis step, linked
+  results between deployments. A research team using this system for their own domain
+  data does not need to know about or connect to other deployments. That connection, if
+  valuable, is built later on top of the persistent store — not designed in as a
+  runtime requirement.
+</p>
+<p>
+  A natural eventual addition would be <strong>import/export and sharing utilities</strong>:
+  standardized formats for publishing a deployment's transition graph, grammar definitions,
+  and calibration history alongside research data — so that teams can compare interpretive
+  knowledge with collaborators running the same stack on different cohorts, without
+  requiring live integration between deployments.
+</p>
+
+<hr>
+
+<h2>Possible Future Features</h2>
+<ul>
+  <li>
+    <strong>Portable computation units.</strong> A self-contained capsule bundling the
+    exact data subset required (snapshot pairs, grammar version, feature predicates) with
+    the inference logic — packaged so it can be dispatched to any execution environment
+    and return results to the persistent store. The core concept is the closure: data and
+    logic travel together, execution is location-independent, results flow back. The
+    capsule format is the stable abstraction; the dispatch interface is pluggable. A
+    Postgres-backed task queue (each capsule is a claimable row containing a query that
+    resolves the exact data needed plus grammar references), a Redis queue, a shared
+    filesystem, or a cloud batch job queue all become viable targets without changing the
+    capsule format — the destination could be a cluster at a research facility, a cloud
+    job, or a collaborator's instance. A scheduler component could watch the queue depth and autonomously dispatch when
+    workload crosses a threshold — no manual invocation required. Pluggable backends:
+    SLURM (via SSH or the SLURM REST API, submitting array jobs on a research facility
+    cluster), AWS Batch (containerized workers on-demand), or Google Cloud Batch — each
+    adapter speaks the capsule format; the rest of the system is unchanged. The system
+    detects the batch, dispatches it, monitors for completion, and harvests results back
+    into Postgres.
+    This also serves as a reproducibility artifact: the capsule that produced a given
+    inference is a complete, independently executable record of what data and rules
+    were used.
+  </li>
+  <li>
+    <strong>Import / export / sharing utilities.</strong> Standardized formats for
+    exporting a deployment's transition graph, grammar definitions, and calibration history
+    — so research teams can publish their interpretive knowledge alongside data, share with
+    collaborators, or load results from another team's deployment for comparison. Not a
+    live integration requirement; a data exchange format.
+  </li>
+  <li>
+    <strong>Grammar induction assistance.</strong> An LLM proposes candidate Horn clause
+    rules grounded in literature; a domain expert validates, edits, or rejects them;
+    accepted rules enter the registry. Human-in-the-loop rule authoring rather than purely
+    manual. Related to the inductive logic programming literature (ILASP, ProbFOIL).
+  </li>
+  <li>
+    <strong>Rule weight learning.</strong> Currently rule weights are manually assigned or
+    left as placeholders. Markov Logic Networks provide a learning framework for deriving
+    weights from labeled data — applicable once a deployment has accumulated enough
+    canonical transitions with known outcomes to calibrate against.
+  </li>
+  <li>
+    <strong>Adaptive temporal window segmentation.</strong> Rather than fixed decade or
+    century buckets, draw centroid window boundaries from transition density — periods
+    of rapid change get finer resolution, stable periods get coarser. Requires a
+    changepoint detection step before centroid computation.
+  </li>
+  <li>
+    <strong>Rule-level diff tracking.</strong> The grammar versioning design already tags
+    every inference with the grammar version that produced it, and grammar lineage is
+    tracked via <code>parent_grammar_id</code>. What's not explicit is a record of
+    exactly which rules changed between versions — the equivalent of a git diff at the
+    rule level. A <code>grammar_rule_changes</code> table (or a
+    <code>superseded_by</code> foreign key on individual rules) would make it possible
+    to ask "which rule change between v1 and v2 shifted the posterior on this
+    transition" without manually diffing rule sets.
+  </li>
+</ul>
+
+</body>
+</html>

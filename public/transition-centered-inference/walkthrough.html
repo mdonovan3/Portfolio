@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>How It Works — A Concrete Walkthrough</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fafaf8;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+  h1 { font-size: 1.6em; font-weight: bold; margin-bottom: 6px; }
+  h2 { font-size: 1.15em; font-weight: bold; margin: 40px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 1em; font-weight: bold; margin: 18px 0 6px; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 22px; }
+  li { margin-bottom: 5px; }
+  .meta { color: #666; font-size: 0.88em; margin-bottom: 36px; font-family: monospace; }
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ec;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.87em;
+  }
+  pre {
+    font-family: 'Courier New', monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-radius: 5px;
+    padding: 16px 20px;
+    font-size: 0.84em;
+    line-height: 1.55;
+    overflow-x: auto;
+    margin: 14px 0 20px;
+  }
+  pre .kw  { color: #569cd6; }
+  pre .str { color: #ce9178; }
+  pre .num { color: #b5cea8; }
+  pre .cmt { color: #6a9955; }
+  pre .key { color: #9cdcfe; }
+  pre .val { color: #ce9178; }
+  pre .op  { color: #d4d4d4; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 40px 0; }
+  .step-header {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin: 40px 0 12px;
+  }
+  .step-num {
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 0.8em;
+    font-family: monospace;
+    padding: 3px 10px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .step-title {
+    font-size: 1.15em;
+    font-weight: bold;
+    border-bottom: 1px solid #ccc;
+    flex: 1;
+    padding-bottom: 4px;
+  }
+  .note {
+    background: #f0f4ff;
+    border-left: 4px solid #3a6fcd;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 0.93em;
+  }
+  .warning {
+    background: #fff8e1;
+    border-left: 4px solid #f0a500;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 0.93em;
+  }
+  .result-box {
+    background: #f0fff4;
+    border: 1px solid #4caf7a;
+    border-radius: 5px;
+    padding: 16px 20px;
+    margin: 14px 0 20px;
+  }
+  .result-box strong { display: block; margin-bottom: 8px; color: #1a6a3a; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88em; margin: 14px 0 20px; }
+  th { background: #2a2a2a; color: #fff; padding: 8px 12px; text-align: left; font-family: monospace; font-size: 0.9em; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e0e0d8; vertical-align: top; font-family: monospace; font-size: 0.88em; }
+  tr:nth-child(even) td { background: #f5f5f0; }
+  td.label { font-family: Georgia, serif; font-size: 0.9em; }
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .flow-box {
+    background: #2a2a2a;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 0.85em;
+    text-align: center;
+    min-width: 120px;
+  }
+  .flow-box small { display: block; color: #aaa; font-size: 0.8em; margin-top: 3px; }
+  .flow-arrow {
+    color: #666;
+    font-size: 1.3em;
+    padding: 0 8px;
+  }
+  .perturb-box {
+    background: #fff0f0;
+    border: 1px solid #e07070;
+    border-radius: 5px;
+    padding: 16px 20px;
+    margin: 14px 0 20px;
+  }
+  .perturb-box strong { display: block; margin-bottom: 8px; color: #8a1a1a; }
+  .grammar-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0 20px;
+  }
+  .grammar-card {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 14px;
+    background: #fff;
+  }
+  .grammar-card h3 { margin-top: 0; font-size: 0.9em; }
+  .grammar-card .tag {
+    display: inline-block;
+    background: #eee;
+    border-radius: 3px;
+    padding: 1px 7px;
+    font-family: monospace;
+    font-size: 0.78em;
+    margin-bottom: 8px;
+  }
+  .prob-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    font-size: 0.85em;
+    font-family: monospace;
+  }
+  .prob-fill {
+    height: 12px;
+    border-radius: 2px;
+    background: #3a7a3a;
+    flex-shrink: 0;
+  }
+  .prob-fill.low { background: #c05a00; }
+  .prob-fill.med { background: #7a6a00; }
+</style>
+</head>
+<body>
+
+<h1>How It Works — A Concrete Walkthrough</h1>
+<div class="meta">
+  Example domain: <em>Geospiza fortis</em> (medium ground finch), Daphne Major, Galápagos &nbsp;·&nbsp;
+  Transition: 1976 → 1977 (drought selection event)
+</div>
+
+<p>
+  This document walks through one complete inference cycle — from raw population
+  measurements in the database to a stored, queryable causal belief — using the
+  1976→1977 Galápagos finch drought as the concrete example. This is the most
+  documented natural selection event in the literature: a severe drought in 1977
+  caused the finch population to crash from ~1,240 to ~180, and the survivors had
+  measurably deeper beaks, having cracked harder seeds when soft ones disappeared.
+</p>
+<p>
+  Three grammars evaluate the same transition simultaneously. Their results are stored
+  separately — not merged, not averaged. A researcher can then query which grammar
+  converged on the documented outcome, and what happens when a rule is removed.
+</p>
+
+<div class="flow">
+  <div class="flow-box">Raw Data<small>Postgres JSONB</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Predicate Registry<small>column → atom</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Evidence Atoms<small>true/false facts</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Grammar Rules<small>Horn clauses</small></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">cause_distribution<small>stored belief</small></div>
+</div>
+
+<hr>
+
+<!-- STEP 1 -->
+<div class="step-header">
+  <span class="step-num">STEP 1</span>
+  <span class="step-title">Raw Data — What's in the Database</span>
+</div>
+
+<p>
+  Each year's population measurements are stored as a <strong>snapshot</strong> — a
+  row in Postgres with a JSONB <code>features</code> column. Two snapshots define
+  a transition: the state before and the state after.
+</p>
+
+<p><strong>Snapshot A — year 1976 (pre-drought baseline)</strong></p>
+<pre>{
+  <span class="key">"year"</span>: <span class="num">1976</span>,
+  <span class="key">"population"</span>: {
+    <span class="key">"size"</span>: <span class="num">1240</span>,
+    <span class="key">"survival_rate"</span>: <span class="num">0.84</span>
+  },
+  <span class="key">"morphology"</span>: {
+    <span class="key">"mean_beak_depth_mm"</span>: <span class="num">9.42</span>,
+    <span class="key">"mean_beak_length_mm"</span>: <span class="num">9.80</span>,
+    <span class="key">"mean_body_mass_g"</span>: <span class="num">15.6</span>
+  },
+  <span class="key">"environment"</span>: {
+    <span class="key">"annual_rainfall_mm"</span>: <span class="num">130</span>,
+    <span class="key">"seed_hardness_index"</span>: <span class="num">0.40</span>,
+    <span class="key">"seed_abundance_index"</span>: <span class="num">0.74</span>
+  },
+  <span class="key">"biotic"</span>: {
+    <span class="key">"competitor_g_magnirostris"</span>: <span class="kw">false</span>
+  }
+}</pre>
+
+<p><strong>Snapshot B — year 1977 (drought survivors)</strong></p>
+<pre>{
+  <span class="key">"year"</span>: <span class="num">1977</span>,
+  <span class="key">"population"</span>: {
+    <span class="key">"size"</span>: <span class="num">180</span>,          <span class="cmt">// crashed from 1240</span>
+    <span class="key">"survival_rate"</span>: <span class="num">0.15</span>   <span class="cmt">// 85% mortality</span>
+  },
+  <span class="key">"morphology"</span>: {
+    <span class="key">"mean_beak_depth_mm"</span>: <span class="num">9.84</span>,   <span class="cmt">// +0.42mm in survivors</span>
+    <span class="key">"mean_beak_length_mm"</span>: <span class="num">10.12</span>,
+    <span class="key">"mean_body_mass_g"</span>: <span class="num">16.2</span>
+  },
+  <span class="key">"environment"</span>: {
+    <span class="key">"annual_rainfall_mm"</span>: <span class="num">24</span>,        <span class="cmt">// 130mm normal → 24mm drought</span>
+    <span class="key">"seed_hardness_index"</span>: <span class="num">0.91</span>,    <span class="cmt">// soft seeds gone</span>
+    <span class="key">"seed_abundance_index"</span>: <span class="num">0.18</span>    <span class="cmt">// very scarce</span>
+  },
+  <span class="key">"biotic"</span>: {
+    <span class="key">"competitor_g_magnirostris"</span>: <span class="kw">false</span>
+  }
+}</pre>
+
+<p>
+  The transition object links these two snapshots and will hold the inference results
+  once the grammar runs. The <strong>delta values</strong> (change between A and B)
+  are computed by the feature extractor: beak depth Δ = +0.42mm, survival rate = 0.15,
+  rainfall dropped by 81%.
+</p>
+
+<hr>
+
+<!-- STEP 2 -->
+<div class="step-header">
+  <span class="step-num">STEP 2</span>
+  <span class="step-title">Predicate Registry — Mapping Columns to Named Atoms</span>
+</div>
+
+<p>
+  Grammar rules don't reference column names directly. They reference <strong>named
+  predicates</strong>. The predicate registry is the typed contract that maps raw
+  column values to boolean atoms the grammar can reason over.
+</p>
+<p>
+  This indirection matters: if a column gets renamed or a threshold is recalibrated,
+  you update the registry — not the rules. The grammar stays stable; the measurement
+  layer changes beneath it.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Predicate name</th><th>Definition (column condition)</th><th>Evaluated on</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>drought</td>
+      <td>environment.annual_rainfall_mm &lt; 60</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>severe_drought</td>
+      <td>environment.annual_rainfall_mm &lt; 40</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>el_nino</td>
+      <td>environment.annual_rainfall_mm &gt; 500</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>seed_hardness_high</td>
+      <td>environment.seed_hardness_index &gt; 0.65</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>seed_hardness_low</td>
+      <td>environment.seed_hardness_index &lt; 0.30</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>seed_scarcity</td>
+      <td>environment.seed_abundance_index &lt; 0.40</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>population_bottleneck</td>
+      <td>population.survival_rate &lt; 0.35</td>
+      <td>transition delta</td>
+    </tr>
+    <tr>
+      <td>beak_depth_increased</td>
+      <td>delta(morphology.mean_beak_depth_mm) &gt; 0.15</td>
+      <td>transition delta</td>
+    </tr>
+    <tr>
+      <td>competitor_present</td>
+      <td>biotic.competitor_g_magnirostris == true</td>
+      <td>snapshot B</td>
+    </tr>
+    <tr>
+      <td>immigration_detected</td>
+      <td>external source or inferred from delta allele data</td>
+      <td>context</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="note">
+  The predicate registry is also a <strong>validation contract</strong>. Before a
+  grammar runs, the system checks that every predicate it references exists in the
+  registry. A rule that references an undefined predicate fails at load time, not
+  silently at inference time. This prevents grammars from compiling against
+  features the feature extractor doesn't actually produce.
+</div>
+
+<hr>
+
+<!-- STEP 3 -->
+<div class="step-header">
+  <span class="step-num">STEP 3</span>
+  <span class="step-title">Evidence Atoms — What the Grammar Receives</span>
+</div>
+
+<p>
+  The feature extractor reads the two snapshots, evaluates every predicate definition
+  against the actual column values, and produces a set of boolean facts. This is
+  what gets handed to ProbLog.
+</p>
+
+<p><strong>Evidence atoms for the 1976→1977 transition:</strong></p>
+
+<pre><span class="cmt">% True atoms (predicate evaluated to true given column values)</span>
+<span class="kw">drought</span>.                    <span class="cmt">% 24mm &lt; 60mm threshold ✓</span>
+<span class="kw">severe_drought</span>.             <span class="cmt">% 24mm &lt; 40mm threshold ✓</span>
+<span class="kw">seed_hardness_high</span>.         <span class="cmt">% 0.91 &gt; 0.65 threshold ✓</span>
+<span class="kw">seed_scarcity</span>.              <span class="cmt">% 0.18 &lt; 0.40 threshold ✓</span>
+<span class="kw">population_bottleneck</span>.      <span class="cmt">% survival_rate 0.15 &lt; 0.35 ✓</span>
+<span class="kw">beak_depth_increased</span>.       <span class="cmt">% delta +0.42mm &gt; 0.15 ✓</span>
+
+<span class="cmt">% False atoms (predicate did not fire)</span>
+<span class="kw">el_nino</span> :- <span class="kw">fail</span>.            <span class="cmt">% 24mm is not &gt; 500mm</span>
+<span class="kw">seed_hardness_low</span> :- <span class="kw">fail</span>.  <span class="cmt">% 0.91 is not &lt; 0.30</span>
+<span class="kw">competitor_present</span> :- <span class="kw">fail</span>. <span class="cmt">% G. magnirostris not on island yet</span>
+<span class="kw">immigration_detected</span> :- <span class="kw">fail</span>.</pre>
+
+<div class="note">
+  This atom set is what actually crosses the boundary into the inference engine.
+  The grammar never sees column names, raw numbers, or JSONB paths — only named
+  facts. This is the predicate registry contract in action.
+</div>
+
+<hr>
+
+<!-- STEP 4 -->
+<div class="step-header">
+  <span class="step-num">STEP 4</span>
+  <span class="step-title">Grammar Rules — Horn Clauses That Fire on Atoms</span>
+</div>
+
+<p>
+  Grammar rules are probabilistic Horn clauses: <em>if all conditions in the body
+  are true, assign this probability to this causal conclusion</em>. The YAML format
+  compiles directly to ProbLog syntax.
+</p>
+
+<p><strong>YAML (what a domain expert authors):</strong></p>
+<pre><span class="key">- id</span>: <span class="str">drought_selects_large_beak</span>
+  <span class="key">conclusion</span>: <span class="str">directional_selection_larger_beak</span>
+  <span class="key">probability</span>: <span class="num">0.88</span>
+  <span class="key">all_of</span>:
+    - <span class="str">drought</span>
+    - <span class="str">seed_hardness_high</span>
+    - <span class="str">seed_scarcity</span>
+    - <span class="str">population_bottleneck</span>
+
+<span class="key">- id</span>: <span class="str">severe_drought_amplifies</span>
+  <span class="key">conclusion</span>: <span class="str">directional_selection_larger_beak</span>
+  <span class="key">probability</span>: <span class="num">0.92</span>
+  <span class="key">all_of</span>:
+    - <span class="str">severe_drought</span>
+    - <span class="str">seed_hardness_high</span>
+    - <span class="str">population_bottleneck</span>
+
+<span class="key">- id</span>: <span class="str">el_nino_selects_small_beak</span>
+  <span class="key">conclusion</span>: <span class="str">directional_selection_smaller_beak</span>
+  <span class="key">probability</span>: <span class="num">0.82</span>
+  <span class="key">all_of</span>:
+    - <span class="str">el_nino</span>
+    - <span class="str">seed_hardness_low</span>
+
+<span class="key">- id</span>: <span class="str">character_displacement_selection</span>
+  <span class="key">conclusion</span>: <span class="str">directional_selection_smaller_beak</span>
+  <span class="key">probability</span>: <span class="num">0.78</span>
+  <span class="key">all_of</span>:
+    - <span class="str">competitor_present</span>
+    - <span class="str">large_seed_niche_blocked</span></pre>
+
+<p><strong>Compiled ProbLog (what the inference engine executes):</strong></p>
+<pre><span class="num">0.88</span>::<span class="kw">directional_selection_larger_beak</span> :-
+    <span class="kw">drought</span>, <span class="kw">seed_hardness_high</span>, <span class="kw">seed_scarcity</span>, <span class="kw">population_bottleneck</span>.
+
+<span class="num">0.92</span>::<span class="kw">directional_selection_larger_beak</span> :-
+    <span class="kw">severe_drought</span>, <span class="kw">seed_hardness_high</span>, <span class="kw">population_bottleneck</span>.
+
+<span class="num">0.82</span>::<span class="kw">directional_selection_smaller_beak</span> :-
+    <span class="kw">el_nino</span>, <span class="kw">seed_hardness_low</span>.
+
+<span class="num">0.78</span>::<span class="kw">directional_selection_smaller_beak</span> :-
+    <span class="kw">competitor_present</span>, <span class="kw">large_seed_niche_blocked</span>.</pre>
+
+<p>
+  Against the 1976→1977 atom set: <code>drought</code>, <code>severe_drought</code>,
+  <code>seed_hardness_high</code>, <code>seed_scarcity</code>, and
+  <code>population_bottleneck</code> are all true. The first two rules both have
+  bodies that are fully satisfied. ProbLog combines them — the combined probability
+  of <code>directional_selection_larger_beak</code> is higher than either rule alone.
+  The el_niño and character displacement rules have false atoms in their bodies and
+  do not fire.
+</p>
+
+<hr>
+
+<!-- STEP 5 -->
+<div class="step-header">
+  <span class="step-num">STEP 5</span>
+  <span class="step-title">Inference Result — The cause_distribution</span>
+</div>
+
+<p>
+  ProbLog returns a probability for each possible conclusion. The feature extractor
+  wraps this into the <code>cause_distribution</code> JSONB field and writes it
+  to the <code>transition_inferences</code> table — one row per (transition, grammar).
+</p>
+
+<div class="result-box">
+  <strong>transition_inferences row — grammar: selection_primary v1.0</strong>
+<pre style="background:#f0fff4; color:#1a1a1a; border: none; padding: 0; margin-top:8px;">
+{
+  "cause_distribution": {
+    "directional_selection_larger_beak": 0.97,
+    "stabilizing_selection":             0.02,
+    "relaxed_selection":                 0.01,
+    "directional_selection_smaller_beak": 0.00,
+    "genetic_drift":                     0.00
+  },
+  "confidence": 0.94,
+  "rule_trace": [
+    { "rule": "drought_selects_large_beak",   "fired": true,  "weight": 0.88 },
+    { "rule": "severe_drought_amplifies",      "fired": true,  "weight": 0.92 },
+    { "rule": "el_nino_selects_small_beak",    "fired": false, "reason": "el_nino=false" },
+    { "rule": "character_displacement_selection", "fired": false, "reason": "competitor_present=false" }
+  ],
+  "grammar_id": "selection_primary",
+  "grammar_version": "1.0",
+  "dataset_version": "1.0"
+}</pre>
+</div>
+
+<p>
+  The <code>rule_trace</code> is the provenance record: which rules fired, which
+  didn't, and why. A researcher can query this to understand not just <em>what</em>
+  the system concluded but <em>how</em> it got there — and which rules were decisive.
+</p>
+
+<hr>
+
+<!-- STEP 6 -->
+<div class="step-header">
+  <span class="step-num">STEP 6</span>
+  <span class="step-title">Three Grammars — Same Transition, Different Posteriors</span>
+</div>
+
+<p>
+  All three grammars evaluate the 1976→1977 transition simultaneously. Each produces
+  its own row in <code>transition_inferences</code>. They are not merged or averaged.
+</p>
+
+<div class="grammar-compare">
+  <div class="grammar-card">
+    <h3>selection_primary</h3>
+    <span class="tag">v1.0</span>
+    <p style="font-size:0.85em; margin-bottom:10px;">Theory: directional natural selection is primary</p>
+    <div class="prob-bar"><div class="prob-fill" style="width:97px;"></div> directional_selection_large: 0.97</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:2px;"></div> stabilizing: 0.02</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:0px;"></div> drift: 0.00</div>
+    <p style="margin-top:10px; font-size:0.82em; color:#1a6a3a;">✓ Converges on documented outcome</p>
+  </div>
+
+  <div class="grammar-card">
+    <h3>drift_primary</h3>
+    <span class="tag">v1.0</span>
+    <p style="font-size:0.85em; margin-bottom:10px;">Theory: stochastic drift through bottlenecks is primary</p>
+    <div class="prob-bar"><div class="prob-fill med" style="width:75px;"></div> genetic_drift: 0.75</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:45px;"></div> directional_selection_large: 0.45</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:0px;"></div> smaller_beak: 0.00</div>
+    <p style="margin-top:10px; font-size:0.82em; color:#8a5a00;">△ Drift fires (bottleneck is real) but misses primary cause</p>
+  </div>
+
+  <div class="grammar-card">
+    <h3>introgression_primary</h3>
+    <span class="tag">v1.0</span>
+    <p style="font-size:0.85em; margin-bottom:10px;">Theory: gene flow and competition are primary</p>
+    <div class="prob-bar"><div class="prob-fill med" style="width:65px;"></div> within_population_process: 0.65</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:0px;"></div> introgression: 0.00</div>
+    <div class="prob-bar"><div class="prob-fill low" style="width:0px;"></div> displacement: 0.00</div>
+    <p style="margin-top:10px; font-size:0.82em; color:#8a5a00;">△ No immigration signal — defers to within-pop process, low confidence</p>
+  </div>
+</div>
+
+<div class="note">
+  <strong>This is the core epistemic value.</strong> The system doesn't force a single
+  answer. It stores all three posteriors. A researcher can query: "across all 26
+  transitions, which grammar had higher confidence on transitions with documented
+  ground truth?" That's calibration — and it's a query, not a re-run.
+</div>
+
+<hr>
+
+<!-- STEP 7: THEORY PERTURBATION -->
+<div class="step-header">
+  <span class="step-num">STEP 7</span>
+  <span class="step-title">Theory Perturbation — Remove One Rule, See What Breaks</span>
+</div>
+
+<p>
+  Create <code>selection_primary v2.0</code> by removing the
+  <code>drought_selects_large_beak</code> rule. Rerun the same transition. The
+  <code>transition_inferences</code> table now holds a new row tagged to v2.0
+  alongside the original v1.0 row. Both are stored; neither overwrites the other.
+</p>
+
+<div class="perturb-box">
+  <strong>selection_primary v2.0 — drought rule removed</strong>
+<pre style="background:#fff0f0; color:#1a1a1a; border:none; padding:0; margin-top:8px;">
+{
+  "cause_distribution": {
+    "directional_selection_larger_beak": 0.52,   ← dropped from 0.97
+    "stabilizing_selection":             0.28,   ← rose
+    "relaxed_selection":                 0.14,   ← rose
+    "genetic_drift":                     0.06    ← rose
+  },
+  "confidence": 0.41,                            ← dropped from 0.94
+  "rule_trace": [
+    { "rule": "drought_selects_large_beak", "fired": false, "reason": "RULE REMOVED" },
+    { "rule": "severe_drought_amplifies",   "fired": true,  "weight": 0.92 }
+  ]
+}</pre>
+</div>
+
+<p>
+  The posterior weakens dramatically when the primary drought rule is absent.
+  <code>severe_drought_amplifies</code> still fires (it's a separate rule with
+  overlapping but not identical conditions), so the conclusion doesn't collapse
+  entirely — but confidence drops from 0.94 to 0.41.
+</p>
+<p>
+  This is <strong>structural sensitivity analysis</strong>: not "what if the weight
+  were 0.80 instead of 0.88" but "what if this causal pathway didn't exist in the
+  theory at all?" The answer is quantified and stored. The comparison between v1.0
+  and v2.0 is now a single SQL query.
+</p>
+
+<pre><span class="cmt">-- Query: how much did removing the drought rule change the posterior?</span>
+<span class="kw">SELECT</span>
+    v1.cause_distribution->><span class="str">'directional_selection_larger_beak'</span> <span class="kw">AS</span> v1_prob,
+    v2.cause_distribution->><span class="str">'directional_selection_larger_beak'</span> <span class="kw">AS</span> v2_prob,
+    v1.confidence - v2.confidence                                       <span class="kw">AS</span> confidence_drop
+<span class="kw">FROM</span> transition_inferences v1
+<span class="kw">JOIN</span> transition_inferences v2 <span class="kw">ON</span> v1.transition_id = v2.transition_id
+<span class="kw">WHERE</span> v1.grammar_version = <span class="str">'1.0'</span>
+  <span class="kw">AND</span> v2.grammar_version = <span class="str">'2.0'</span>
+  <span class="kw">AND</span> v1.transition_id = <span class="str">'1976_1977'</span>;</pre>
+
+<hr>
+
+<!-- STEP 8: WHAT GETS STORED -->
+<div class="step-header">
+  <span class="step-num">STEP 8</span>
+  <span class="step-title">What Gets Stored — The Full transition_inferences Row</span>
+</div>
+
+<p>
+  Everything produced by the inference cycle lands in one row per
+  (transition, grammar, dataset_version). This is the "database row" at the center
+  of the system's defining feature: a complete, queryable, revisable epistemic record.
+</p>
+
+<table>
+  <thead>
+    <tr><th>Column</th><th>Value (1976→1977, selection_primary v1.0)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>inference_id</td><td>7f3a...</td></tr>
+    <tr><td>transition_id</td><td>1976_1977_geospiza_fortis_daphne</td></tr>
+    <tr><td>grammar_id</td><td>selection_primary</td></tr>
+    <tr><td>grammar_version</td><td>1.0</td></tr>
+    <tr><td>dataset_version</td><td>1.0</td></tr>
+    <tr><td>inference_engine</td><td>problog-2.1</td></tr>
+    <tr><td>cause_distribution</td><td>{"directional_selection_larger_beak": 0.97, ...}</td></tr>
+    <tr><td>confidence</td><td>0.94</td></tr>
+    <tr><td>rule_trace</td><td>[{"rule": "drought_selects_large_beak", "fired": true}, ...]</td></tr>
+    <tr><td>ground_truth</td><td>directional_selection_larger_beak</td></tr>
+    <tr><td>created_at</td><td>2026-07-06 14:22:11</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>The defining feature, made concrete:</strong> a researcher can now ask —
+  across all 26 annual transitions in the dataset, across all three grammars, across
+  all grammar versions — any of these questions without re-running any analysis:
+  <ul style="margin-top:8px;">
+    <li>Which grammar had the highest mean confidence on transitions with known ground truth?</li>
+    <li>Which transitions have the highest disagreement between selection_primary and drift_primary?</li>
+    <li>How did removing the drought rule change the posterior on every transition in the dataset?</li>
+    <li>What was believed about the 1983 transition before and after we calibrated the seed hardness threshold?</li>
+  </ul>
+</div>
+
+</body>
+</html>

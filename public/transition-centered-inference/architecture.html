@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Technical Architecture — Epistemic Inference Framework</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    background: #fafaf8;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+  h1 { font-size: 1.6em; font-weight: bold; margin-bottom: 6px; }
+  h2 { font-size: 1.15em; font-weight: bold; margin: 36px 0 10px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+  h3 { font-size: 1.02em; font-weight: bold; margin: 22px 0 6px; color: #2a2a2a; }
+  p { margin-bottom: 14px; }
+  ul, ol { margin: 0 0 14px 20px; }
+  li { margin-bottom: 5px; }
+  .meta { color: #666; font-size: 0.88em; margin-bottom: 8px; font-family: monospace; }
+  code {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ec;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+  pre {
+    font-family: 'Courier New', monospace;
+    background: #f0f0ec;
+    border: 1px solid #ddd;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-size: 0.83em;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 14px 0;
+  }
+  hr { border: none; border-top: 1px solid #ddd; margin: 36px 0; }
+  .diagram-wrap { margin: 28px 0; overflow-x: auto; }
+  .concept-note {
+    background: #f0f4ff;
+    border-left: 4px solid #3a6fcd;
+    padding: 12px 16px;
+    margin: 14px 0 20px;
+    font-size: 0.93em;
+  }
+  .component-block {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin: 18px 0;
+    background: #fff;
+  }
+  .component-block h3 { margin-top: 0; }
+  .tech-tag {
+    display: inline-block;
+    background: #e8e8e4;
+    border-radius: 3px;
+    padding: 1px 8px;
+    font-family: monospace;
+    font-size: 0.83em;
+    margin-bottom: 10px;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9em; margin: 16px 0 24px; }
+  th { background: #2a2a2a; color: #fff; padding: 8px 12px; text-align: left; }
+  td { padding: 8px 12px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafaf8; }
+  svg { font-family: Georgia, serif; }
+</style>
+</head>
+<body>
+
+<h1>Technical Architecture</h1>
+<div class="meta" style="margin-bottom:6px;">
+  Companion to the conceptual overview &nbsp;·&nbsp; July 2026
+</div>
+<div style="font-size:1.05em; color:#444; font-style:italic; margin-bottom:36px;">
+  Start with the stack. Understand why each component exists by what conceptual problem it solves.
+</div>
+
+<h2>The Stack at a Glance</h2>
+
+<table>
+  <thead>
+    <tr><th>Component</th><th>Technology</th><th>Conceptual Role</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Epistemic Store</strong></td>
+      <td>PostgreSQL</td>
+      <td>Persistent, queryable home for all first-class objects: snapshots, transitions, grammars, inferences, centroids. The canonical record that survives restarts, revisions, and time.</td>
+    </tr>
+    <tr>
+      <td><strong>Coordination Layer</strong></td>
+      <td>Redis</td>
+      <td>Ephemeral task queue, atomic job claiming, candidate pool, agent heartbeats. Hot coordination state that doesn't need to survive a restart.</td>
+    </tr>
+    <tr>
+      <td><strong>Grammar Engine</strong></td>
+      <td>ProbLog (HTTP service)</td>
+      <td>Evaluates the causal grammar against evidence atoms. Produces a probability distribution over competing causal explanations for each transition.</td>
+    </tr>
+    <tr>
+      <td><strong>Agent Workers</strong></td>
+      <td>Python (×N parallel)</td>
+      <td>Distributed evidence extractors. Each agent claims a transition task, extracts evidence atoms from snapshot feature vectors, calls the grammar engine, and returns a candidate result.</td>
+    </tr>
+    <tr>
+      <td><strong>Meta-Agent</strong></td>
+      <td>Python (single, cyclic)</td>
+      <td>Synthesis and discovery. Harvests candidates from Redis, promotes stable results to Postgres, computes centroids, flags instability signals, and surfaces anomalies for researcher attention.</td>
+    </tr>
+    <tr>
+      <td><strong>REST API</strong></td>
+      <td>FastAPI</td>
+      <td>Researcher interface and external integration point. Accepts new data, exposes query endpoints, triggers batch dispatch, serves results.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- DIAGRAM 1: Stack Architecture -->
+<h2>Stack Architecture</h2>
+<p>How the components connect. The canonical store sits at the center; everything reads from and writes to it. Redis is the coordination membrane between agents and the meta-agent. The ProbLog service is isolated so the grammar can be reloaded without restarting workers.</p>
+
+<div class="diagram-wrap">
+<svg width="860" height="400" viewBox="0 0 860 400">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#666"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3a6fcd"/>
+    </marker>
+  </defs>
+
+  <!-- Researcher -->
+  <rect x="340" y="10" width="180" height="44" rx="6" fill="#2a2a2a" stroke="none"/>
+  <text x="430" y="29" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Researcher</text>
+  <text x="430" y="46" text-anchor="middle" font-size="10" fill="#aaa">browser / API client</text>
+
+  <!-- REST API -->
+  <rect x="320" y="80" width="220" height="50" rx="6" fill="#4a7fc1" stroke="none"/>
+  <text x="430" y="101" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">REST API</text>
+  <text x="430" y="118" text-anchor="middle" font-size="10" fill="#d0dcf0">FastAPI · port 8000</text>
+
+  <!-- Arrow: Researcher → API -->
+  <line x1="430" y1="54" x2="430" y2="78" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="430" y1="78" x2="430" y2="54" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Agent Workers -->
+  <rect x="30" y="180" width="200" height="60" rx="6" fill="#5a8a5a" stroke="none"/>
+  <text x="130" y="204" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Agent Workers</text>
+  <text x="130" y="220" text-anchor="middle" font-size="10" fill="#c0e0c0">×N parallel · evidence extraction</text>
+  <text x="130" y="234" text-anchor="middle" font-size="10" fill="#c0e0c0">+ grammar evaluation</text>
+
+  <!-- Meta-Agent -->
+  <rect x="630" y="180" width="200" height="60" rx="6" fill="#7a5a8a" stroke="none"/>
+  <text x="730" y="204" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Meta-Agent</text>
+  <text x="730" y="220" text-anchor="middle" font-size="10" fill="#d8c8e8">synthesis · promotion</text>
+  <text x="730" y="234" text-anchor="middle" font-size="10" fill="#d8c8e8">centroid computation · discovery</text>
+
+  <!-- Redis -->
+  <rect x="310" y="175" width="240" height="70" rx="6" fill="#c85a00" stroke="none"/>
+  <text x="430" y="201" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Redis</text>
+  <text x="430" y="218" text-anchor="middle" font-size="10" fill="#ffd0b0">task queue (ZSET)</text>
+  <text x="430" y="233" text-anchor="middle" font-size="10" fill="#ffd0b0">candidate pool · heartbeats</text>
+  <text x="430" y="248" text-anchor="middle" font-size="10" fill="#ffd0b0">atomic job claiming (SET NX EX)</text>
+
+  <!-- PostgreSQL -->
+  <rect x="280" y="310" width="300" height="70" rx="6" fill="#1a5a8a" stroke="none"/>
+  <text x="430" y="336" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">PostgreSQL — Epistemic Store</text>
+  <text x="430" y="353" text-anchor="middle" font-size="10" fill="#b0d0f0">snapshots · transitions · grammars</text>
+  <text x="430" y="368" text-anchor="middle" font-size="10" fill="#b0d0f0">transition_inferences · centroids</text>
+
+  <!-- ProbLog Service -->
+  <rect x="30" y="310" width="200" height="60" rx="6" fill="#6a6a3a" stroke="none"/>
+  <text x="130" y="334" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">ProbLog Service</text>
+  <text x="130" y="350" text-anchor="middle" font-size="10" fill="#e0e0a0">grammar engine · HTTP</text>
+  <text x="130" y="366" text-anchor="middle" font-size="10" fill="#e0e0a0">hot-reloadable</text>
+
+  <!-- API → Redis -->
+  <line x1="380" y1="130" x2="380" y2="173" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- API → Postgres -->
+  <line x1="430" y1="130" x2="430" y2="308" stroke="#3a6fcd" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+
+  <!-- Agents ↔ Redis -->
+  <line x1="230" y1="205" x2="308" y2="205" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="308" y1="220" x2="230" y2="220" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Meta-Agent ↔ Redis -->
+  <line x1="630" y1="205" x2="552" y2="205" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="552" y1="220" x2="630" y2="220" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Meta-Agent → Postgres -->
+  <line x1="730" y1="240" x2="730" y2="290" stroke="#666" stroke-width="1.5"/>
+  <line x1="730" y1="290" x2="562" y2="320" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Agents → Postgres (read snapshots) -->
+  <line x1="130" y1="240" x2="130" y2="290" stroke="#3a6fcd" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <line x1="130" y1="290" x2="295" y2="330" stroke="#3a6fcd" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+
+  <!-- Agents → ProbLog -->
+  <line x1="130" y1="240" x2="130" y2="308" stroke="#c8a000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="130" y1="308" x2="130" y2="240" stroke="#c8a000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Legend -->
+  <line x1="570" y1="300" x2="600" y2="300" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="605" y="304" font-size="9" fill="#666">write / coordinate</text>
+  <line x1="570" y1="315" x2="600" y2="315" stroke="#3a6fcd" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr-blue)"/>
+  <text x="605" y="319" font-size="9" fill="#3a6fcd">read</text>
+  <line x1="570" y1="330" x2="600" y2="330" stroke="#c8a000" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="605" y="334" font-size="9" fill="#888">call / response</text>
+</svg>
+</div>
+
+<!-- DIAGRAM 2: Data Model -->
+<h2>The Four First-Class Objects</h2>
+<p>Every piece of knowledge the system accumulates is one of four types of object in Postgres. All other tables serve to link, version, or annotate these four.</p>
+
+<div class="diagram-wrap">
+<svg width="860" height="160" viewBox="0 0 860 160">
+  <defs>
+    <marker id="arr2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+  </defs>
+
+  <!-- Snapshot -->
+  <rect x="20" y="40" width="180" height="80" rx="6" fill="#1a5a8a" stroke="none"/>
+  <text x="110" y="68" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Snapshot</text>
+  <text x="110" y="86" text-anchor="middle" font-size="10" fill="#b0d0f0">state at time t</text>
+  <text x="110" y="101" text-anchor="middle" font-size="10" fill="#b0d0f0">feature vectors (JSONB)</text>
+  <text x="110" y="114" text-anchor="middle" font-size="10" fill="#b0d0f0">one per observation</text>
+
+  <!-- Arrow -->
+  <line x1="200" y1="80" x2="238" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="219" y="73" text-anchor="middle" font-size="9" fill="#666">pairs</text>
+
+  <!-- Transition -->
+  <rect x="240" y="40" width="200" height="80" rx="6" fill="#5a3a7a" stroke="none"/>
+  <text x="340" y="68" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Transition Inference</text>
+  <text x="340" y="86" text-anchor="middle" font-size="10" fill="#d8c8f0">cause_distribution (JSONB)</text>
+  <text x="340" y="101" text-anchor="middle" font-size="10" fill="#d8c8f0">one per (transition, grammar)</text>
+  <text x="340" y="114" text-anchor="middle" font-size="10" fill="#d8c8f0">confidence · rule_trace</text>
+
+  <!-- Arrow -->
+  <line x1="440" y1="80" x2="478" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="459" y="73" text-anchor="middle" font-size="9" fill="#666">governs</text>
+
+  <!-- Grammar -->
+  <rect x="480" y="40" width="180" height="80" rx="6" fill="#5a7a3a" stroke="none"/>
+  <text x="570" y="68" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Grammar</text>
+  <text x="570" y="86" text-anchor="middle" font-size="10" fill="#c0e0a0">versioned causal theory</text>
+  <text x="570" y="101" text-anchor="middle" font-size="10" fill="#c0e0a0">Horn clause production rules</text>
+  <text x="570" y="114" text-anchor="middle" font-size="10" fill="#c0e0a0">parent_grammar_id (lineage)</text>
+
+  <!-- Arrow -->
+  <line x1="660" y1="80" x2="698" y2="80" stroke="#555" stroke-width="1.5" marker-end="url(#arr2)"/>
+  <text x="679" y="73" text-anchor="middle" font-size="9" fill="#666">aggregates to</text>
+
+  <!-- Centroid -->
+  <rect x="700" y="40" width="140" height="80" rx="6" fill="#8a5a1a" stroke="none"/>
+  <text x="770" y="68" text-anchor="middle" font-size="12" fill="#fff" font-weight="bold">Centroid</text>
+  <text x="770" y="86" text-anchor="middle" font-size="10" fill="#f0d0a0">temporal aggregate</text>
+  <text x="770" y="101" text-anchor="middle" font-size="10" fill="#f0d0a0">instability_score</text>
+  <text x="770" y="114" text-anchor="middle" font-size="10" fill="#f0d0a0">attention signal</text>
+</svg>
+</div>
+
+<!-- DIAGRAM 3: Process Cycle -->
+<h2>The Process Cycle</h2>
+<p>One full cycle from raw data ingestion to researcher discovery. The cycle repeats continuously; the grammar refinement path (steps 8–10) is triggered by the researcher in response to discovery signals from the meta-agent.</p>
+
+<div class="diagram-wrap">
+<svg width="860" height="520" viewBox="0 0 860 520">
+  <defs>
+    <marker id="arr3" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#444"/>
+    </marker>
+    <marker id="arr3r" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#c04000"/>
+    </marker>
+  </defs>
+
+  <!-- Step boxes, two rows of 5 -->
+
+  <!-- Row 1 -->
+  <!-- 1. Raw Data -->
+  <rect x="20" y="30" width="140" height="64" rx="6" fill="#2a5a2a" stroke="none"/>
+  <text x="90" y="52" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">① Raw Data</text>
+  <text x="90" y="68" text-anchor="middle" font-size="9.5" fill="#c0e0c0">measurements, records,</text>
+  <text x="90" y="81" text-anchor="middle" font-size="9.5" fill="#c0e0c0">corpora → POST /snapshots</text>
+
+  <!-- arrow -->
+  <line x1="160" y1="62" x2="188" y2="62" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 2. Snapshot Stored -->
+  <rect x="190" y="30" width="140" height="64" rx="6" fill="#1a5a8a" stroke="none"/>
+  <text x="260" y="52" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">② Snapshot</text>
+  <text x="260" y="68" text-anchor="middle" font-size="9.5" fill="#b0d0f0">feature vector written</text>
+  <text x="260" y="81" text-anchor="middle" font-size="9.5" fill="#b0d0f0">to Postgres</text>
+
+  <!-- arrow -->
+  <line x1="330" y1="62" x2="358" y2="62" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 3. Task Queued -->
+  <rect x="360" y="30" width="140" height="64" rx="6" fill="#c85a00" stroke="none"/>
+  <text x="430" y="52" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">③ Task Queued</text>
+  <text x="430" y="68" text-anchor="middle" font-size="9.5" fill="#ffd0a0">snapshot pair → Redis</text>
+  <text x="430" y="81" text-anchor="middle" font-size="9.5" fill="#ffd0a0">ZSET work queue</text>
+
+  <!-- arrow -->
+  <line x1="500" y1="62" x2="528" y2="62" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 4. Agent Claims -->
+  <rect x="530" y="30" width="140" height="64" rx="6" fill="#3a7a3a" stroke="none"/>
+  <text x="600" y="48" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">④ Agent Claims</text>
+  <text x="600" y="64" text-anchor="middle" font-size="9.5" fill="#c0e0c0">atomic SET NX EX</text>
+  <text x="600" y="78" text-anchor="middle" font-size="9.5" fill="#c0e0c0">extracts evidence atoms</text>
+  <text x="600" y="91" text-anchor="middle" font-size="9.5" fill="#c0e0c0">calls ProbLog service</text>
+
+  <!-- arrow -->
+  <line x1="670" y1="62" x2="698" y2="62" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 5. Grammar Evaluated -->
+  <rect x="700" y="30" width="140" height="64" rx="6" fill="#6a6a3a" stroke="none"/>
+  <text x="770" y="48" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑤ Grammar Run</text>
+  <text x="770" y="64" text-anchor="middle" font-size="9.5" fill="#e0e0a0">Horn clauses evaluated</text>
+  <text x="770" y="78" text-anchor="middle" font-size="9.5" fill="#e0e0a0">cause_distribution</text>
+  <text x="770" y="91" text-anchor="middle" font-size="9.5" fill="#e0e0a0">produced per grammar</text>
+
+  <!-- down arrow from step 5 -->
+  <line x1="770" y1="96" x2="770" y2="164" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- Row 2 (right to left) -->
+
+  <!-- 6. Candidate to Redis -->
+  <rect x="700" y="166" width="140" height="64" rx="6" fill="#c85a00" stroke="none"/>
+  <text x="770" y="188" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑥ Candidate</text>
+  <text x="770" y="204" text-anchor="middle" font-size="9.5" fill="#ffd0a0">result written to</text>
+  <text x="770" y="218" text-anchor="middle" font-size="9.5" fill="#ffd0a0">Redis candidate pool</text>
+
+  <!-- arrow left -->
+  <line x1="700" y1="198" x2="672" y2="198" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 7. Meta-Agent Harvests -->
+  <rect x="530" y="166" width="140" height="64" rx="6" fill="#7a3a9a" stroke="none"/>
+  <text x="600" y="188" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑦ Meta-Agent</text>
+  <text x="600" y="204" text-anchor="middle" font-size="9.5" fill="#e0c0f0">harvests candidates</text>
+  <text x="600" y="218" text-anchor="middle" font-size="9.5" fill="#e0c0f0">promotes if variance &lt; θ</text>
+
+  <!-- arrow left -->
+  <line x1="530" y1="198" x2="502" y2="198" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 8. Transition Stored -->
+  <rect x="360" y="166" width="140" height="64" rx="6" fill="#1a5a8a" stroke="none"/>
+  <text x="430" y="183" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑧ Stored</text>
+  <text x="430" y="199" text-anchor="middle" font-size="9.5" fill="#b0d0f0">transition_inferences</text>
+  <text x="430" y="213" text-anchor="middle" font-size="9.5" fill="#b0d0f0">row per (transition,</text>
+  <text x="430" y="227" text-anchor="middle" font-size="9.5" fill="#b0d0f0">grammar, dataset)</text>
+
+  <!-- arrow left -->
+  <line x1="360" y1="198" x2="332" y2="198" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 9. Centroid Computed -->
+  <rect x="190" y="166" width="140" height="64" rx="6" fill="#8a5a1a" stroke="none"/>
+  <text x="260" y="188" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑨ Centroid</text>
+  <text x="260" y="204" text-anchor="middle" font-size="9.5" fill="#f0d0a0">temporal aggregation</text>
+  <text x="260" y="218" text-anchor="middle" font-size="9.5" fill="#f0d0a0">instability_score set</text>
+
+  <!-- arrow left -->
+  <line x1="190" y1="198" x2="162" y2="198" stroke="#444" stroke-width="1.5" marker-end="url(#arr3)"/>
+
+  <!-- 10. Discovery -->
+  <rect x="20" y="166" width="140" height="64" rx="6" fill="#6a1a1a" stroke="none"/>
+  <text x="90" y="188" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑩ Discovery</text>
+  <text x="90" y="204" text-anchor="middle" font-size="9.5" fill="#f0c0c0">high instability flagged</text>
+  <text x="90" y="218" text-anchor="middle" font-size="9.5" fill="#f0c0c0">unexplained transitions</text>
+
+  <!-- down arrow from discovery -->
+  <line x1="90" y1="232" x2="90" y2="300" stroke="#c04000" stroke-width="2" marker-end="url(#arr3r)"/>
+
+  <!-- Refinement row -->
+
+  <!-- 11. Researcher Examines -->
+  <rect x="20" y="302" width="160" height="64" rx="6" fill="#5a2a0a" stroke="none"/>
+  <text x="100" y="322" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑪ Researcher</text>
+  <text x="100" y="338" text-anchor="middle" font-size="9.5" fill="#f0c0a0">examines anomaly</text>
+  <text x="100" y="353" text-anchor="middle" font-size="9.5" fill="#f0c0a0">proposes hypothesis</text>
+
+  <!-- arrow -->
+  <line x1="180" y1="334" x2="208" y2="334" stroke="#c04000" stroke-width="2" marker-end="url(#arr3r)"/>
+
+  <!-- 12. Encode New Rule -->
+  <rect x="210" y="302" width="160" height="64" rx="6" fill="#3a5a0a" stroke="none"/>
+  <text x="290" y="322" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑫ Encode Rule</text>
+  <text x="290" y="338" text-anchor="middle" font-size="9.5" fill="#d0e0a0">YAML → Horn clause</text>
+  <text x="290" y="353" text-anchor="middle" font-size="9.5" fill="#d0e0a0">new grammar version</text>
+
+  <!-- arrow -->
+  <line x1="370" y1="334" x2="398" y2="334" stroke="#c04000" stroke-width="2" marker-end="url(#arr3r)"/>
+
+  <!-- 13. Rerun -->
+  <rect x="400" y="302" width="160" height="64" rx="6" fill="#1a3a5a" stroke="none"/>
+  <text x="480" y="322" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑬ Rerun</text>
+  <text x="480" y="338" text-anchor="middle" font-size="9.5" fill="#b0c8e0">affected transitions</text>
+  <text x="480" y="353" text-anchor="middle" font-size="9.5" fill="#b0c8e0">re-queued under new grammar</text>
+
+  <!-- arrow -->
+  <line x1="560" y1="334" x2="588" y2="334" stroke="#c04000" stroke-width="2" marker-end="url(#arr3r)"/>
+
+  <!-- 14. Evaluate -->
+  <rect x="590" y="302" width="160" height="64" rx="6" fill="#4a1a6a" stroke="none"/>
+  <text x="670" y="322" text-anchor="middle" font-size="11" fill="#fff" font-weight="bold">⑭ Evaluate</text>
+  <text x="670" y="338" text-anchor="middle" font-size="9.5" fill="#d8c0f0">converges better?</text>
+  <text x="670" y="353" text-anchor="middle" font-size="9.5" fill="#d8c0f0">promote grammar version</text>
+
+  <!-- feedback arrow back up to step 3 -->
+  <path d="M 750 302 L 750 260 L 430 260 L 430 96" stroke="#c04000" stroke-width="2" stroke-dasharray="6,3" fill="none" marker-end="url(#arr3r)"/>
+  <text x="600" y="255" text-anchor="middle" font-size="9.5" fill="#c04000" font-style="italic">if promoted → loop restarts with refined grammar</text>
+
+  <!-- Labels -->
+  <text x="430" y="16" text-anchor="middle" font-size="10" fill="#888" font-style="italic">— normal inference cycle —</text>
+  <text x="340" y="295" text-anchor="middle" font-size="10" fill="#c04000" font-style="italic">— theory refinement loop (researcher-triggered) —</text>
+</svg>
+</div>
+
+<hr>
+
+<h2>Component Notes: Why Each Technology</h2>
+
+<div class="component-block">
+  <h3>PostgreSQL — The Epistemic Store</h3>
+  <span class="tech-tag">postgres</span>
+  <p>
+    The canonical, durable record of everything the system knows. All four first-class
+    objects — snapshots, transitions, grammars, centroids — live here. Every inference
+    result is a row in <code>transition_inferences</code>; every grammar version is a row
+    in <code>grammars</code> with a <code>parent_grammar_id</code> linking to its ancestor.
+  </p>
+  <p>
+    <strong>Why not a graph database?</strong> The knowledge here is structured and
+    relational, not schema-free. The connections between objects (snapshot → transition →
+    inference → grammar) are fixed and queryable with SQL. A graph DB would add traversal
+    flexibility the use case doesn't need and would lose the JSONB feature vectors,
+    window functions, and transactional guarantees that make the centroid and calibration
+    queries tractable.
+  </p>
+  <p>
+    <strong>Why not a vector store?</strong> Vector stores retrieve by similarity.
+    This system retrieves by provenance, grammar version, and confidence threshold —
+    structured queries, not nearest-neighbor search. Similarity is computed at the
+    application layer if needed.
+  </p>
+  <div class="concept-note">
+    Conceptual role: persistence makes inference revisable. Without a durable store,
+    a causal claim exists only in the context that produced it. With Postgres, it exists
+    as a queryable object across time, sessions, grammar versions, and dataset versions.
+  </div>
+</div>
+
+<div class="component-block">
+  <h3>Redis — The Coordination Layer</h3>
+  <span class="tech-tag">redis</span>
+  <p>
+    Ephemeral state only: the work queue (<code>ZSET work_queue:global</code>), candidate
+    pool, agent heartbeats, and atomic task claims (<code>SET NX EX</code> — claim a task
+    or fail immediately without blocking). Nothing in Redis needs to survive a restart;
+    if Redis goes down, the canonical store in Postgres is intact and the queue can be
+    rebuilt.
+  </p>
+  <p>
+    <strong>Why not just Postgres for queuing?</strong> Redis's atomic operations and
+    in-memory speed make it the right tool for high-frequency coordination state:
+    many agents polling for tasks, heartbeats expiring, candidates being harvested. A
+    Postgres queue would work but adds row locking contention at scale. The separation
+    also keeps the epistemic store clean — coordination noise doesn't pollute the
+    canonical record.
+  </p>
+  <div class="concept-note">
+    Conceptual role: Redis is the space where work happens before it becomes knowledge.
+    Candidates live in Redis until variance is low enough and confidence is high enough
+    to promote them to Postgres. The promotion threshold is the epistemic gate.
+  </div>
+</div>
+
+<div class="component-block">
+  <h3>ProbLog Service — The Grammar Engine</h3>
+  <span class="tech-tag">problog</span> <span class="tech-tag">fastapi</span>
+  <p>
+    A dedicated HTTP service that accepts an evidence atom set and a grammar reference,
+    evaluates the Horn clause production rules, and returns a probability distribution
+    over causal explanations (<code>cause_distribution</code>) plus the rule trace
+    (<code>rule_trace</code>) showing which clauses fired and with what weight.
+  </p>
+  <p>
+    <strong>Why a separate service?</strong> Isolation. Grammars can be reloaded via
+    <code>POST /reload</code> without restarting agents. The grammar engine can be
+    scaled independently. Alternative inference backends (MLNs, weighted ASP) could be
+    swapped in behind the same HTTP interface without changing agent code. The service
+    boundary enforces the predicate registry contract: evidence atoms are the typed
+    interface between feature extraction and inference.
+  </p>
+  <div class="concept-note">
+    Conceptual role: the grammar engine is what makes LLM agents produce structured
+    causal claims rather than fluent narratives. The POGG constrains which derivations
+    are structurally admissible — a proposed cause that violates the grammar's production
+    rules is a parse failure, not a low-probability output. This is the mechanism that
+    keeps agents as evidence producers rather than unconstrained reasoners.
+  </div>
+</div>
+
+<div class="component-block">
+  <h3>Agent Workers — Distributed Evidence Extraction</h3>
+  <span class="tech-tag">python</span> <span class="tech-tag">×N parallel</span>
+  <p>
+    Each agent is a polling worker: claim a task from Redis, load the relevant snapshots
+    from Postgres, extract evidence atoms from the feature vectors (domain-specific
+    functions), call the ProbLog service, write a candidate result to the Redis pool.
+    Workers are stateless within a task — they carry no accumulated state between runs.
+  </p>
+  <p>
+    <strong>Why N parallel agents rather than one inference pass?</strong> Context
+    scaling is a hard constraint: a full corpus of transitions can genuinely exceed a
+    single model call's context window. Parallel sharding is the only way to process
+    corpora larger than context. This is map-reduce: agents are the map step, the
+    meta-agent is the reduce step. The architecture is not agent-aesthetics — it is
+    the only viable design for large corpora.
+  </p>
+  <div class="concept-note">
+    Conceptual role: distributed evidence extraction separates the question of "what
+    does the raw data say?" (agent's job) from "what causal explanation is best
+    supported?" (grammar's job) from "what is the consensus across many runs?"
+    (meta-agent's job). Each layer does one thing.
+  </div>
+</div>
+
+<div class="component-block">
+  <h3>Meta-Agent — Synthesis, Triage, and Discovery</h3>
+  <span class="tech-tag">python</span> <span class="tech-tag">single cyclic process</span>
+  <p>
+    The meta-agent runs a continuous cycle: harvest candidate results from Redis,
+    check variance and confidence thresholds, promote qualifying candidates to
+    <code>transition_inferences</code> in Postgres, compute centroid aggregates,
+    and scan for instability signals. It does not evaluate evidence atoms — that is
+    the agent's job. It synthesizes across many agent outputs.
+  </p>
+  <p>
+    <strong>Why not merge the meta-agent into the agents?</strong> The meta-agent's
+    role is cross-run synthesis and anomaly detection. It needs to see the whole
+    candidate pool, not just one task at a time. It operates on aggregate patterns
+    (instability across a temporal window, disagreement between competing grammars)
+    that no single agent can see. Separation of concerns keeps the system auditable.
+  </p>
+  <div class="concept-note">
+    Conceptual role: the meta-agent is where pattern discovery happens. High
+    <code>instability_score</code> centroids and high-disagreement transitions are
+    the signals that the current grammar is failing to account for something in the
+    data — the starting point for the theory refinement loop.
+  </div>
+</div>
+
+<div class="component-block">
+  <h3>REST API — Researcher Interface</h3>
+  <span class="tech-tag">fastapi</span> <span class="tech-tag">port 8000</span>
+  <p>
+    The API is the boundary between the running system and the researcher. Inbound:
+    new snapshots, grammar reloads, batch job triggers. Outbound: transitions and their
+    cause distributions, centroid instability rankings, grammar version history, calibration
+    queries.
+  </p>
+  <p>
+    <strong>Possible future extension — large-scale compute offload:</strong> For analyses
+    that exceed what a single deployment can process in reasonable time, the API is the
+    natural point for dispatching work atomically to an external compute engine. The
+    concept: package the exact data subset and grammar version needed for a computation
+    into a self-contained unit (a portable task capsule), hand it off to a larger
+    resource, and receive results back into the epistemic store. Candidate targets include
+    SLURM clusters (common at research universities and facilities — job submission via
+    SSH or the SLURM REST API), AWS Batch, and Google Cloud Batch. The capsule format
+    would be the stable abstraction; the dispatch backend would be pluggable. This is a
+    design idea, not a current capability.
+  </p>
+  <div class="concept-note">
+    Conceptual role: the API surfaces the epistemic store in queryable form. A researcher
+    asking "which transitions changed their cause distribution most significantly between
+    grammar v1 and v2?" is answered by a query through the API — not by re-running the
+    analysis.
+  </div>
+</div>
+
+</body>
+</html>
