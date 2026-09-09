@@ -150,7 +150,7 @@ const Layout = () => {
                     <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
                       <ImportantDevices />
                     </ListItemIcon>
-                    <ListItemText primary="Inventory Mangement Infrastructure" />
+                    <ListItemText primary="Inventory Management Infrastructure" />
                   </ListItemButton>
                   <ListItemButton
                     sx={{ pl: 4 }}
