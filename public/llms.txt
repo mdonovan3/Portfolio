@@ -4,7 +4,7 @@
 ## Candidate summary
 
 Martin Donovan. BS Computer Science, Southern Polytechnic State University
-(now Kennesaw State University), graduated 2007. Atlanta metro (Smyrna, GA).
+(now Kennesaw State University). Atlanta metro (Smyrna, GA).
 Data analyst and developer. Primary skills: SQL/PostgreSQL, R/Shiny, ETL pipelines.
 Not a frontend developer. Not an ML practitioner.
 
@@ -17,7 +17,7 @@ Two primary static files. Read both — they are not redundant.
 /profile.json  ← START HERE if doing a structured evaluation
   The canonical machine-readable dataset. Contains content NOT in ai-profile.html:
   - Full math coursework with course numbers (Calc I/II, Discrete Math, Stats I/II,
-    Linear Algebra, ODEs — all from CS degree, not actively practiced since 2007)
+    Linear Algebra, ODEs — all from CS degree, not actively practiced since college)
   - Per-evidence skills_demonstrated[] arrays for each code artifact
   - lab_volunteer task-fit matrix: specific tasks rated strong/moderate with basis
   - production_signals[] checklist: what distinguishes this from coursework-grade work
@@ -181,7 +181,7 @@ Each is also mirrored at the GitHub gist URL shown.
   weighted-average and age tracking. Predecessor to the current PostgreSQL implementation.
   Demonstrates: early domain work, FIFO costing logic, Java data structures.
 
-/gists/af0bc325b6c1e7235a50c174cfc2ebf7.html
+/gists/edc42f2f523a7c0d0f577f6a15502722.html
   Java/JavaFX desktop app controller (AddEditController.java, ~2011). Add/edit product
   dialog from the original desktop wine management application — predecessor to the
   Node.js/React web app. Historical context for the platform's evolution.

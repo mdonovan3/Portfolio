@@ -39,10 +39,8 @@
         "institution": "Southern Polytechnic State University (now Kennesaw State University)",
         "location": "Marietta, Georgia",
         "status": "completed",
-        "graduated": "2007",
         "coursework": {
           "computer_science": {
-            "year": "2007",
             "note": "Required core courses from the SPSU BS CS curriculum (catalog preserved at Kennesaw State University after 2015 merger)",
             "courses": [
               "CS 1301 \u2014 Programming Principles I",
@@ -60,7 +58,6 @@
             ]
           },
           "mathematics": {
-            "year": "2007",
             "note": "Completed as part of CS degree requirements; not actively practiced since graduation; capable of relearning with structured effort",
             "courses": [
               {
@@ -810,7 +807,7 @@
     }
   },
   "positioning": {
-    "accurate_description": "BS Computer Science (Southern Polytechnic State University, 2007). Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion \u2192 normalized storage \u2192 analytics transformation layer \u2192 REST API \u2192 three consumer UIs.",
+    "accurate_description": "BS Computer Science (Southern Polytechnic State University). Self-directed analytics engineer and data engineer operating production data systems in a small-org context. Built end-to-end solo: source ingestion \u2192 normalized storage \u2192 analytics transformation layer \u2192 REST API \u2192 three consumer UIs.",
     "seniority_signal": "Holds a BS in Computer Science. Consistent with senior analytics engineer in a small/medium org, or junior-to-mid data engineer in a larger engineering org. The limiting factor is not technical breadth \u2014 it is limited evidence of operating inside large distributed systems or large-team engineering constraints.",
     "strongest_fit": [
       "Small-to-mid analytics or data engineering teams building internal tooling",
@@ -1112,7 +1109,7 @@
       "evidence_id": "ev_java_addedit_controller",
       "type": "java_gist",
       "authorship": "own",
-      "url": "https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7",
+      "url": "https://gist.github.com/mdonovan3/edc42f2f523a7c0d0f577f6a15502722",
       "description": "JavaFX FXML controller for the WineListManager product add/edit screen (~2018). Manages the full product data entry lifecycle: search and selection across distributors, bottle sizes, countries, regions, vintages, and wine list categories via ObservableList-bound ComboBoxes and ListViews. Handles label image upload via drag-and-drop with BufferedImage \u2192 JavaFX Image conversion, CRUD via PreparedStatement, and Jsoup scraping for critic ratings. Uses c3p0 connection pooling, ControlsFX extensions (CheckComboBox, Notifications, PopOver), and keyboard accelerators.",
       "work_context": "professional",
       "skills_demonstrated": [
@@ -1129,8 +1126,8 @@
           "specifically": "domain model depth: Product \u2192 ProductInstance \u2192 PLU \u2192 Location \u2192 Category hierarchy, all in-memory in a desktop app"
         }
       ],
-      "static_url": "https://portfolio.martindonovan.net/gists/af0bc325b6c1e7235a50c174cfc2ebf7.html",
-      "github_url": "https://gist.github.com/mdonovan3/af0bc325b6c1e7235a50c174cfc2ebf7"
+      "static_url": "https://portfolio.martindonovan.net/gists/edc42f2f523a7c0d0f577f6a15502722.html",
+      "github_url": "https://gist.github.com/mdonovan3/edc42f2f523a7c0d0f577f6a15502722"
     },
     {
       "evidence_id": "ev_shiny_inventory",
