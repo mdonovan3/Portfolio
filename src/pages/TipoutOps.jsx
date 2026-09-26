@@ -106,7 +106,7 @@ const sources = [
 ];
 
 const stagingNodes = [
-  { title: "stg_alohadbf_*", subtitle: "Typed columns · shared model across BRG + Bones despite layout divergence", accent: t.dbt },
+  { title: "stg_alohadbf_*", subtitle: "79 typed staging models · one common Aloha model shared across both restaurants despite layout divergence", accent: t.dbt },
 ];
 
 const intermediateNodes = [
@@ -114,8 +114,8 @@ const intermediateNodes = [
 ];
 
 const martNodes = [
-  { title: "mart_tipout_calc (BRG)", subtitle: "Replaces the Excel formula tabs — blocked on nothing but time", accent: t.dbt },
-  { title: "mart_tipout_calc (Bones)", subtitle: "Separate calc logic from BRG — blocked on Bones rule documentation", accent: t.dbt },
+  { title: "mart_tipout_calc (HVG)", subtitle: "Replaces the Excel formula tabs — blocked on nothing but time", accent: t.dbt },
+  { title: "mart_tipout_calc (Ironstone)", subtitle: "Separate calc logic from HVG — blocked on Ironstone rule documentation", accent: t.dbt },
 ];
 
 const designDecisions = [
@@ -125,15 +125,15 @@ const designDecisions = [
   },
   {
     heading: "dlt + dbfread for the loader, not a hand-rolled parser",
-    body: "The loader uses dlt with dbfread to turn raw Aloha DBF tables into typed staging tables (raw.alohadbf_*), dedupe-then-append on each nightly run. Tested against real grind data from BRG; S3-as-input path is written but untested — no scoped AWS key exists yet.",
+    body: "The loader uses dlt with dbfread to turn raw Aloha DBF tables into typed staging tables (raw.alohadbf_*), dedupe-then-append on each nightly run. Tested against real grind data from HVG; S3-as-input path is written but untested — no scoped AWS key exists yet.",
   },
   {
     heading: "GNDITEM + GNDTNDR over GNDAUDIT for transfer detection",
     body: "GNDAUDIT alone isn't reliable ground truth for detecting transfers between employees mid-shift. Pairing GNDITEM (origin) with GNDTNDR (destination) gives a more trustworthy signal — a rule surfaced by reverse-engineering real historical tip-out spreadsheets against the raw POS export.",
   },
   {
-    heading: "BRG and Bones are not one shared formula set",
-    body: "The existing R import script already lands both restaurants' tip-outs in the same employee_tips table, which made it tempting to write one shared calc. Confirmed with the business owner that BRG and Bones tip-out rules genuinely diverge — separate mart models per restaurant, not a parameterized single model.",
+    heading: "HVG and Ironstone are not one shared formula set",
+    body: "The existing R import script already lands both restaurants' tip-outs in the same employee_tips table, which made it tempting to write one shared calc. Confirmed with the business owner that HVG and Ironstone tip-out rules genuinely diverge — separate mart models per restaurant, not a parameterized single model.",
   },
   {
     heading: "Job code alone can't derive role/section",
@@ -141,7 +141,7 @@ const designDecisions = [
   },
   {
     heading: "Prototype before pipeline completion, for stakeholder buy-in",
-    body: "Built a static interactive walkthrough (prototype/) from real BRG roster, job codes, and six weeks of historical tip totals — before the calc engine existed — so the manager could react to the intended UX (shift setup, next-day review, rate admin) early, without waiting on the dbt marts.",
+    body: "Built a static interactive walkthrough (prototype/) from real HVG roster, job codes, and six weeks of historical tip totals — before the calc engine existed — so the manager could react to the intended UX (shift setup, next-day review, rate admin) early, without waiting on the dbt marts.",
   },
 ];
 
@@ -179,7 +179,7 @@ const TipoutOps = () => {
           Postgres table (<code>employee_tips</code>) an existing R import script already writes to.
         </Typography>
         <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8, mb: 2 }}>
-          Two restaurants (Blue Ridge Grill live, Bones next) with genuinely divergent tip-out
+          Two restaurants (Harborview Grille live, Ironstone next) with genuinely divergent tip-out
           rules — not a shared formula set. Runs across two machines: a poller on the restaurant's
           own POS computer, and a cloud-scheduled loader → dbt → archiver chain that only touches
           S3 and Postgres.
@@ -267,7 +267,7 @@ const TipoutOps = () => {
           borderRadius: 1, px: 2, py: 1 }}>
           <Star sx={{ color: t.python, fontSize: 18 }} />
           <Typography variant="caption" sx={{ color: t.python, fontWeight: 600 }}>
-            Local-dir input tested against real BRG data; S3 input path written but untested — no scoped AWS key yet
+            Tested end to end against real S3 + Postgres (landing → load); a per-day batched run cut a 22-day, two-store reload from a projected ~2 hours to ~23 minutes
           </Typography>
         </Box>
         <DetailLink to="/projects/tipout-ops/loader" />
@@ -297,7 +297,7 @@ const TipoutOps = () => {
           {stagingNodes.map((n) => <NodeCard key={n.title} {...n} />)}
         </Box>
         <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 0.5 }}>
-          One common Aloha model shared across BRG and Bones, despite the two restaurants'
+          One common Aloha model shared across HVG and Ironstone, despite the two restaurants'
           layout divergence in the raw export.
         </Typography>
 
@@ -317,8 +317,8 @@ const TipoutOps = () => {
           {martNodes.map((n) => <NodeCard key={n.title} {...n} />)}
         </Box>
         <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 1 }}>
-          This layer is the point of the project — replacing the Excel formula tabs. BRG is
-          unblocked; Bones is blocked on a filled-out tip-sheet documenting that restaurant's
+          This layer is the point of the project — replacing the Excel formula tabs. HVG is
+          unblocked; Ironstone is blocked on a filled-out tip-sheet documenting that restaurant's
           rules.
         </Typography>
         <DetailLink to="/projects/tipout-ops/dbt" />
@@ -326,25 +326,40 @@ const TipoutOps = () => {
         <FlowArrow />
 
         {/* Archiver — in progress */}
-        <LayerLabel label="Archiver — archiver/ (S3 lifecycle, nightly)" color={t.python} status="wip" />
+        <LayerLabel label="Archiver — archiver/ (S3 lifecycle, nightly)" color={t.python} status="done" />
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
           <NodeCard title="archiver.py" subtitle="Ages a day's zip from landing/ to archive/ once past the 30-day reprocess window" accent={t.python} />
         </Box>
         <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 1 }}>
-          Built, not yet run against real S3 data — needs a scoped IAM key that hasn't been
-          created yet.
+          Working, tested against real S3 data — a full mock-set run archived every day cleanly.
         </Typography>
         <DetailLink to="/projects/tipout-ops/archiver" />
 
         <FlowArrow />
 
+        {/* Verify — done */}
+        <LayerLabel label="Verify — verify/ (reconciliation, last step of the nightly run)" color={t.python} status="done" />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+          <NodeCard title="verify.py" subtitle="Reconciles S3 and Postgres ground truth per source / store / date / stage into ops.import_status" accent={t.python} />
+          <NodeCard title="import-dashboard" subtitle="Local React + FastAPI view over ops.import_status: stat tiles, day-by-day landed / loaded / archived checklist, size and row-count timelines" accent={t.python} />
+        </Box>
+        <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 1 }}>
+          Same discipline as the rest of my data work: an import isn't "done" until an independent
+          check agrees. After a real landing → load → archive → verify pass, every row reconciled
+          with zero outstanding issues. Dashboard is local dev only (no auth, not deployed).
+        </Typography>
+
+        <FlowArrow />
+
         {/* CI/CD — not started */}
-        <DimWrap dim>
-          <LayerLabel label="Orchestration — GitHub Actions" color={t.grey} status="todo" />
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
-            <NodeCard dimmed title="nightly workflow" subtitle="Wire loader → dbt → archiver on a schedule. Poller stays on-prem — GH runners can't reach the local Aloha file share." accent={t.grey} />
-          </Box>
-        </DimWrap>
+        <LayerLabel label="Orchestration — GitHub Actions" color={t.python} status="wip" />
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mb: 1 }}>
+          <NodeCard title="nightly workflow" subtitle="loader → dbt → archiver → verify on a schedule. Poller stays on-prem — GH runners can't reach the local Aloha file share." accent={t.python} />
+        </Box>
+        <Typography variant="caption" sx={{ color: t.grey, display: "block", mb: 1 }}>
+          Written, but not yet run in GitHub Actions itself — needs repo secrets and the scoped
+          DB roles it depends on.
+        </Typography>
 
         <FlowArrow />
 
@@ -365,7 +380,7 @@ const TipoutOps = () => {
         <Divider sx={{ mb: 2 }} />
         <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>
           Before the calc engine existed, a static interactive walkthrough was built from real
-          BRG data — actual roster, real Aloha job codes, real shift assignments, and real
+          HVG data — actual roster, real Aloha job codes, real shift assignments, and real
           historical tip totals across six recent weeks — to demo the intended UX (shift setup,
           next-day review, rate admin) to the manager early. It doesn't compute anything live;
           every figure shown is a real historical number, not output from a working calc engine.

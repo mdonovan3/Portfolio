@@ -80,7 +80,7 @@ const soloRepos = [
 const wlmBackend = {
   title: "Wine List Manager — Backend & API",
   description:
-    "Node.js/Express REST API and PostgreSQL schema powering the full WLM platform across two restaurant locations. 14+ endpoints covering inventory counts, sales reporting, purchasing, product management, and analytics. JWT auth, per-restaurant middleware guards, and stored functions for perpetual inventory math. The data model, all server-side code, and SQL stored procedures are my own work developed over several years — the React and mobile frontends below are clients to this backend.",
+    "Node.js/Express REST API and PostgreSQL schema powering the full WLM platform across two restaurant locations. 50+ route modules covering inventory counts, sales reporting, purchasing, product management, analytics, and a Cube.js semantic layer with a natural-language assistant. JWT auth, per-restaurant middleware guards, and stored functions for perpetual inventory math. The data model, all server-side code, and SQL stored procedures are my own work developed over several years — the React and mobile frontends below are clients to this backend.",
   tags: ["Node.js", "Express", "PostgreSQL", "JWT", "AWS RDS", "stored functions"],
   url: "https://github.com/mdonovan3/react-wine-app",
 };

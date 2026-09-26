@@ -35,7 +35,7 @@ library(shinyjs)
 # Credentials loaded from .Renviron: DB_HOST, DB_PORT, DB_USER, DB_PASS, WINE_DB
 
 db    &lt;- Sys.getenv(&quot;WINE_DB&quot;)
-color &lt;- if (db == &quot;bones_wine&quot;) &quot;red&quot; else &quot;blue&quot;
+color &lt;- if (db == &quot;irs_wine&quot;) &quot;red&quot; else &quot;blue&quot;
 
 con &lt;- dbConnect(
   RPostgres::Postgres(),

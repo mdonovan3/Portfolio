@@ -113,6 +113,32 @@ const modules = [
     ],
   },
   {
+    title: "Semantic Layer & Reconciliation",
+    icon: "🧮",
+    description:
+      "A Cube.js semantic layer sits on top of the operational PostgreSQL databases: 23 cubes of documented house metric definitions, routed per restaurant from the JWT's tenant claim. The business definitions are mine; every metric was reconciled against independent SQL on the raw source tables before release, because a dashboard being internally consistent doesn't mean it's correct.",
+    highlights: [
+      "House definitions: stock status, bottle vs. glass sales, pour cost, margin, count variance, invoice cost, inflation-adjusted (today's dollars) measures",
+      "Sales velocity as trailing 30/90/365-day windows with a Gini-based confidence score — replaced a function that treated lifetime sales as one month for about half the products (18 s → ~1 s)",
+      "Reconciliation caught a join defect that silently dropped ~85% of rows in product-filtered purchasing and count queries; fixed and verified to the cent",
+      "Reconciliation also caught a decade-long CPI gap (the BLS API silently truncating requests) that overstated inflation-adjusted figures by up to ~18%; ingestion fixed, backfilled, guarded",
+      "Per-tenant driver and connection pool keyed on the JWT restaurant claim — tenants can't share a connection or cache",
+      "Not yet: automated tests/CI, and the semantic layer runs locally rather than in production",
+    ],
+  },
+  {
+    title: "Natural-Language Assistant",
+    icon: "💬",
+    description:
+      "An in-app chat that answers questions about the wine program by having Claude translate them into semantic-layer queries. The server executes the queries and feeds results back, so the model never writes SQL against production tables. Internal use; the production API path is built but not yet deployed.",
+    highlights: [
+      "Answers arrive with the inspectable queries that produced them, plus CSV export",
+      "Guardrails: capped result rows in context, a documented join map, and arithmetic pushed into the semantic layer instead of left to the model (one question went from 94 s and a truncated answer to 16 s and a complete one)",
+      "Admin-only, per-tenant isolation inherited from the semantic layer",
+      "One switch between a local Claude CLI (development) and the Anthropic API (deployed)",
+    ],
+  },
+  {
     title: "Tasting Notes",
     icon: "📝",
     description: "Entry and viewing pages for wine tasting notes linked to product instances.",
@@ -130,6 +156,11 @@ const techStack = [
     layer: "Database & Schema",
     own:  ["PostgreSQL on AWS RDS", "Multi-tenant: separate DB per restaurant", "Perpetual inventory stored functions", "Complex analytical queries"],
     ai:   [],
+  },
+  {
+    layer: "Semantic Layer & AI",
+    own:  ["Business metric definitions", "Reconciliation against source SQL"],
+    ai:   ["Cube.js (23 cubes)", "Assistant server route + Claude client"],
   },
   {
     layer: "Web Frontend",

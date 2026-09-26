@@ -30,7 +30,7 @@ library(dplyr)
 # --- Contact lists -----------------------------------------------------------
 # One row per distributor rep. BCC goes to the buyer&#x27;s manager.
 
-bones_df &lt;- data.frame(
+irs_df &lt;- data.frame(
   Distributors = c(&quot;United&quot;, &quot;RNDC&quot;, &quot;Winebow&quot;, &quot;GA Crown&quot;,
                    &quot;Empire&quot;, &quot;Prime&quot;, &quot;General Wholesale&quot;,
                    &quot;Savannah&quot;, &quot;Ultimate&quot;, &quot;Avant Partir&quot;, &quot;Bon Vin&quot;,
@@ -47,7 +47,7 @@ bones_df &lt;- data.frame(
                    &quot;rep13@distributor13.com&quot;)
 )
 
-brg_df &lt;- data.frame(
+hvg_df &lt;- data.frame(
   Distributors = c(&quot;United&quot;, &quot;RNDC&quot;, &quot;Winebow&quot;, &quot;GA Crown&quot;, &quot;Empire&quot;,
                    &quot;Prime&quot;, &quot;General Wholesale&quot;, &quot;Savannah&quot;, &quot;Ultimate&quot;,
                    &quot;Avant Partir&quot;, &quot;Bon Vin&quot;),
@@ -61,21 +61,21 @@ brg_df &lt;- data.frame(
                    &quot;rep11@distributor11.com&quot;)
 )
 
-bones_bcc &lt;- &quot;manager@restaurant.com&quot;
-brg_bcc   &lt;- &quot;manager@restaurant.com&quot;
+irs_bcc &lt;- &quot;manager@restaurant.com&quot;
+hvg_bcc   &lt;- &quot;manager@restaurant.com&quot;
 
 em_signature &lt;- &quot;Thank You\n\nMartin Donovan\nWine Buyer&quot;
 
-bns_body_template &lt;- function(rep_name) {
+irs_body_template &lt;- function(rep_name) {
   paste0(&quot;Hello &quot;, rep_name,
-         &quot;,\n\nCan you please send the following order to Bones for Wednesday:\n\n&quot;,
+         &quot;,\n\nCan you please send the following order to Ironstone for Wednesday:\n\n&quot;,
          &quot;1 case:\n\n\n&quot;,
          em_signature)
 }
 
-brg_body_template &lt;- function(rep_name) {
+hvg_body_template &lt;- function(rep_name) {
   paste0(&quot;Hello &quot;, rep_name,
-         &quot;,\n\nCan you please send the following order to BRG for Wednesday:\n\n&quot;,
+         &quot;,\n\nCan you please send the following order to HVG for Wednesday:\n\n&quot;,
          &quot;1 case:\n\n\n&quot;,
          em_signature)
 }
@@ -86,18 +86,18 @@ brg_body_template &lt;- function(rep_name) {
 
 outlb &lt;- get_business_outlook(tenant = &quot;yourcompany.com&quot;)
 
-lapply(seq_len(nrow(bones_df)), function(r) {
+lapply(seq_len(nrow(irs_df)), function(r) {
   em &lt;- outlb$create_email()
-  em$set_body(bns_body_template(bones_df$RepNames[r]))
-  em$set_subject(paste(&quot;Bones Order -&quot;, bones_df$Distributors[r]))
-  em$set_recipients(to = bones_df$Emails[r], bcc = bones_bcc)
+  em$set_body(irs_body_template(irs_df$RepNames[r]))
+  em$set_subject(paste(&quot;Ironstone Order -&quot;, irs_df$Distributors[r]))
+  em$set_recipients(to = irs_df$Emails[r], bcc = irs_bcc)
 })
 
-lapply(seq_len(nrow(brg_df)), function(r) {
+lapply(seq_len(nrow(hvg_df)), function(r) {
   em &lt;- outlb$create_email()
-  em$set_body(brg_body_template(brg_df$RepNames[r]))
-  em$set_subject(paste(&quot;BRG Order -&quot;, brg_df$Distributors[r]))
-  em$set_recipients(to = brg_df$Emails[r], bcc = brg_bcc)
+  em$set_body(hvg_body_template(hvg_df$RepNames[r]))
+  em$set_subject(paste(&quot;HVG Order -&quot;, hvg_df$Distributors[r]))
+  em$set_recipients(to = hvg_df$Emails[r], bcc = hvg_bcc)
 })
 </code></pre>
 </body>

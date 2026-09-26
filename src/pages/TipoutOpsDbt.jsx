@@ -82,9 +82,9 @@ const TipoutOpsDbt = () => (
       <Prose>
         <P>
           The actual tip-out calculation is blocked on having both restaurants' full formula
-          logic mapped out first — by design, not oversight. BRG's formulas (upstairs solo
+          logic mapped out first — by design, not oversight. HVG's formulas (upstairs solo
           stations vs. downstairs team pooling, headcount-tiered SA rates, bar transfer detection)
-          are fully reverse-engineered from a real filled-out week. Bones is a genuinely
+          are fully reverse-engineered from a real filled-out week. Ironstone is a genuinely
           different, team-based model and still needs a real filled-out week to see the live
           formulas — the one template found so far has no calculation logic in it at all.
         </P>

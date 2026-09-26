@@ -331,6 +331,10 @@
 <div class="section">
 <h2>Code Repositories</h2>
 
+<h3>WLM Semantic Layer &amp; Natural-Language Assistant (own metric definitions; AI-assisted code)</h3>
+<p>Cube.js semantic layer over the multi-tenant PostgreSQL databases: 23 cubes of documented business metrics (stock status, bottle vs. glass sales, pour cost, margin, count variance, sales velocity with a Gini-based confidence score, inflation-adjusted measures), routed per restaurant from the JWT claim. Every metric was reconciled against independent SQL before release; that process caught a join defect that silently dropped ~85% of rows in product-filtered queries and a decade-long CPI gap that overstated inflation-adjusted figures by up to ~18%. An in-app assistant translates natural-language questions into semantic-layer queries, with inspectable queries and CSV export. Runs locally; the production API path is built but not deployed. No automated tests or CI yet.</p>
+<p>Tags: Cube.js, PostgreSQL, semantic layer, data reconciliation, Node.js, Claude API</p>
+
 <h3>tipout-ops — Aloha POS Tip-Out Automation (In Progress, current work)</h3>
 <p>Private repo — real employee data, not yet public.</p>
 <p>Replaces a manager's hand-transcribed Excel tip-out workbook with data pulled directly from Aloha POS for two restaurants with genuinely divergent tip-out rules. The clearest current example of moving this restaurant group's stack toward modern DE tooling: dlt for ingestion, an S3 landing/archive lake, full SCD2 dimension history in dbt (59 dimension tables, hash-based change detection — so historical pay is never misattributed after a POS reference-data change), least-privilege IAM/DB roles scoped per pipeline stage, and planned nightly GitHub Actions orchestration. AI-assisted build — the code is AI-authored while learning the toolchain; business requirements (redaction scope, real tip-out formulas per restaurant) come from own restaurant-operations knowledge. Status by stage: poller and loader working against real data; dbt staging/intermediate built, marts blocked on business-rule documentation; archiver built, untested; portal (React) and CI/CD not started.</p>

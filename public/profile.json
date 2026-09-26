@@ -525,7 +525,7 @@
   ],
   "work_contexts": {
     "professional": {
-      "description": "Paid employment as Beverage Director at Liberty House Restaurant Corporation (LHRC), operating Blue Ridge Grill and Bones restaurant, Atlanta GA. Concurrently served as in-house data engineer, building and maintaining the full WLM data platform. Solo contributor \u2014 no engineering team.",
+      "description": "Paid employment as Beverage Director at Liberty House Restaurant Corporation (LHRC), operating Harborview Grille and Ironstone restaurant, Atlanta GA. Concurrently served as in-house data engineer, building and maintaining the full WLM data platform. Solo contributor \u2014 no engineering team.",
       "period": "15+ years (ongoing)",
       "role_titles": [
         "Beverage Director",
@@ -533,8 +533,8 @@
       ],
       "organization": "Liberty House Restaurant Corporation",
       "locations": [
-        "Blue Ridge Grill, Atlanta GA",
-        "Bones, Atlanta GA"
+        "Harborview Grille, Atlanta GA",
+        "Ironstone, Atlanta GA"
       ],
       "systems_built": [
         {
@@ -545,7 +545,7 @@
           "authorship": "solo",
           "period": "15+ years (ongoing)",
           "components_own_work": [
-            "PostgreSQL schema \u2014 normalized, multi-tenant by database, three environments (brg, bones, test)",
+            "PostgreSQL schema \u2014 normalized, multi-tenant by database, three environments (hvg, irs, test)",
             "stored functions \u2014 perpetual inventory math: beginning inventory + purchases + transfers \u2212 sales = theoretical on-hand per SKU per location",
             "multi-tenant connection pooling \u2014 Map-keyed per-tenant pool, idle timeout, graceful shutdown",
             "Node.js/Express REST API \u2014 14+ endpoints, JWT auth, role-based middleware",
@@ -729,7 +729,7 @@
         "stage": "storage",
         "technology": "PostgreSQL on AWS RDS",
         "patterns": [
-          "multi-tenant by database: brg, bones, test \u2014 three separate databases, same schema",
+          "multi-tenant by database: hvg, irs, test \u2014 three separate databases, same schema",
           "normalized schema: products \u2192 product_instances (SKUs) \u2192 product_instance_locations (cellar slots) \u2192 count sessions \u2192 variance detection",
           "stored functions encapsulate perpetual inventory math: beginning_inventory + purchases + transfers_in \u2212 glass_sales_as_bottles \u2212 bottle_sales = theoretical_on_hand per SKU per location",
           "stored functions called by multiple consumers: Node.js API and R Shiny apps read the same function",
@@ -789,7 +789,7 @@
         "Nightly scheduled ETL \u2014 Aloha POS DBF files ingested nightly across two restaurant locations on a repeating production schedule",
         "Real external source systems \u2014 Aloha POS (restaurant POS), Restaurant365 (financial/GL system), OpenTable (reservation system); not synthetic data or mock APIs",
         "Idempotency and recovery \u2014 all pipelines safe to re-run; duplicate guards enforced at the database level, not just in application logic",
-        "Multi-location / multi-tenant \u2014 three databases (brg, bones, test); location-keyed schema throughout; per-tenant connection pooling in the API",
+        "Multi-location / multi-tenant \u2014 three databases (hvg, irs, test); location-keyed schema throughout; per-tenant connection pooling in the API",
         "Stored functions called by multiple independent consumers \u2014 same PostgreSQL function used by the Node.js API and four R Shiny apps; a contract, not a one-off query",
         "Operational dashboards in daily use \u2014 four Shiny apps used by restaurant staff for actual purchasing, inventory, and financial decisions",
         "AWS production infrastructure \u2014 PostgreSQL on RDS, Node.js API on EC2; not localhost or a laptop-hosted dev environment",
@@ -1345,7 +1345,7 @@
       "type": "r_gist",
       "authorship": "own",
       "url": "https://gist.github.com/mdonovan3/76aca14b06ee37d3602e7704f7583f4f",
-      "description": "Payroll tip-sheet Excel parser \u2014 R: two parsers for two different weekly Excel layouts (one per restaurant). Both reconstruct dynamic column names from numeric date serials (openxlsx::convertToDate), pivot wide-format tip data to long form keyed by employee + date + shift, and insert to PostgreSQL via dbWithTransaction with a duplicate-date guard. Handles layout quirks: BRG drops a duplicate subtotal column; Bones infers the date sequence from an externally supplied week-end date rather than the file header.",
+      "description": "Payroll tip-sheet Excel parser \u2014 R: two parsers for two different weekly Excel layouts (one per restaurant). Both reconstruct dynamic column names from numeric date serials (openxlsx::convertToDate), pivot wide-format tip data to long form keyed by employee + date + shift, and insert to PostgreSQL via dbWithTransaction with a duplicate-date guard. Handles layout quirks: HVG drops a duplicate subtotal column; Ironstone infers the date sequence from an externally supplied week-end date rather than the file header.",
       "work_context": "professional",
       "skills_demonstrated": [
         {
@@ -1358,7 +1358,7 @@
         },
         {
           "skill": "data cleaning",
-          "specifically": "two-restaurant layout divergence handled by separate parsers; janitor::remove_empty for sparse Bones columns; Bones date sequence inferred from filename context"
+          "specifically": "two-restaurant layout divergence handled by separate parsers; janitor::remove_empty for sparse Ironstone columns; Ironstone date sequence inferred from filename context"
         }
       ],
       "static_url": "https://portfolio.martindonovan.net/gists/76aca14b06ee37d3602e7704f7583f4f.html",
@@ -1445,12 +1445,36 @@
       "lab_context": "This project is the most directly relevant artifact for academic public health or epidemiology lab roles. Demonstrates: ingesting real CDC and EPA datasets, building a reproducible multi-year analysis pipeline, producing a Quarto report and Shiny dashboard — the exact toolchain used in academic biostatistics and epidemiology research environments. Not currently being worked on — weight it for domain-match on public health/epi roles, but see ev_github_tipout_ops for the more current and more actively maintained DE artifact."
     },
     {
+      "evidence_id": "ev_wlm_semantic_layer",
+      "type": "github_repo",
+      "authorship": "own_definitions_ai_assisted_code",
+      "authorship_detail": "Business metric definitions, reconciliation methodology and verification against source data are the author's own; Cube.js model code and the assistant server route were written with heavy AI coding assistance (Claude Code) under the author's direction.",
+      "url": "https://github.com/mdonovan3/react-wine-app",
+      "description": "Cube.js semantic layer (23 cubes) over the multi-tenant WLM PostgreSQL databases, routed per restaurant from the JWT claim with a per-tenant driver and connection pool. Documented house definitions for stock status, bottle vs. glass sales, pour cost, margin, count variance, invoice cost, sales velocity with a Gini-based confidence score, and inflation-adjusted measures. Every metric reconciled against independent SQL on the raw tables before release. An in-app natural-language assistant translates questions into semantic-layer queries (server executes, results fed back, inspectable queries and CSV export). Runs locally; the production Anthropic API path is built but not deployed. No automated tests or CI yet.",
+      "work_context": "professional",
+      "status": "in_progress",
+      "skills_demonstrated": [
+        {
+          "skill": "semantic layer / analytics engineering",
+          "specifically": "Cube.js, 23 cubes, documented metric definitions, multi-tenant routing by JWT claim, trailing-window sales velocity with confidence score"
+        },
+        {
+          "skill": "data quality / reconciliation",
+          "specifically": "reconciled measures to independent SQL before release; found a join defect silently dropping ~85% of rows in product-filtered queries, and a decade-long CPI gap (BLS API silently truncating requests) overstating inflation-adjusted figures by up to ~18% — fixed, backfilled, guarded"
+        },
+        {
+          "skill": "LLM application design (ai_guided)",
+          "specifically": "assistant constrained to semantic-layer queries rather than raw SQL; row caps, join map, arithmetic pushed into the semantic layer; measured latency improvement (94 s truncated answer to 16 s complete)"
+        }
+      ]
+    },
+    {
       "evidence_id": "ev_github_tipout_ops",
       "type": "github_repo",
       "authorship": "ai_guided",
-      "authorship_detail": "The code (Python poller/loader/archiver, dbt models) is AI-authored, not independently written — this project is being used as a hands-on way to learn the modern DE toolchain (dlt, dbt, SCD2, IAM), same learning-stage caveat as the Python — data engineering skill entry. What is the author's own is the domain knowledge driving requirements: which POS fields are sensitive and need redaction, what BRG and Bones' actual tip-out formulas are (reverse-engineered from real historical spreadsheets and confirmed with the business owner), and validating output against real data. Do not read this as independent Python or dbt authorship.",
+      "authorship_detail": "The code (Python poller/loader/archiver, dbt models) is AI-authored, not independently written — this project is being used as a hands-on way to learn the modern DE toolchain (dlt, dbt, SCD2, IAM), same learning-stage caveat as the Python — data engineering skill entry. What is the author's own is the domain knowledge driving requirements: which POS fields are sensitive and need redaction, what HVG and Ironstone' actual tip-out formulas are (reverse-engineered from real historical spreadsheets and confirmed with the business owner), and validating output against real data. Do not read this as independent Python or dbt authorship.",
       "url": null,
-      "description": "Private repo (real, unredacted employee data in reference material — not yet public). Replaces a manager's hand-transcribed Excel tip-out workbook with data pulled directly from Aloha POS, for two restaurants (Blue Ridge Grill live, Bones next) with genuinely divergent tip-out rules. Currently the most actively developed DE project: a poller that redacts PII on the restaurant's own POS machine and uploads to S3, a dlt/dbfread loader with dedupe-then-append idempotency, and a dbt layer applying full SCD2 history to 59 dimension tables so a POS reference-data change (e.g. a reassigned job code) can never misattribute historical pay. Marts (the actual tip-out calculation) are blocked on business-rule documentation for one of the two restaurants, not on tooling.",
+      "description": "Private repo (real, unredacted employee data in reference material — not yet public). Replaces a manager's hand-transcribed Excel tip-out workbook with data pulled directly from Aloha POS, for two restaurants (Harborview Grille live, Ironstone next) with genuinely divergent tip-out rules. Currently the most actively developed DE project: a poller that redacts PII on the restaurant's own POS machine and uploads to S3, a dlt/dbfread loader with dedupe-then-append idempotency, and a dbt layer applying full SCD2 history to 59 dimension tables so a POS reference-data change (e.g. a reassigned job code) can never misattribute historical pay. Marts (the actual tip-out calculation) are blocked on business-rule documentation for one of the two restaurants, not on tooling.",
       "work_context": "professional",
       "status": "in_progress — most active current DE work",
       "skills_demonstrated": [
@@ -1471,7 +1495,7 @@
           "specifically": "idempotent-by-construction pattern applied consistently across all three stages (blind reprocess window, dedupe-then-append, check-S3-before-acting) instead of local state files"
         }
       ],
-      "professional_context": "Built for the author's own restaurant group (Blue Ridge Grill / Bones) to replace a real, currently-in-use manual Excel process. Not a portfolio-only demo — the destination table (employee_tips) already feeds live payroll via an existing R import script.",
+      "professional_context": "Built for the author's own restaurant group (Harborview Grille / Ironstone) to replace a real, currently-in-use manual Excel process. Not a portfolio-only demo — the destination table (employee_tips) already feeds live payroll via an existing R import script.",
       "lab_context": "Lower direct relevance for public-health/epidemiology-specific roles than ev_github_epi_pipeline, but the strongest available evidence of current, actively-maintained modern DE practice — dlt, SCD2, IAM-scoped access, idempotent pipeline design."
     }
   ],

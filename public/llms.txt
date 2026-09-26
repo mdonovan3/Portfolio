@@ -204,6 +204,17 @@ Wine Management Platform (WLM)
   React frontend is AI-assisted against own API and data model.
   GitHub: https://github.com/mdonovan3/react-wine-app
 
+WLM semantic layer and natural-language assistant (own metric definitions; AI-assisted code)
+  Cube.js semantic layer over the multi-tenant PostgreSQL databases: 23 cubes of documented
+  business metrics (stock status, bottle vs. glass sales, pour cost, margin, count variance,
+  sales velocity with a Gini-based confidence score, inflation-adjusted measures), routed per
+  restaurant from the JWT claim. Every metric reconciled against independent SQL before
+  release; that process caught a join defect silently dropping ~85% of rows in
+  product-filtered queries and a decade-long CPI gap overstating inflation-adjusted figures by
+  up to ~18%. In-app assistant translates natural-language questions into semantic-layer
+  queries with inspectable queries and CSV export. Status: runs locally; production API path
+  built, not deployed. No automated tests/CI yet.
+
 Analytics Engineering Pipeline (demo)
   Python ingestion (Aloha DBF + R365 JSON → Parquet → raw PostgreSQL schema)
   + dbt staging views + dbt mart tables with column-level tests
@@ -219,7 +230,8 @@ tipout-ops (current work — private repo, real employee data)
   tooling. AI-assisted build — code is AI-authored while learning the toolchain; business
   requirements come from own restaurant-operations knowledge, not independent Python/dbt
   authorship. Status: poller + loader working against real data; dbt marts blocked on
-  business-rule documentation; archiver built untested; portal (React) + CI/CD not started.
+  business-rule documentation; archiver and verify (reconciliation) working against real S3 +
+  Postgres; GitHub Actions workflow written, not yet run; portal (React) not started.
 
 Public Health Epi Pipeline (portfolio — public repo, early-stage, not under active development)
   R ingestion (CDC PLACES county health prevalence + EPA AQS PM2.5, 2019–2023, ~3,000 counties)

@@ -155,7 +155,7 @@ getDFFromBRGTipSheet &lt;- function(f, entityId, shifts) {
 # inferred from the week-end date passed in as endDate (supplied externally,
 # e.g. parsed from the filename). Sparse columns removed via janitor.
 
-getDFFromBonesTipSheet &lt;- function(file, entityId, shifts, endDate) {
+getDFFromIronstoneTipSheet &lt;- function(file, entityId, shifts, endDate) {
   getShiftId &lt;- Vectorize(function(name) {
     as.integer(shifts %&gt;% filter(tolower(shift_name) == tolower(name)) %&gt;% pull(shift_id))
   })
@@ -165,7 +165,7 @@ getDFFromBonesTipSheet &lt;- function(file, entityId, shifts, endDate) {
 
   cnames &lt;- c(&quot;employee_r365_payroll_id&quot;, &quot;employee_name&quot;,
                unlist(lapply(week_seq, function(d) c(paste(d, &quot;Lunch&quot;), paste(d, &quot;Dinner&quot;)))))
-  # Note: seq[[6]] has no Lunch column in this layout (Bones closes for lunch Sat/Sun)
+  # Note: seq[[6]] has no Lunch column in this layout (Ironstone closes for lunch Sat/Sun)
   cnames[length(cnames) - 1] &lt;- paste(week_seq[[6]], &quot;Dinner&quot;)
 
   tips &lt;- readxl::read_excel(file, sheet = &quot;Server Detail Page&quot;,
